@@ -23,8 +23,9 @@ use Arikaim\Core\Utils\Text;
 use Arikaim\Core\Http\Session;
 use Arikaim\Core\Http\Url;
 use Arikaim\Core\View\Interfaces\ComponentDataInterface;
-use Arikaim\Core\Interfaces\HtmlPageInterface;
-use Arikaim\Core\Interfaces\ViewInterface;
+use Arikaim\Core\Interfaces\View\HtmlPageInterface;
+use Arikaim\Core\Interfaces\View\ViewInterface;
+use Arikaim\Core\Interfaces\Packages\PackageFactoryInterface;
 
 /**
  * Html page
@@ -39,14 +40,22 @@ class Page extends Component implements HtmlPageInterface
     protected $head;
     
     /**
+     * Package factory
+     *
+     * @var PackageFactoryInterface
+     */
+    protected $packageFactroy;
+
+    /**
      * Constructor
      * 
      * @param ViewInterface $view
      */
-    public function __construct(ViewInterface $view, $params = [], $language = null, $basePath = 'pages', $withOptions = true) 
+    public function __construct(ViewInterface $view, PackageFactoryInterface $packageFactroy,$params = [], $language = null, $basePath = 'pages', $withOptions = true) 
     {  
         parent::__construct($view,null,$params,$language,$basePath,'page.json',$withOptions);
 
+        $this->packageFactroy = $packageFactroy;       
         $this->head = new PageHead();
     }
 
@@ -440,7 +449,7 @@ class Page extends Component implements HtmlPageInterface
     {
         $name = ($name == null) ? Template::getTemplateName() : $name;
     
-        $templateOptions = $this->view->createPackage('template',$name)->getProperties();
+        $templateOptions = $this->packageFactroy->createPackage('template',$name)->getProperties();
 
         $options = $templateOptions->getByPath("include",[]);
     
@@ -472,9 +481,9 @@ class Page extends Component implements HtmlPageInterface
         $includeLib = [];
 
         foreach ($libraryList as $libraryName) {
-            $library = $this->view->createPackage('library',$libraryName);
-            $files = $library->getFiles();
-            $params = $library->getParams();
+            $library = $this->packageFactroy->createPackage('library',$libraryName);
+            $files = $library->getFiles();       
+            $params = $this->resolveLibraryParams($library->getParams());
 
             foreach($files as $file) {
                 $libraryFile = $this->view->getViewPath() . 'library' . DIRECTORY_SEPARATOR . $libraryName . DIRECTORY_SEPARATOR . $file;
@@ -501,6 +510,22 @@ class Page extends Component implements HtmlPageInterface
     }
 
     /**
+     * Resolev library params
+     *
+     * @param array $params
+     * @return array
+     */
+    protected function resolveLibraryParams(array $params)
+    {      
+        $vars = [
+            'domian'    => DOMAIN,
+            'base_url'  => Url::BASE_URL
+        ];
+
+        return Text::renderMultiple($params,$vars);    
+    }
+
+    /**
      * Include theme files
      *
      * @param string $templateName
@@ -515,7 +540,7 @@ class Page extends Component implements HtmlPageInterface
             return true;
         }
       
-        $properties = $this->view->createPackage('template',$templateName)->getProperties();
+        $properties = $this->packageFactroy->createPackage('template',$templateName)->getProperties();
         $defaultTheme = $properties->get("default-theme",null);
         $currentTheme = Theme::getCurrentTheme($templateName,$defaultTheme);
 
@@ -524,7 +549,7 @@ class Page extends Component implements HtmlPageInterface
         } 
         
         $library = $properties->getByPath("themes/$currentTheme/library","");
-        $libraryPackage = $this->view->createPackage('library',$library);
+        $libraryPackage = $this->packageFactroy->createPackage('library',$library);
         // get theme from other template
         $template = $properties->getByPath("themes/$currentTheme/template","");
         $templateName = (empty($template) == false) ? $template : $templateName;

@@ -17,7 +17,8 @@ use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
 
 use Arikaim\Core\Interfaces\CacheInterface;
-use Arikaim\Core\Interfaces\AccessInterface;
+use Arikaim\Core\Interfaces\Access\AccessInterface;
+use Arikaim\Core\Interfaces\View\HtmlPageInterface;
 use Arikaim\Core\View\Template\Tags\ComponentTagParser;
 use Arikaim\Core\View\Template\Tags\MdTagParser;
 use Arikaim\Core\View\Template\Template;
@@ -50,21 +51,30 @@ class Extension extends AbstractExtension implements GlobalsInterface
     protected $access;
 
     /**
+     * Extensions path
+     *
+     * @var string
+     */
+    protected $extensionsPath;
+
+    /**
      * Constructor
      *
      * @param CacheInterface $cache
-     * @param [type] $basePath
-     * @param [type] $viewPath
-     * @param [type] $libraryPath
-     * @param [type] $page
+     * @param string $basePath
+     * @param string $viewPath
+     * @param string $libraryPath
+     * @param string $extensionsPath
+     * @param HtmlPageInterface $page
      * @param AccessInterface $access
      */
-    public function __construct(CacheInterface $cache, $basePath, $viewPath, $libraryPath, $page, AccessInterface $access)
+    public function __construct(CacheInterface $cache, $basePath, $viewPath, $libraryPath, $extensionsPath, HtmlPageInterface $page, AccessInterface $access)
     {
         $this->cache = $cache;
         $this->basePath = $basePath;
         $this->viewPath = $viewPath;
         $this->libraryPath = $libraryPath;
+        $this->extensionsPath = $extensionsPath;
         $this->page = $page;
         $this->access = $access;
     }
@@ -124,6 +134,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('loadLibraryFile',[$this,'loadLibraryFile']),     
             new TwigFunction('loadComponentCssFile',[$this,'loadComponentCssFile']),  
             new TwigFunction('getLanguage',["Arikaim\\Core\\View\\Html\\Page","getLanguage"]),
+            new TwigFunction('sessionInfo',["Arikaim\\Core\\Http\\Session","getParams"]),
 
             // macros
             new TwigFunction('macro',["Arikaim\\Core\\View\\Template\\Template","getMacroPath"]),         

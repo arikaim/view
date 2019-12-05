@@ -11,7 +11,7 @@ namespace Arikaim\Core\View\Html;
 
 use Arikaim\Core\Collection\Arrays;
 use Arikaim\Core\View\Html\Component;
-use Arikaim\Core\Interfaces\HtmlComponentInterface;
+use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
 
 /**
  * Render html component

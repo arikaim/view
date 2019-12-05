@@ -16,8 +16,8 @@
         "arikaim/collection": "^1.0.0",
         "arikaim/http": "^1.0.0",
         "arikaim/utils": "^1.0.0",
-        "twig/twig": "2.7.*"
-      
+        "twig/twig": "2.7.*",
+        "erusev/parsedown-extra": "^0.7"
     },
     "autoload": {       
         "psr-4": {

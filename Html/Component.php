@@ -16,7 +16,7 @@ use Arikaim\Core\Utils\Mobile;
 use Arikaim\Core\Utils\Utils;
 use Arikaim\Core\View\Html\ComponentData;
 use Arikaim\Core\View\Interfaces\ComponentDataInterface;
-use Arikaim\Core\Interfaces\ViewInterface;
+use Arikaim\Core\Interfaces\View\ViewInterface;
 
 /**
  *  Base html component

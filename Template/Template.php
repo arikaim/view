@@ -9,7 +9,6 @@
 */
 namespace Arikaim\Core\View\Template;
 
-use Arikaim\Core\Utils\File;
 use Arikaim\Core\Http\Session;
 
 /**
@@ -59,7 +58,17 @@ class Template
     {                            
         return Session::get('current.template',Self::DEFAULT_TEMPLATE_NAME);               
     }
-    
+
+    /**
+     * Set current template name
+     *
+     * @return void
+     */
+    public static function setTemplateName($name)     
+    {                            
+        return Session::set('current.template',$name);               
+    }
+
     /**
      * Set current front end framework.
      *
@@ -90,85 +99,6 @@ class Template
     }
 
     /**
-     * Scan directory and return components list
-     *
-     * @param string $path
-     * @return array
-     */
-    public static function getComponents($path)
-    {       
-        if (File::exists($path) == false) {
-            return [];
-        }
-        $items = [];
-        $dir = new \RecursiveDirectoryIterator($path,\RecursiveDirectoryIterator::SKIP_DOTS);
-        $iterator = new \RecursiveIteratorIterator($dir,\RecursiveIteratorIterator::SELF_FIRST);
-
-        foreach ($iterator as $file) {
-            if ($file->isDir() == true) {
-                $item['name'] = $file->getFilename();   
-                $item['path'] = $file->getPathname();
-                
-                $componentPath = str_replace($path,'',$file->getRealPath());                
-                $componentPath = str_replace(DIRECTORY_SEPARATOR,'.',$componentPath);
-               
-                $item['full_name'] = $componentPath;
-                array_push($items,$item);
-            }
-        }
-
-        return $items;
-    }
-
-    /**
-     * Scan directory and return pages list
-     *
-     * @param string $path
-     * @return array
-     */
-    public static function getPages($path)
-    {
-        if (File::exists($path) == false) {
-            return [];
-        }
-        $items = [];
-        foreach (new \DirectoryIterator($path) as $file) {
-            if ($file->isDot() == true) continue;
-            if ($file->isDir() == true) {
-                $item['name'] = $file->getFilename();
-                array_push($items,$item);
-            }
-        }
-
-        return $items;
-    }
-
-    /**
-     * Scan directory and return macros list
-     *
-     * @param string $path
-     * @return array
-     */
-    public static function getMacros($path)
-    {       
-        if (File::exists($path) == false) {
-            return [];
-        }
-        $items = [];
-        foreach (new \DirectoryIterator($path) as $file) {
-            if ($file->isDot() == true || $file->isDir() == true) continue;
-            
-            $fileExt = $file->getExtension();
-            if ($fileExt != "html" && $fileExt != "htm") continue;           
-            
-            $item['name'] = str_replace(".$fileExt",'',$file->getFilename());
-            array_push($items,$item);            
-        }
-
-        return $items;
-    }
-
-    /**
      * Get macro path
      *
      * @param string $macroName
@@ -177,7 +107,8 @@ class Template
      */
     public static function getMacroPath($macroName, $template = null)
     {
-        $template = (empty($template) == true) ? Self::getTemplateName() : $template;          
+        $template = (empty($template) == true) ? Self::getTemplateName() : $template; 
+
         return DIRECTORY_SEPARATOR . $template . DIRECTORY_SEPARATOR . "macros" . DIRECTORY_SEPARATOR . $macroName;
     }
 

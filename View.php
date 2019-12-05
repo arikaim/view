@@ -14,9 +14,8 @@ use Twig\Extension\ExtensionInterface;
 use Twig\Loader\FilesystemLoader;
 
 use Arikaim\Core\Collection\Collection;
-use Arikaim\Core\Interfaces\ViewInterface;
+use Arikaim\Core\Interfaces\View\ViewInterface;
 use Arikaim\Core\Interfaces\CacheInterface;
-use Arikaim\Core\Interfaces\PackageFactoryInterface;
 
 /**
  * View class
@@ -80,13 +79,6 @@ class View implements ViewInterface
     private $pageProperties;
 
     /**
-     * Package factory ref
-     *
-     * @var PackageFactoryInterface
-     */
-    private $packageFactory;
-
-    /**
      * Constructor
      *
      * @param CacheInterface $cache
@@ -96,15 +88,14 @@ class View implements ViewInterface
      * @param string $componentsPath
      * @param array $settings
      */
-    public function __construct(CacheInterface $cache, $viewPath, $extensionsPath, $templatesPath, $componentsPath, $settings = [], PackageFactoryInterface $packageFactory = null)
+    public function __construct(CacheInterface $cache, $viewPath, $extensionsPath, $templatesPath, $componentsPath, $settings = [])
     {
         $this->pageProperties = new Collection();
         $this->viewPath = $viewPath;
         $this->extensionsPath = $extensionsPath;
         $this->templatesPath = $templatesPath;
         $this->componentsPath = $componentsPath;
-        $this->packageFactory = $packageFactory;
-       
+      
         $paths = [
             $extensionsPath,
             $templatesPath,
@@ -135,18 +126,6 @@ class View implements ViewInterface
     public function getExtensionsPath()
     {
         return $this->extensionsPath;
-    }
-
-    /**
-     * Create package
-     *
-     * @param string $packageType
-     * @param string $name
-     * @return PackageInterface|null
-     */
-    public function createPackage($packageType, $name)
-    {
-        return (is_object($this->packageFactory) == true) ? $this->packageFactory->createPackage($packageType,$name) : null;
     }
 
     /**
