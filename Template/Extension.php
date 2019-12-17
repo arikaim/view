@@ -89,6 +89,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
         $templateName = Template::getTemplateName();
         $templateUrl = Url::getTemplateUrl($templateName);
         $systemTemplateUrl = Url::getTemplateUrl(Template::SYSTEM_TEMPLATE_NAME);
+        
         return [
             'base_path'             => $this->basePath,
             'base_url'              => Url::BASE_URL,

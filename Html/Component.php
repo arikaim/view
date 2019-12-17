@@ -163,7 +163,11 @@ class Component
             if ($access == false) {
                 $component->setError("ACCESS_DENIED",["name" => $component->getName()]);
             }
+        } else {
+            // check root component auth access option
+            
         }
+
         // check permissions
         $permission = $component->getOption('access/permission');       
         if (empty($permission) == false) {
@@ -171,6 +175,9 @@ class Component
             if ($access == false) {              
                 $component->setError("ACCESS_DENIED",["name" => $component->getName()]);
             }          
+        } else {
+            // check root component permissions
+
         }    
         
         $component = Self::applyIncludeOption($component,'include/js','js');

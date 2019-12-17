@@ -51,7 +51,7 @@ class Page extends Component implements HtmlPageInterface
      * 
      * @param ViewInterface $view
      */
-    public function __construct(ViewInterface $view, PackageFactoryInterface $packageFactroy,$params = [], $language = null, $basePath = 'pages', $withOptions = true) 
+    public function __construct(ViewInterface $view, PackageFactoryInterface $packageFactroy, $params = [], $language = null, $basePath = 'pages', $withOptions = true) 
     {  
         parent::__construct($view,null,$params,$language,$basePath,'page.json',$withOptions);
 
@@ -566,7 +566,7 @@ class Page extends Component implements HtmlPageInterface
         if (empty($fileUrl) == false) {
             $theme['name'] = $currentTheme;
             $theme['file'] = $file;
-            $this->page->properties->add('template.theme',$fileUrl);
+            $this->view->properties()->add('template.theme',$fileUrl);
             // saev to cache
             $this->view->getCache()->save('template.theme.file',$fileUrl,3);
 

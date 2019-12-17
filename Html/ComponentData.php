@@ -426,7 +426,7 @@ class ComponentData implements ComponentDataInterface
     public function setError($code, $params = [], $msssage = null) 
     {
         $this->error = [
-            'core'    => $code,
+            'code'    => $code,
             'params'  => $params,
             'message' => $msssage
         ];
