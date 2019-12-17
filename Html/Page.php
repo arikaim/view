@@ -536,7 +536,7 @@ class Page extends Component implements HtmlPageInterface
         // cehck cache
         $fileUrl = $this->view->getCache()->fetch('template.theme.file');
         if (empty($fileUrl) == false) {
-            $this->page->properties->add('template.theme',$fileUrl);
+            $this->view->properties()->add('template.theme',$fileUrl);
             return true;
         }
       
