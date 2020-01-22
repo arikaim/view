@@ -95,6 +95,22 @@ class Page extends Component implements HtmlPageInterface
      */
     public function load($response, $name, $params = [], $language = null)
     {
+        $html = $this->getHtmlCode($name,$params,$language);
+        $response->getBody()->write($html);
+
+        return $response;
+    }
+
+    /**
+     * Get page html code
+     *
+     * @param string $name
+     * @param array $params
+     * @param string|null $language
+     * @return string
+     */
+    public function getHtmlCode($name, $params = [], $language = null)
+    {
         if (empty($name) == true) {         
             return false;     
         }
@@ -103,11 +119,8 @@ class Page extends Component implements HtmlPageInterface
         }
         $component = $this->render($name,$params,$language);
            
-        $html = $component->getHtmlCode();
-        $response->getBody()->write($html);
-
-        return $response;
-    }
+        return $component->getHtmlCode();
+    }   
 
     /**
      * Render page
