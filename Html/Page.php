@@ -298,16 +298,16 @@ class Page extends Component implements HtmlPageInterface
      *
      * @param string $path
      * @param boolean $full
-     * @param boolean $withLanguagePath
+     * @param string|null $language
      * @return string
      */
-    public static function getUrl($path = '', $full = false, $withLanguagePath = false)
+    public static function getUrl($path = '', $full = false, $language = null)
     {       
         $path = (substr($path,0,1) == "/") ? substr($path,1) : $path;      
         $url = ($full == true) ? Url::BASE_URL : BASE_PATH;        
         $url = ($url == "/") ? $url : $url . "/";       
 
-        return ($withLanguagePath == true) ? $url . Self::getLanguagePath($path) : $url . $path;
+        return (empty($language) == false && Self::getDefaultLanguage() != $language) ? Self::getLanguagePath($url . $path,$language) : $url . $path;
     }
 
     /**

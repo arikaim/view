@@ -109,6 +109,38 @@ class View implements ViewInterface
     }
 
     /**
+     * Add global variable
+     *
+     * @param string $name
+     * @param mixed $value
+     * @return void
+     */
+    public function addGlobal($name, $value)
+    {
+        $this->environment->addGlobal($name,$value);
+    }
+
+    /**
+     * Get components path
+     *
+     * @return string
+     */
+    public function getComponentsPath()
+    {
+        return $this->componentsPath;
+    }
+
+    /**
+     * Get templates path
+     *
+     * @return string
+     */
+    public function getTemplatesPath()
+    {
+        return $this->templatesPath;
+    }
+
+    /**
      * Get page properties
      *
      * @return Collection
