@@ -135,7 +135,8 @@ class Page extends Component implements HtmlPageInterface
         $this->setCurrent($name);
         $component = $this->createComponentData($name,$language);
         $params['component_url'] = $component->getUrl();
- 
+        $params['template_url'] = $component->getTemplateUrl(); 
+        
         $body = $this->getCode($component,$params);
         $indexPage = $this->getIndexFile($component);              
         $params = array_merge($params,['body' => $body, 'head' => $this->head->toArray()]);   

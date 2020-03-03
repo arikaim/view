@@ -119,7 +119,7 @@ class Component
 
         $componentData = new ComponentData($name,$this->basePath,$language,$this->optionsFile,$this->view->getViewPath(),$this->view->getExtensionsPath());
         if ($componentData->isValid() == false) {           
-            $componentData->setError("TEMPLATE_COMPONENT_NOT_FOUND",["name" => $name]);             
+            $componentData->setError("TEMPLATE_COMPONENT_NOT_FOUND",["full_component_name" => $name]);             
         }
         $componentData = ($withOptions == true) ? $this->processOptions($componentData) : $componentData;  
         

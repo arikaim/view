@@ -8,10 +8,8 @@ Html components system for Arikaim CMS
   * PHP 7.1
 
 
-#### Install
+#### Installation
 
-```bash
-
+```sh
 composer require arikaim/view
-
 ```
