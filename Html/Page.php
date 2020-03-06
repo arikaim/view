@@ -333,7 +333,7 @@ class Page extends Component implements HtmlPageInterface
         $files = $this->getPageIncludeOptions($component);
         $files = Arrays::setDefault($files,'library',[]);            
         $files = Arrays::setDefault($files,'loader',false);       
-            
+        
         $this->includeComponents($component);
      
         $this->view->getCache()->save("page.include.files." . $component->getName(),$files,3);
@@ -419,12 +419,15 @@ class Page extends Component implements HtmlPageInterface
             }        
             
             // include components
-            if (empty($options['components']) == false) {              
+            if (empty($options['components']) == false) { 
                 foreach ($options['components'] as $item) {     
                     $files = $this->getComponentFiles($item);  
-                  
-                    $options['js'][] = $files['js'][0]['url'];
-                    $options['css'][] = $files['css'][0]['url'];                       
+                    if (empty($files['js'][0]['url']) == false) {
+                        $options['js'][] = $files['js'][0]['url'];
+                    }
+                    if (empty($files['css'][0]['url']) == false) {
+                        $options['css'][] = $files['css'][0]['url']; 
+                    }                      
                 }    
             }
 
@@ -476,6 +479,7 @@ class Page extends Component implements HtmlPageInterface
     
         $options = Arrays::setDefault($options,'js',[]);  
         $options = Arrays::setDefault($options,'css',[]);   
+        $options = Arrays::setDefault($options,'components',null);
 
         $url = Url::getTemplateUrl($templateName);    
       
@@ -487,6 +491,19 @@ class Page extends Component implements HtmlPageInterface
             return ResourceLocator::getResourceUrl($value,$url . "/css/" . $value);         
         },$options['css']);
       
+        // include components
+        if (empty($options['components']) == false) { 
+            foreach ($options['components'] as $item) {     
+                $files = $this->getComponentFiles($item);  
+                if (empty($files['js'][0]['url']) == false) {
+                    $options['js'][] = $files['js'][0]['url'];
+                }
+                if (empty($files['css'][0]['url']) == false) {
+                    $options['css'][] = $files['css'][0]['url'];    
+                }                   
+            }    
+        }
+
         return $options;
     }
 
