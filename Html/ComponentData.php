@@ -889,7 +889,7 @@ class ComponentData implements ComponentDataInterface
                 $templatePath = "";      
         }
         $this->fullPath = $this->getComponentFullPath($this->type);
-        $this->filePath = $templatePath  . $path;  
+        $this->filePath = rtrim($templatePath,DIRECTORY_SEPARATOR) . $path;
     }
 
     /**

@@ -333,9 +333,9 @@ class Page extends Component implements HtmlPageInterface
         $files = $this->getPageIncludeOptions($component);
         $files = Arrays::setDefault($files,'library',[]);            
         $files = Arrays::setDefault($files,'loader',false);       
-              
+            
         $this->includeComponents($component);
-
+     
         $this->view->getCache()->save("page.include.files." . $component->getName(),$files,3);
         $this->view->properties()->set('template.files',$files);
         // include ui lib files                
@@ -389,7 +389,7 @@ class Page extends Component implements HtmlPageInterface
     {
         // from cache 
         $options = $this->view->getCache()->fetch("page.include.files." . $component->getName());
-        if (is_array($options) == true) {
+        if (is_array($options) == true) {          
             return $options;
         }
 
@@ -407,21 +407,32 @@ class Page extends Component implements HtmlPageInterface
             $options['js'] = array_map(function($value) use($url) {              
                 return $url . "/js/" . $value; 
             },$options['js']);
-    
+          
             $options['css'] = array_map(function($value) use($url) {
                 return $url . "/css/" . $value;
             },$options['css']);
 
             if (empty($options['template']) == false) {
-                $options = array_merge($options,$this->getTemplateIncludeOptions($options['template']));              
-            } elseif ($component->getType() == ComponentData::TEMPLATE_COMPONENT) {
-                $options = array_merge($options,$this->getTemplateIncludeOptions($component->getTemplateName())); 
-            }                  
+                $options = array_merge_recursive($this->getTemplateIncludeOptions($options['template']),$options);              
+            } elseif ($component->getType() == ComponentData::TEMPLATE_COMPONENT) {              
+                $options = array_merge_recursive($this->getTemplateIncludeOptions($component->getTemplateName()),$options);                 
+            }        
+            
+            // include components
+            if (empty($options['components']) == false) {              
+                foreach ($options['components'] as $item) {     
+                    $files = $this->getComponentFiles($item);  
+                  
+                    $options['js'][] = $files['js'][0]['url'];
+                    $options['css'][] = $files['css'][0]['url'];                       
+                }    
+            }
+
             // set loader from page.json
             if (isset($options['loader']) == true) {
                 Session::set('template.loader',$options['loader']);
             }
-           
+            
             return $options;
         }
 
@@ -437,15 +448,15 @@ class Page extends Component implements HtmlPageInterface
      */
     protected function includeComponents($component)
     {
-        // include component files
+       // include component files
         $components = $component->getOption('include/components',null);        
+    
         if (empty($components) == true) {
             return;
         }  
-       
+
         foreach ($components as $item) {                        
             $files = $this->getComponentFiles($item);      
-        
             $this->includeComponentFiles($files['js'],'js');
             $this->includeComponentFiles($files['css'],'css');              
         }      
