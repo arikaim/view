@@ -35,7 +35,7 @@ class Template
      * @return void
      */
     public static function getPrimary($default = Self::DEFAULT_TEMPLATE_NAME)
-    {       
+    {              
         return Session::get("primary.template",$default);
     }
 

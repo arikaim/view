@@ -22,6 +22,7 @@ use Arikaim\Core\Interfaces\View\HtmlPageInterface;
 use Arikaim\Core\View\Template\Tags\ComponentTagParser;
 use Arikaim\Core\View\Template\Tags\MdTagParser;
 use Arikaim\Core\Utils\File;
+use Arikaim\Core\View\Template\Template;
 
 /**
  *  Template engine functions, filters and tests.
@@ -116,7 +117,8 @@ class Extension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('getThemeFiles',[$this,'getThemeFiles']),
             new TwigFunction('getLibraryFiles',[$this,'getLibraryFiles']),
             new TwigFunction('getCurrentTheme',["Arikaim\\Core\\View\\Theme",'getCurrentTheme']),
-            
+            new TwigFunction('getPrimaryTemplate',[$this,'getPrimaryTemplate']),
+
             new TwigFunction('loadLibraryFile',[$this,'loadLibraryFile']),     
             new TwigFunction('loadComponentCssFile',[$this,'loadComponentCssFile']),  
             new TwigFunction('getLanguage',["Arikaim\\Core\\View\\Html\\Page","getLanguage"]),
@@ -235,6 +237,16 @@ class Extension extends AbstractExtension implements GlobalsInterface
         $value = (isset($GLOBALS[$name]) == true) ? $GLOBALS[$name] : $default;
 
         return $value;
+    }
+
+    /**
+     * Get current template
+     *
+     * @return string
+     */
+    public function getPrimaryTemplate()
+    {
+        return Template::getPrimary();
     }
 
     /**
