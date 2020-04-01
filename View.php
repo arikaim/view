@@ -109,6 +109,21 @@ class View implements ViewInterface
     }
 
     /**
+     * Create twig environment
+     *
+     * @param string $path
+     * @param array $settings
+     * @return Environment
+     */
+    public function createEnvironment($path, $settings = [])
+    {
+        $loader = new FilesystemLoader([$path]);
+        $environment = new Environment($loader,$settings);
+        
+        return $environment;
+    }
+
+    /**
      * Add global variable
      *
      * @param string $name
