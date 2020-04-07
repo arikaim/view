@@ -266,7 +266,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
     }
 
     /**
-     * Undocumented function
+     * Load component
      *
      * @param string $name
      * @param array $params

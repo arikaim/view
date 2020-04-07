@@ -75,15 +75,90 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
         $options = (isset($arguments[1]) == true) ? $arguments[1] : [];
 
         if (substr($name,0,2) == 'og') {
-            $name = substr($name,2);
+            $name = strtolower(substr($name,2));
             return $this->og($name,$value,$options);          
         }
         if (substr($name,0,7) == 'twitter') {
-            $name = substr($name,7);
+            $name = strtolower(substr($name,7));
             return $this->twitter($name,$value);
         }
 
         return $this->set($name,$value);      
+    }
+
+    /**
+     * Set meta title, description and keywords
+     *
+     * @param array $data
+     * @return PageHead
+     */
+    public function setMetaTags(array $data)
+    {
+        $this->set('title',$data['title']);
+        $this->set('description',$data['description']);
+        $this->set('keywords',$data['keywords']);
+        
+        return $this;
+    }
+
+    /**
+     * Apply meta tags if values are empty
+     *
+     * @param array $data
+     * @return void
+     */
+    public function applyDefaultMetaTags(array $data)
+    {
+        $this->applyDefault('title',$data);
+        $this->applyDefault('description',$data);
+        $this->applyDefault('keywords',$data);      
+    }
+
+    /**
+     * Apply item value if is empty in collection
+     *
+     * @param string $keyName
+     * @param array $data
+     * @return void
+     */
+    public function applyDefault($keyName, array $data)
+    {
+        if (empty($this->get($keyName)) == true) {
+            $value = (isset($data[$keyName]) == true) ? $data[$keyName] : null;
+            $this->set($keyName,$value);
+        }
+    }
+
+    /**
+     * Apply og property if value is not empty
+     *
+     * @param string $keyName
+     * @return PageHead
+     */
+    public function applyOgProperty($keyName)
+    {
+        $value = $this->get($keyName);
+        if (empty($value) == false) {
+            $this->og($keyName,$value);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Apply twitter property if value is not empty
+     *
+     * @param string $keyName
+     * @return PageHead
+     */
+    public function applyTwitterProperty($keyName)
+    {
+        $value = $this->get($keyName);
+        if (empty($value) == false) {
+            $this->twitter($keyName,$value);
+        }
+
+        return $this;
     }
 
     /**
@@ -187,7 +262,8 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
     protected function addProperty($key, $name, $value, $options = [])
     {
         $property = $this->createProperty($name,$value,$options);
-        array_push($this->data[$key],$property);
+        $this->data[$key][$name] = $property;
+       // array_push($this->data[$key],$property);
 
         return $this;
     }

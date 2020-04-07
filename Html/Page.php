@@ -138,8 +138,13 @@ class Page extends Component implements HtmlPageInterface
         $params['template_url'] = $component->getTemplateUrl(); 
         
         $body = $this->getCode($component,$params);
-        $indexPage = $this->getIndexFile($component);              
-        $params = array_merge($params,['body' => $body, 'head' => $this->head->toArray()]);   
+        $indexPage = $this->getIndexFile($component);     
+        
+        $params = array_merge($params,[
+            'body' => $body,
+            'head' => $this->head->toArray()
+        ]);   
+
         $component->setHtmlCode($this->view->fetch($indexPage,$params));
 
         return $component;
@@ -184,15 +189,20 @@ class Page extends Component implements HtmlPageInterface
         
         if (isset($properties['head']) == true) {
             $head = Text::renderMultiple($properties['head'],$this->head->getParams()); 
-            $this->head->replace($head); 
+            $this->head->applyDefaultMetaTags($head); 
+
             if (isset($head['og']) == true) {
-                $this->head->set('og',$head['og']);
-                $this->head->resolveProperties('og');
+                if (empty($this->head->get('og')) == true) {
+                    $this->head->set('og',$head['og']);
+                    $this->head->resolveProperties('og');
+                }                
             }
             if (isset($head['twitter']) == true) {
-                $this->head->set('twitter',$head['twitter']);
-                $this->head->resolveProperties('twitter');
-            }         
+                if (empty($this->head->get('twitter')) == true) {
+                    $this->head->set('twitter',$head['twitter']);
+                    $this->head->resolveProperties('twitter');
+                }               
+            }
         }
         $params = array_merge_recursive($params,(array)$properties);
 
