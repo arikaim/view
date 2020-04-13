@@ -63,6 +63,9 @@ class ResourceLocator
         }
 
         $selectorType = (empty($selectorType) == true) ? Self::getSelectorType($name) : $selectorType;
+        if (empty($selectorType) == true) {
+            return Self::UNKNOWN;
+        }
         $tokens = explode($selectorType,$name);  
 
         switch ($selectorType) {
@@ -112,11 +115,17 @@ class ResourceLocator
     public static function parse($name)
     {
         $selectorType = Self::getSelectorType($name);
-        $tokens = explode($selectorType,$name);  
+      
+        if (empty($selectorType) == true) {
+            $tokens[0] = $name;
+            $type = Self::UNKNOWN;
+        } else {
+            $tokens = explode($selectorType,$name); 
+            $type = Self::getType($name); 
+        } 
         $componentName = (isset($tokens[0]) == true) ? $tokens[0] : null;
         $path = (isset($tokens[1]) == true) ? $tokens[1] : null;
-        $type = Self::getType($name);
-
+        
         return [
             'path'           => $path,
             'component_name' => $componentName,
