@@ -115,6 +115,21 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
     }
 
     /**
+     * Set items value if not exist in collection
+     *
+     * @param array $items
+     * @return void
+     */
+    public function applyDefaultItems(array $items)
+    {
+        foreach ($items as $key => $value) {           
+            if (empty($this->get($key)) == true) {               
+                $this->set($key,$value);
+            }
+        }
+    } 
+
+    /**
      * Apply item value if is empty in collection
      *
      * @param string $keyName

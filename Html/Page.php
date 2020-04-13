@@ -188,9 +188,12 @@ class Page extends Component implements HtmlPageInterface
         $properties = $component->getProperties();
         
         if (isset($properties['head']) == true) {
-            $head = Text::renderMultiple($properties['head'],$this->head->getParams()); 
-            $this->head->applyDefaultMetaTags($head); 
+            $templateUrl = (isset($params['template_url']) == true) ? $params['template_url'] : '';
+            $this->head->param('template_url',$templateUrl);           
+            $head = Text::renderMultiple($properties['head'],$this->head->getParams());  
 
+            $this->head->applyDefaultMetaTags($head); 
+           
             if (isset($head['og']) == true) {
                 if (empty($this->head->get('og')) == true) {
                     $this->head->set('og',$head['og']);
@@ -203,6 +206,7 @@ class Page extends Component implements HtmlPageInterface
                     $this->head->resolveProperties('twitter');
                 }               
             }
+            $this->head->applyDefaultItems($head);
         }
         $params = array_merge_recursive($params,(array)$properties);
 
