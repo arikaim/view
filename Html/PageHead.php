@@ -150,9 +150,9 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param string $keyName
      * @return PageHead
      */
-    public function applyOgProperty($keyName)
+    public function applyOgProperty($keyName, $default = '')
     {
-        $value = $this->get($keyName);
+        $value = $this->get($keyName,$default);
         if (empty($value) == false) {
             $this->og($keyName,$value);
         }
@@ -166,9 +166,9 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param string $keyName
      * @return PageHead
      */
-    public function applyTwitterProperty($keyName)
+    public function applyTwitterProperty($keyName, $default = '')
     {
-        $value = $this->get($keyName);
+        $value = $this->get($keyName,$default);
         if (empty($value) == false) {
             $this->twitter($keyName,$value);
         }

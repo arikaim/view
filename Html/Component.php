@@ -359,7 +359,7 @@ class Component
      */
     public static function getLanguage() 
     {  
-        return Session::get('language',"en");
+        return Session::get('language',null);
     }
 
     /**
@@ -371,26 +371,5 @@ class Component
     public static function setLanguage($language) 
     {
         Session::set('language',$language);
-    }
-
-    /**
-     * Return default language
-     *
-     * @return string
-     */
-    public static function getDefaultLanguage() 
-    {  
-        return Session::get('default-language',"en");
-    }
-
-    /**
-     * Set default language
-     *
-     * @param string $language Language code
-     * @return void
-     */
-    public static function setDefaultLanguage($language) 
-    {
-        Session::set('default-language',$language);
     }
 }

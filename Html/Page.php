@@ -320,9 +320,13 @@ class Page extends Component implements HtmlPageInterface
     {       
         $path = (substr($path,0,1) == "/") ? substr($path,1) : $path;      
         $url = ($full == true) ? Url::BASE_URL : BASE_PATH;        
-        $url = ($url == "/") ? $url : $url . "/";       
+        $url = ($url == "/") ? $url : $url . "/"; 
+        $url .= $path;      
+        if (empty($language) == true) {
+            return $url;
+        }
 
-        return (empty($language) == false && Self::getDefaultLanguage() != $language) ? Self::getLanguagePath($url . $path,$language) : $url . $path;
+        return (Session::get('default.language') != $language) ? Self::getLanguagePath($url,$language) : $url;
     }
 
     /**
