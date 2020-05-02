@@ -105,20 +105,22 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * Apply meta tags if values are empty
      *
      * @param array $data
-     * @return void
+     * @return PageHead
      */
     public function applyDefaultMetaTags(array $data)
     {
         $this->applyDefault('title',$data);
         $this->applyDefault('description',$data);
-        $this->applyDefault('keywords',$data);      
+        $this->applyDefault('keywords',$data);    
+        
+        return $this;
     }
 
     /**
      * Set items value if not exist in collection
      *
      * @param array $items
-     * @return void
+     * @return PageHead
      */
     public function applyDefaultItems(array $items)
     {
@@ -127,6 +129,8 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
                 $this->set($key,$value);
             }
         }
+
+        return $this;
     } 
 
     /**
@@ -134,7 +138,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      *
      * @param string $keyName
      * @param array $data
-     * @return void
+     * @return PageHead
      */
     public function applyDefault($keyName, array $data)
     {
@@ -142,6 +146,8 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
             $value = (isset($data[$keyName]) == true) ? $data[$keyName] : null;
             $this->set($keyName,$value);
         }
+
+        return $this;
     }
 
     /**
@@ -191,6 +197,21 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
         }
        
         return $this->set('keywords',Arrays::toString($words,','));     
+    }
+
+    /**
+     * Set keywords if field is empty
+     *
+     * @param array ...$keywords
+     * @return PageHead
+     */
+    public function applyDefaultKeywors(...$keywords)
+    {
+        if (empty($this->get('keywords')) == true) {
+            $this->keywords(...$keywords);
+        }
+
+        return $this;
     }
 
     /**
