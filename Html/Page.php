@@ -471,13 +471,12 @@ class Page extends Component implements HtmlPageInterface
     {
        // include component files
         $components = $component->getOption('include/components',null);        
-    
         if (empty($components) == true) {
             return;
         }  
 
         foreach ($components as $item) {                        
-            $files = $this->getComponentFiles($item);      
+            $files = $this->getComponentFiles($item);  
             $this->includeComponentFiles($files['js'],'js');
             $this->includeComponentFiles($files['css'],'css');              
         }      
@@ -513,6 +512,7 @@ class Page extends Component implements HtmlPageInterface
         if (empty($options['components']) == false) { 
             foreach ($options['components'] as $item) {     
                 $files = $this->getComponentFiles($item);  
+
                 if (empty($files['js'][0]['url']) == false) {
                     $options['js'][] = $files['js'][0]['url'];
                 }
@@ -521,7 +521,7 @@ class Page extends Component implements HtmlPageInterface
                 }                   
             }    
         }
-
+      
         return $options;
     }
 
