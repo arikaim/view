@@ -99,4 +99,54 @@ interface ComponentDataInterface
      * @return ComponentDataInterface|false
     */
     public function createComponent($name = null);
+
+    /**
+     * Add files
+     *
+     * @param string|array $files
+     * @param string $fileType
+     * @return bool
+     */
+    public function addFiles($files, $fileType);
+
+    /**
+     * Get option
+     *
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public function getOption($name, $default = null);
+
+    /**
+     * Get template file
+     *
+     * @return string|false
+     */
+    public function getTemplateFile();
+
+    /**
+     * Set html code
+     *
+     * @param string $code
+     * @return void
+     */
+    public function setHtmlCode($code);
+
+    /**
+     * Get root component name
+     *
+     * @return string
+     */
+    public function getRootName();
+
+    /**
+     * Set error
+     *
+     * @param string $code
+     * @param array $params
+     * @param string|null $msssage
+     * @return void
+     */
+    public function setError($code, $params = [], $msssage = null);
 }

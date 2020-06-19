@@ -184,7 +184,7 @@ class Component
     /**
      * Procss component options
      *
-     * @param ComponentDataInterface $component
+     * @param Arikaim\Core\View\Interfaces\ComponentDataInterface $component
      * @return Arikaim\Core\View\Interfaces\ComponentDataInterface
      */
     public function processOptions(ComponentDataInterface $component)
@@ -213,8 +213,8 @@ class Component
             return $component;
         }
        
-        $component = Self::applyIncludeOption($component,'include/js','js');
-        $component = Self::applyIncludeOption($component,'include/css','css');
+        $component = $this->applyIncludeOption($component,'include/js','js');
+        $component = $this->applyIncludeOption($component,'include/css','css');
 
         // mobile only option
         $mobileOnly = $component->getOption('mobile-only');      
@@ -242,7 +242,7 @@ class Component
         if (empty($option) == false) {
             if (is_array($option) == true) {              
                 // include component files
-                foreach ($option as $item) {                      
+                foreach ($option as $item) {                                       
                     $files = $this->resolveIncludeFile($item,$fileType);
                     $component->addFiles($files,$fileType);
                 }
@@ -270,8 +270,8 @@ class Component
             $tokens[0] = 'external';
             $params = (isset($tokens[1]) == true) ? $tokens : [];                           
             $files = [['url' => $url,'params' => $params]];       
-        } else {
-            $files = $this->getComponentFiles($includeFile,$fileType);
+        } else {          
+            $files = $this->getComponentFiles($includeFile,$fileType);         
         }
 
         return $files;

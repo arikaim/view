@@ -225,7 +225,7 @@ class ComponentData implements ComponentDataInterface
     }
 
     /**
-     * Gte root component name
+     * Get root component name
      *
      * @return string
      */
@@ -532,7 +532,7 @@ class ComponentData implements ComponentDataInterface
     /**
      * Add files
      *
-     * @param string $files
+     * @param string|array $files
      * @param string $fileType
      * @return bool
      */
