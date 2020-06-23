@@ -536,9 +536,13 @@ class Page extends Component implements HtmlPageInterface
         $frameworks = [];
         $includeLib = [];
 
-        foreach ($libraryList as $libraryName) {
+        foreach ($libraryList as $libraryItem) {
+            $nameTokens = explode(":",$libraryItem);
+            $libraryName = (isset($nameTokens[0]) == true) ? $nameTokens[0] : $libraryItem;
+            $libraryVersion = (isset($nameTokens[1]) == true) ? $nameTokens[1] : null;
+
             $library = $this->packageFactroy->createPackage('library',$libraryName);
-            $files = $library->getFiles();       
+            $files = $library->getFiles($libraryVersion);       
             $params = $library->resolveParams();
 
             foreach($files as $file) {
