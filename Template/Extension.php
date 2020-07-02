@@ -113,10 +113,8 @@ class Extension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('url',["Arikaim\\Core\\View\\Html\\Page",'getUrl']),        
             new TwigFunction('currentUrl',["Arikaim\\Core\\View\\Html\\Page",'getCurrentUrl']),
             // template
-            new TwigFunction('getTemplateFiles',[$this,'getTemplateFiles']),
-            new TwigFunction('getThemeFiles',[$this,'getThemeFiles']),
-            new TwigFunction('getLibraryFiles',[$this,'getLibraryFiles']),
-            new TwigFunction('getCurrentTheme',["Arikaim\\Core\\View\\Theme",'getCurrentTheme']),
+            new TwigFunction('getTemplateFiles',[$this,'getTemplateFiles']),          
+            new TwigFunction('getLibraryFiles',[$this,'getLibraryFiles']),           
             new TwigFunction('getPrimaryTemplate',[$this,'getPrimaryTemplate']),
 
             new TwigFunction('loadLibraryFile',[$this,'loadLibraryFile']),     
@@ -287,19 +285,14 @@ class Extension extends AbstractExtension implements GlobalsInterface
         return $this->page->getPageFiles();        
     }
 
-    public function getTemplateFiles()
-    {
-        return $this->page->getTemplateFiles();       
-    }
-
     /**
-     * Return theme files
+     * Get template files list
      *
      * @return array
      */
-    public function getThemeFiles()
-    {      
-        return $this->page->getThemeFiles();
+    public function getTemplateFiles()
+    {
+        return $this->page->getTemplateFiles();       
     }
 
     /**

@@ -278,7 +278,7 @@ class Component
     }
 
     /**
-     * Return compoenent files
+     * Return component files
      *
      * @param string $name
      * @param string $fileType
@@ -286,9 +286,16 @@ class Component
      */
     public function getComponentFiles($name, $fileType = null)
     {        
+        $files = $this->view->getCache()->fetch("component.files." . $name);
+        if (is_array($files) == true) {
+            return $files;
+        }
         $componentData = new ComponentData($name,'components',null,'component.json',$this->view->getViewPath(),$this->view->getExtensionsPath());
         
-        return (is_object($componentData) == true) ? $componentData->getFiles($fileType) : ['js' => [],'css' => []];
+        $files = (is_object($componentData) == true) ? $componentData->getFiles($fileType) : ['js' => [],'css' => []];
+        $this->view->getCache()->save("component.files." . $name,$files,10);
+
+        return $files;
     }
 
     /**
@@ -334,6 +341,7 @@ class Component
         if (empty($files) == true) {
             return false;
         }       
+
         foreach ($files as $item) {             
             $this->view->properties()->prepend('include.components.files',$item,$key);                    
         }

@@ -16,13 +16,13 @@ use Arikaim\Core\View\Template\Template;
 use Arikaim\Core\Collection\Collection;
 use Arikaim\Core\Collection\Arrays;
 use Arikaim\Core\View\Html\PageHead;
-use Arikaim\Core\View\Theme;
 use Arikaim\Core\View\Html\ResourceLocator;
 use Arikaim\Core\Utils\File;
 use Arikaim\Core\Utils\Utils;
 use Arikaim\Core\Utils\Text;
 use Arikaim\Core\Http\Session;
 use Arikaim\Core\Http\Url;
+
 use Arikaim\Core\View\Interfaces\ComponentDataInterface;
 use Arikaim\Core\Interfaces\View\HtmlPageInterface;
 use Arikaim\Core\Interfaces\View\ViewInterface;
@@ -105,7 +105,7 @@ class Page extends Component implements HtmlPageInterface
      * Get page html code
      *
      * @param string $name
-     * @param array $params
+     * @param array|object $params
      * @param string|null $language
      * @return string
      */
@@ -354,16 +354,11 @@ class Page extends Component implements HtmlPageInterface
         
         $this->includeComponents($component);
      
-        $this->view->getCache()->save("page.include.files." . $component->getName(),$files,3);
+        $this->view->getCache()->save("page.include.files." . $component->getName(),$files,10);
         $this->view->properties()->set('template.files',$files);
         // include ui lib files                
         $this->includeLibraryFiles($files['library']);  
       
-        // include template files               
-        if (empty($files['template']) == false) {
-            $this->includeThemeFiles($files['template']);  
-        }
-       
         return true;
     }
 
@@ -375,16 +370,6 @@ class Page extends Component implements HtmlPageInterface
     public function getTemplateFiles()
     {
         return $this->view->properties()->get('template.files');
-    }
-
-    /**
-     * Return theme files
-     *
-     * @return array
-     */
-    public function getThemeFiles()
-    {      
-        return $this->view->properties()->get('template.theme');
     }
 
     /**
@@ -462,7 +447,7 @@ class Page extends Component implements HtmlPageInterface
     }
 
     /**
-     * Include components fiels set in page.json include/components
+     * Include components files set in page.json include/components
      *
      * @param Component $component
      * @return void
@@ -533,6 +518,12 @@ class Page extends Component implements HtmlPageInterface
      */
     public function includeLibraryFiles(array $libraryList)
     {          
+        $libraryFiles = $this->view->getCache()->fetch("ui.library.files");        
+        if (is_array($libraryFiles) == true) {
+            $this->view->properties()->set('ui.library.files',$libraryFiles);   
+            return true;
+        }
+
         $frameworks = [];
         $includeLib = [];
 
@@ -561,62 +552,13 @@ class Page extends Component implements HtmlPageInterface
                 array_push($frameworks,$libraryName);
             }
         }
-
+        // save to cache
+        $this->view->getCache()->save("ui.library.files",$includeLib,10);
+        
         $this->view->properties()->set('ui.library.files',$includeLib);       
         Session::set("ui.included.libraries",json_encode($libraryList));
         Session::set("ui.included.frameworks",json_encode($frameworks));
 
         return true;
-    }
-
-    /**
-     * Include theme files
-     *
-     * @param string $templateName
-     * @return bool
-     */
-    public function includeThemeFiles($templateName)
-    {  
-        // cehck cache
-        $fileUrl = $this->view->getCache()->fetch('template.theme.file');
-        if (empty($fileUrl) == false) {
-            $this->view->properties()->add('template.theme',$fileUrl);
-            return true;
-        }
-      
-        $properties = $this->packageFactroy->createPackage('template',$templateName)->getProperties();
-        $defaultTheme = $properties->get("default-theme",null);
-        $currentTheme = Theme::getCurrentTheme($templateName,$defaultTheme);
-
-        if (empty($currentTheme) == true) {
-            return true;
-        } 
-        
-        $library = $properties->getByPath("themes/$currentTheme/library","");
-        $libraryPackage = $this->packageFactroy->createPackage('library',$library);
-        // get theme from other template
-        $template = $properties->getByPath("themes/$currentTheme/template","");
-        $templateName = (empty($template) == false) ? $template : $templateName;
-           
-        if (empty($library) == false) {
-            // load theme from library           
-            $file = $libraryPackage->getThemeFile($currentTheme);
-            $fileUrl = Url::getLibraryThemeFileUrl($library,$file,$currentTheme);
-        } else {
-            // load from template
-            $file = $properties->getByPath("themes/$currentTheme/file","");
-            $fileUrl = Url::getThemeFileUrl($templateName,$currentTheme,$file);
-        }
-        if (empty($fileUrl) == false) {
-            $theme['name'] = $currentTheme;
-            $theme['file'] = $file;
-            $this->view->properties()->add('template.theme',$fileUrl);
-            // saev to cache
-            $this->view->getCache()->save('template.theme.file',$fileUrl,3);
-
-            return true;
-        }
-
-        return false;
     }
 }
