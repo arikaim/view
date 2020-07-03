@@ -17,16 +17,18 @@ use Arikaim\Core\Collection\Collection;
 use Arikaim\Core\Collection\Arrays;
 use Arikaim\Core\View\Html\PageHead;
 use Arikaim\Core\View\Html\ResourceLocator;
+use Arikaim\Core\Packages\PackageManager;
 use Arikaim\Core\Utils\File;
 use Arikaim\Core\Utils\Utils;
 use Arikaim\Core\Utils\Text;
+use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Http\Session;
 use Arikaim\Core\Http\Url;
 
 use Arikaim\Core\View\Interfaces\ComponentDataInterface;
 use Arikaim\Core\Interfaces\View\HtmlPageInterface;
 use Arikaim\Core\Interfaces\View\ViewInterface;
-use Arikaim\Core\Interfaces\Packages\PackageFactoryInterface;
+use Arikaim\Core\Interfaces\OptionsInterface;
 
 /**
  * Html page
@@ -41,22 +43,29 @@ class Page extends Component implements HtmlPageInterface
     protected $head;
     
     /**
-     * Package factory
+     * Options
      *
-     * @var PackageFactoryInterface
+     * @var OptionsInterface
      */
-    protected $packageFactroy;
+    protected $options;
+
+    /**
+     * Current template name
+     *
+     * @var string
+     */
+    protected $templateName;
 
     /**
      * Constructor
      * 
      * @param ViewInterface $view
      */
-    public function __construct(ViewInterface $view, PackageFactoryInterface $packageFactroy, $params = [], $language = null, $basePath = 'pages', $withOptions = true) 
+    public function __construct(ViewInterface $view, $options, $params = [], $language = null, $basePath = 'pages', $withOptions = true) 
     {  
         parent::__construct($view,null,$params,$language,$basePath,'page.json',$withOptions);
 
-        $this->packageFactroy = $packageFactroy;       
+        $this->options = $options;       
         $this->head = new PageHead();
     }
 
@@ -128,12 +137,19 @@ class Page extends Component implements HtmlPageInterface
      * @param string $name
      * @param array $params
      * @param string|null $language
+     * @param boolean $useCache
      * @return ComponentDataInterface
     */
-    public function render($name, $params = [], $language = null)
+    public function render($name, $params = [], $language = null, $useCache = true)
     { 
         $this->setCurrent($name);
-        $component = $this->createComponentData($name,$language);
+        $this->templateName = ($name == 'system:admin') ? Template::SYSTEM_TEMPLATE_NAME : Template::getPrimary();
+        
+        if ($useCache == true) {
+            $component = $this->view->getCache()->fetch("html.page." . $name .".$language");
+        }
+       
+        $component = (empty($component) == true) ? $this->createComponentData($name,$language) : $component;
         $params['component_url'] = $component->getUrl();
         $params['template_url'] = $component->getTemplateUrl(); 
         
@@ -146,6 +162,9 @@ class Page extends Component implements HtmlPageInterface
         ]);   
 
         $component->setHtmlCode($this->view->fetch($indexPage,$params));
+
+        // save to cache         
+        $this->view->getCache()->save("html.page." . $name .".$language",$component,1);
 
         return $component;
     }
@@ -354,7 +373,7 @@ class Page extends Component implements HtmlPageInterface
         
         $this->includeComponents($component);
      
-        $this->view->getCache()->save("page.include.files." . $component->getName(),$files,10);
+        $this->view->getCache()->save("page.include.files." . $component->getName(),$files,1);
         $this->view->properties()->set('template.files',$files);
         // include ui lib files                
         $this->includeLibraryFiles($files['library']);  
@@ -475,8 +494,13 @@ class Page extends Component implements HtmlPageInterface
      */
     public function getTemplateIncludeOptions($templateName)
     {
-        $templateOptions = $this->packageFactroy->createPackage('template',$templateName)->getProperties();
+        $options = $this->view->getCache()->fetch("template.include.files." . $templateName);
+        if (is_array($options) == true) {          
+            return $options;
+        }
 
+        $templateOptions = PackageManager::loadPackageProperties($templateName,Path::TEMPLATES_PATH);
+       
         $options = $templateOptions->getByPath("include",[]);
     
         $options = Arrays::setDefault($options,'js',[]);  
@@ -506,8 +530,50 @@ class Page extends Component implements HtmlPageInterface
                 }                   
             }    
         }
-      
+        $this->view->getCache()->save("template.include.files." . $templateName,$options,1);
+        
         return $options;
+    }
+
+    /**
+     * Return library properties
+     *
+     * @param string|null $version
+     * @return Collection
+     */
+    public function getLibraryProperties($name, $version = null)
+    {
+        $properties = PackageManager::loadPackageProperties($name,Path::LIBRARY_PATH);
+       
+        if (empty($version) == true) {
+            $properties['files'] = $properties->get('files',[]);
+            return $properties;
+        }
+        $versions = $properties->get('versions',[]);
+        $properties['files'] = (isset($versions[$version]) == true) ? $versions[$version]['files'] : $properties->get('files',[]);
+
+        return $properties;
+    }
+
+    /**
+     * Resolve library params
+     *
+     * @param Collection $properties
+     * @return array
+     */
+    public function resolveLibraryParams($properties)
+    {      
+        $params = $properties->get('params',[]);
+        $vars = [
+            'domian'    => DOMAIN,
+            'base_url'  => Url::BASE_URL
+        ];
+
+        $options = $this->options->get('library.params',[]);
+        $libraryParams = (isset($options[$properties['name']]) == true) ? $options[$properties['name']] : [];
+        $vars = array_merge($vars,$libraryParams);
+
+        return Text::renderMultiple($params,$vars);    
     }
 
     /**
@@ -518,7 +584,7 @@ class Page extends Component implements HtmlPageInterface
      */
     public function includeLibraryFiles(array $libraryList)
     {          
-        $libraryFiles = $this->view->getCache()->fetch("ui.library.files");        
+        $libraryFiles = $this->view->getCache()->fetch("ui.library.files." . $this->templateName);        
         if (is_array($libraryFiles) == true) {
             $this->view->properties()->set('ui.library.files',$libraryFiles);   
             return true;
@@ -532,28 +598,27 @@ class Page extends Component implements HtmlPageInterface
             $libraryName = (isset($nameTokens[0]) == true) ? $nameTokens[0] : $libraryItem;
             $libraryVersion = (isset($nameTokens[1]) == true) ? $nameTokens[1] : null;
 
-            $library = $this->packageFactroy->createPackage('library',$libraryName);
-            $files = $library->getFiles($libraryVersion);       
-            $params = $library->resolveParams();
+            $properties = $this->getLibraryProperties($libraryName,$libraryVersion);            
+            $params = $this->resolveLibraryParams($properties);
 
-            foreach($files as $file) {
+            foreach($properties->get('files') as $file) {
                 $libraryFile = $this->view->getViewPath() . 'library' . DIRECTORY_SEPARATOR . $libraryName . DIRECTORY_SEPARATOR . $file;
                 $item = [
                     'file'        => (Utils::isValidUrl($file) == true) ? $file : Url::getLibraryFileUrl($libraryName,$file),
                     'type'        => File::getExtension($libraryFile),
                     'params'      => $params,
                     'library'     => $libraryName,
-                    'async'       => $library->getProperties()->get('async',false),
-                    'crossorigin' => $library->getProperties()->get('crossorigin',null)
+                    'async'       => $properties->get('async',false),
+                    'crossorigin' => $properties->get('crossorigin',null)
                 ];
                 array_push($includeLib,$item);
             }           
-            if ($library->isFramework() == true) {
+            if ($properties->get('framework',false) == true) {
                 array_push($frameworks,$libraryName);
             }
         }
         // save to cache
-        $this->view->getCache()->save("ui.library.files",$includeLib,10);
+        $this->view->getCache()->save("ui.library.files." . $this->templateName,$includeLib,1);
         
         $this->view->properties()->set('ui.library.files',$includeLib);       
         Session::set("ui.included.libraries",json_encode($libraryList));

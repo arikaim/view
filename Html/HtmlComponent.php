@@ -11,6 +11,7 @@ namespace Arikaim\Core\View\Html;
 
 use Arikaim\Core\Collection\Arrays;
 use Arikaim\Core\View\Html\Component;
+use Arikaim\Core\View\Html\ComponentData;
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
 
 /**
@@ -34,11 +35,12 @@ class HtmlComponent extends Component implements HtmlComponentInterface
     /**
      * Load component from template
      *
+     * @param boolean $useCache
      * @return string
      */
-    public function load()
+    public function load($useCache = true)
     {      
-        $component = $this->render($this->name,$this->params,$this->language);
+        $component = $this->render($this->name,$this->params,$this->language,true,$useCache);
         if ($component == null) {
             if (Arrays::getDefaultValue($this->params,'show_error') !== false) {              
                 return $this->getErrorMessage('Not valid component name ' .  $this->name);
@@ -85,14 +87,15 @@ class HtmlComponent extends Component implements HtmlComponentInterface
         $params = Arrays::merge($component->getProperties(),$params);
         $component->setHtmlCode("");  
         if ($component->getOption('render') !== false) {      
-
             $component = $this->fetch($component,$params);
             // include files
             $this->includeComponentFiles($component->getFiles('js'),'js');
             $this->includeComponentFiles($component->getFiles('css'),'css');
         }
         $this->view->getEnvironment()->addGlobal('current_component_name',$component->getName());
-
+        // save to cache         
+        $this->view->getCache()->save("html.component." . $component->getFullName() . "." . $component->getLanguage(),$component,1);
+      
         return $component;
     }
 
@@ -103,11 +106,16 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * @param array $params
      * @param string|null $language
      * @param boolean $withOptions
+     * @param boolean $useCache
      * @return ComponentData
      */
-    public function render($name, $params = [], $language = null, $withOptions = true) 
+    public function render($name, $params = [], $language = null, $withOptions = true, $useCache = true) 
     {    
-        $component = $this->createComponentData($name,$language,$withOptions);
+        if ($useCache == true) {        
+            $component = $this->view->getCache()->fetch("html.component." . $name . ".$language");
+        }
+       
+        $component = (empty($component) == true) ? $this->createComponentData($name,$language,$withOptions) : $component;
 
         return $this->renderComponentData($component,$params);
     }

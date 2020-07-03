@@ -36,6 +36,13 @@ class ComponentData implements ComponentDataInterface
     protected $name;
 
     /**
+     * Component full name
+     *
+     * @var string
+     */
+    protected $fullName;
+
+    /**
      * Template or extension name
      *
      * @var string
@@ -169,9 +176,10 @@ class ComponentData implements ComponentDataInterface
      * @param string $language
      * @param string $optionsFile
      */
-    public function __construct($name, $basePath, $language, $optionsFile, $viewPath, $extensionsPath, $defaultFramework = 'fomantic') 
+    public function __construct($name, $basePath, $language = 'en', $optionsFile = null, $viewPath = null, $extensionsPath = null, $defaultFramework = 'fomantic') 
     {
         $this->selectorType = null;
+        $this->fullName = $name;
         $this->language = $language;
         $this->optionsFile = $optionsFile;
         $this->basePath = $basePath;
@@ -271,6 +279,16 @@ class ComponentData implements ComponentDataInterface
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * Get component full name
+     *
+     * @return string
+     */
+    public function getFullName()
+    {
+        return $this->fullName;
     }
 
     /**
@@ -703,6 +721,22 @@ class ComponentData implements ComponentDataInterface
     public function setOptionsFileName($fileName)
     {
         $this->files['options']['file_name'] = $fileName;
+    }
+
+    /**
+     * Init component from array
+     *
+     * @param array $componentData
+     * @return ComponentData
+     */
+    public static function createFromArray(array $data)
+    {
+        $component = new Self($data['name'],$data['basePath']);
+        foreach($data as $key => $value) {
+            $component->{$key} = $value;
+        }
+
+        return $component;
     }
 
     /**

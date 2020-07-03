@@ -272,7 +272,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
      */
     public function loadComponent($name, $params = [])
     {
-        return $this->page->createHtmlComponent($name,$params)->load();
+        return $this->page->createHtmlComponent($name,$params)->load(false);
     }
 
     /**
