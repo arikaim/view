@@ -377,7 +377,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
      */
     public function hasAccess($name, $type = null, $authId = null)
     {
-        return $this->access->hasAccess($name,$type);
+        return $this->access->hasAccess($name,$type, $authId);
     }
 
     /**
