@@ -151,11 +151,12 @@ class Component
      * Check auth and permissions access
      *
      * @param ComponentDataInterface $component       
-     * @return boolean
+     * @return boolean|null
      */
     public function checkAuthOption(ComponentDataInterface $component)
     {
-        $auth = $component->getOption('access/auth',null);      
+        $auth = $component->getOption('access/auth',null);   
+    
         if (strtolower($auth) == 'none') {
             return true;
         }
@@ -191,9 +192,10 @@ class Component
     {         
         // check auth access 
         $authAccess = $this->checkAuthOption($component);
-        if ($authAccess == null) {
+
+        if ($authAccess === null) {
             // check root component
-            $rootComponent = $component->createComponent($component->getRootName());
+            $rootComponent = $component->createComponent($component->getRootName());           
             $authAccess = (is_object($rootComponent) == true) ? $this->checkAuthOption($rootComponent) : true;               
         }
         if ($authAccess === false) {

@@ -91,7 +91,8 @@ class HtmlComponent extends Component implements HtmlComponentInterface
             // include files
             $this->includeComponentFiles($component->getFiles('js'),'js');
             $this->includeComponentFiles($component->getFiles('css'),'css');
-        }
+        }        
+
         $this->view->getEnvironment()->addGlobal('current_component_name',$component->getName());
         // save to cache         
         $this->view->getCache()->save("html.component." . $component->getFullName() . "." . $component->getLanguage(),$component,1);

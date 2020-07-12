@@ -241,7 +241,7 @@ class ComponentData implements ComponentDataInterface
     {
         $tokens = explode('/',$this->path);
 
-        return $this->templateName . $this->selectorType . "." . $tokens[0];
+        return $this->templateName . $this->selectorType . $tokens[0];
     }
 
     /**
@@ -877,8 +877,8 @@ class ComponentData implements ComponentDataInterface
      * @return Collection
      */
     public function loadOptions()
-    {       
-        return Collection::createFromFile($this->getOptionsFileName());               
+    {         
+        return Collection::createFromFile($this->getOptionsFileName());            
     }
 
     /**
