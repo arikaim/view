@@ -181,7 +181,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
     public function getTests() 
     {
         $items = $this->cache->fetch('twig.tests');
-        if (is_array($items) == true) {
+        if (\is_array($items) == true) {
             return $items;
         }
         $items = [

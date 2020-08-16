@@ -473,7 +473,7 @@ class Page extends Component implements HtmlPageInterface
      */
     protected function includeComponents($component)
     {
-       // include component files
+        // include component files
         $components = $component->getOption('include/components',null);        
         if (empty($components) == true) {
             return;
@@ -481,6 +481,7 @@ class Page extends Component implements HtmlPageInterface
 
         foreach ($components as $item) {                        
             $files = $this->getComponentFiles($item);  
+
             $this->includeComponentFiles($files['js'],'js');
             $this->includeComponentFiles($files['css'],'css');              
         }      

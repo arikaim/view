@@ -295,6 +295,9 @@ class Component
         $componentData = new ComponentData($name,'components',null,'component.json',$this->view->getViewPath(),$this->view->getExtensionsPath());
         
         $files = (is_object($componentData) == true) ? $componentData->getFiles($fileType) : ['js' => [],'css' => []];
+        $files['js'] = (isset($files['js']) == true) ? $files['js'] : [];
+        $files['css'] = (isset($files['css']) == true) ? $files['css'] : [];
+
         $this->view->getCache()->save("component.files." . $name,$files,10);
 
         return $files;

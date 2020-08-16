@@ -27,8 +27,8 @@ class Filters
      */
     public static function is($value, $var2, $returnValue)
     {
-        if (is_array($value) == true) {
-            if (in_array($value,$var2) == true) {
+        if (\is_array($value) == true) {
+            if (\in_array($value,$var2) == true) {
                 return $returnValue;
             }
         }
@@ -46,7 +46,7 @@ class Filters
      */
     public static function dump($value)
     {
-        return (is_array($value) == true) ? print_r($value) : var_dump($value);
+        return (\is_array($value) == true) ? \print_r($value) : \var_dump($value);
     }
 
     /**
@@ -69,9 +69,9 @@ class Filters
      * @param string $label
      * @return string
      */
-    public static function sliceLabel($text, $size, $label = '...')
+    public static function sliceLabel($text, $size = 30, $label = '...')
     {
-        return (strlen($text) > $size) ? substr($text,0,$size) . $label : $text;          
+        return (\strlen($text) > $size) ? \substr($text,0,$size) . $label : $text;          
     }
 
     /**
@@ -83,10 +83,10 @@ class Filters
      */
     public static function convertToString($value, $separator = " ")
     {
-        if (is_bool($value) === true) {
+        if (\is_bool($value) === true) {
             return ($value === true) ? 'true' : 'false';
         }  
-        if (is_array($value) === true) {    
+        if (\is_array($value) === true) {    
             return Arrays::toString($value,$separator);
         }
         
@@ -103,6 +103,6 @@ class Filters
      */
     public static function attr($value, $name = null, $default = null)
     {      
-        return (is_array($value) == true) ? Html::getAttributes($value) : Html::attr($value,$name,$default);
+        return (\is_array($value) == true) ? Html::getAttributes($value) : Html::attr($value,$name,$default);
     }
 }
