@@ -346,8 +346,10 @@ class Component
             return false;
         }       
 
-        foreach ($files as $item) {             
-            $this->view->properties()->prepend('include.components.files',$item,$key);                    
+        foreach ($files as $item) {          
+            if (empty($item['url']) == false) {
+                $this->view->properties()->prepend('include.components.files',$item,$key); 
+            }                              
         }
 
         return true;
