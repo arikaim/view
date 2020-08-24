@@ -105,7 +105,11 @@ class View implements ViewInterface
         $this->loader = $this->createLoader($paths);  
         $this->cache = $cache;      
         $this->environment = new Environment($this->loader,$settings);
+        
         $this->environment->addGlobal('current_component_name','');
+        if (isset($settings['demo_mode']) == true) {
+            $this->environment->addGlobal('demo_mode',$settings['demo_mode']);
+        }
     }
 
     /**
