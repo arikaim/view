@@ -149,4 +149,53 @@ interface ComponentDataInterface
      * @return void
      */
     public function setError($code, $params = [], $msssage = null);
+
+    /**
+     * Clear content
+     *
+     * @return void
+     */
+    public function clearContent();    
+
+    /**
+     * Get template url
+     *
+     * @return string|false
+     */
+    public function getTemplateUrl();
+
+    /**
+     * Get component full name
+     *
+     * @return string
+     */
+    public function getFullName();
+
+    /**
+     * Load properties json file
+     *
+     * @return Collection
+     */
+    public function loadProperties();
+
+    /**
+     * Get template or extension name
+     *
+     * @return string
+     */
+    public function getTemplateName();
+
+    /**
+     * Return root component name
+     *
+     * @return string
+     */
+    public function getRootComponentPath();
+
+    /**
+     * Return base path
+     *
+     * @return string
+     */
+    public function getBasePath();    
 }

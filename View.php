@@ -292,7 +292,7 @@ class View implements ViewInterface
      */
     private function createLoader($paths)
     {
-        $paths = (is_array($paths) == false) ? $paths = [$paths] : $paths;
+        $paths = (\is_array($paths) == false) ? $paths = [$paths] : $paths;
         
         return new FilesystemLoader($paths);
     }

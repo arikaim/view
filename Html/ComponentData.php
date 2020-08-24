@@ -213,9 +213,9 @@ class ComponentData implements ComponentDataInterface
         if (empty($this->path) == true) {
             return false;
         }
-        $tokens = explode('/',$this->path);
+        $tokens = \explode('/',$this->path);
 
-        return (count($tokens) > 0);
+        return (\count($tokens) > 0);
     }
 
     /**
@@ -225,8 +225,8 @@ class ComponentData implements ComponentDataInterface
      */
     public function getParentName()
     {
-        $tokens = explode('/',$this->path);
-        $count = count($tokens) - 1;
+        $tokens = \explode('/',$this->path);
+        $count = \count($tokens) - 1;
         $path = $tokens[$count];
 
         return $this->templateName . $this->selectorType . $path;
@@ -239,7 +239,7 @@ class ComponentData implements ComponentDataInterface
      */
     public function getRootName()
     {
-        $tokens = explode('/',$this->path);
+        $tokens = \explode('/',$this->path);
 
         return $this->templateName . $this->selectorType . $tokens[0];
     }
@@ -258,7 +258,7 @@ class ComponentData implements ComponentDataInterface
         $name = (empty($name) == true) ? $this->getParentName() : $name;
         $child = new Self($name,$this->basePath,$this->language,$this->optionsFile,$this->viewPath,$this->extensionsPath,$this->defaultFramework);
 
-        return (is_object($child) == true) ? $child : false;
+        return (\is_object($child) == true) ? $child : false;
     }
 
     /**
@@ -346,7 +346,7 @@ class ComponentData implements ComponentDataInterface
     public function hasProperties()
     {
         if (isset($this->files['properties']) == true) {
-            return (count($this->files['properties']) > 0) ? true : false;
+            return (\count($this->files['properties']) > 0) ? true : false;
         }
 
         return false;
@@ -365,7 +365,7 @@ class ComponentData implements ComponentDataInterface
         }
 
         if (isset($this->files[$fileType]) == true) {
-            return (count($this->files[$fileType]) > 0) ? true : false;
+            return (\count($this->files[$fileType]) > 0) ? true : false;
         }
 
         return false;
@@ -394,7 +394,7 @@ class ComponentData implements ComponentDataInterface
      */
     public function getProperties($default = [])
     {
-        return (is_array($this->properties) == true) ? $this->properties : $default;
+        return (\is_array($this->properties) == true) ? $this->properties : $default;
     }
 
     /**
@@ -556,7 +556,7 @@ class ComponentData implements ComponentDataInterface
      */
     public function addFiles($files, $fileType)
     {
-        if (is_array($files) == false) {
+        if (\is_array($files) == false) {
             return false;
         }
         if (isset($this->files[$fileType]) == false) {
@@ -564,7 +564,7 @@ class ComponentData implements ComponentDataInterface
         }
         foreach ($files as $file) {
             if (empty($file) == false) {
-                array_push($this->files[$fileType],$file);     
+                \array_push($this->files[$fileType],$file);     
             }                  
         }
 
@@ -602,14 +602,14 @@ class ComponentData implements ComponentDataInterface
      */
     public function addFile($file, $fileType)
     {
-        if (is_array($file) == false) {
+        if (\is_array($file) == false) {
             return false;
         }
 
         if (isset($this->files[$fileType]) == false) {
             $this->files[$fileType] = [];
         }
-        array_push($this->files[$fileType],$file);
+        \array_push($this->files[$fileType],$file);
     }
 
     /**
@@ -623,35 +623,35 @@ class ComponentData implements ComponentDataInterface
      */
     protected function parseName($name)
     {
-        if (stripos($name,'::') !== false) {
+        if (\stripos($name,'::') !== false) {
             // extension component
-            $tokens = explode('::',$name);     
+            $tokens = \explode('::',$name);     
             $type = Self::EXTENSION_COMPONENT;
             $this->selectorType = '::';
         } elseif (stripos($name,'>') !== false) {
             // resolve location
-            $tokens = explode('>',$name);
+            $tokens = \explode('>',$name);
             $type = Self::RESOLVE_LOCATION;
             $this->selectorType = '>';
         } else {
             // template component
             $this->selectorType = ':';
-            $tokens = explode(':',$name);  
+            $tokens = \explode(':',$name);  
             $type = ($tokens[0] == 'components') ? Self::GLOBAL_COMPONENT : Self::TEMPLATE_COMPONENT;    
         }
 
         if (isset($tokens[1]) == false) {    
             // component location not set                     
-            $this->path = str_replace('.','/',$tokens[0]);            
+            $this->path = \str_replace('.','/',$tokens[0]);            
             $this->templateName = null;
             $type = Self::UNKNOWN_COMPONENT;        
         } else {
-            $this->path = str_replace('.','/',$tokens[1]);
+            $this->path = \str_replace('.','/',$tokens[1]);
             $this->templateName = $tokens[0];          
         }
 
         if ($type == Self::RESOLVE_LOCATION) {
-            $this->path = str_replace('.','/',$tokens[1]);
+            $this->path = \str_replace('.','/',$tokens[1]);
             $this->templateName = $tokens[0]; 
 
             // resolve component location (template or extension)
@@ -669,8 +669,8 @@ class ComponentData implements ComponentDataInterface
         }
 
         $this->type = $type;
-        $parts = explode('/',$this->path);
-        $this->name = end($parts);
+        $parts = \explode('/',$this->path);
+        $this->name = \end($parts);
     }   
 
     /**
@@ -680,11 +680,7 @@ class ComponentData implements ComponentDataInterface
      */
     public function getPropertiesFileName() 
     {
-        if (isset($this->files['properties']['file_name']) == true) {
-            return $this->files['properties']['file_name'];
-        }
-
-        return false;
+        return (isset($this->files['properties']['file_name']) == true) ? $this->files['properties']['file_name'] : false;        
     }
 
     /**
@@ -705,11 +701,7 @@ class ComponentData implements ComponentDataInterface
      */
     public function getOptionsFileName()
     {
-        if (isset($this->files['options']['file_name']) == true) {
-            return $this->files['options']['file_name'];
-        }
-        
-        return false;
+        return (isset($this->files['options']['file_name']) == true) ? $this->files['options']['file_name'] : false;           
     }
 
     /**

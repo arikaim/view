@@ -68,7 +68,7 @@ class Component
     /**
      * Component data
      *
-     * @var Arikaim\Core\View\Interfaces\ComponentDataInterface
+     * @var ComponentDataInterface
      */
     protected $componentData;
 
@@ -156,8 +156,7 @@ class Component
     public function checkAuthOption(ComponentDataInterface $component)
     {
         $auth = $component->getOption('access/auth',null);   
-    
-        if (strtolower($auth) == 'none') {
+        if (\strtolower($auth) == 'none') {
             return true;
         }
         $access = (empty($auth) == false) ? $this->view->getExtension("Arikaim\\Core\\View\\Template\\Extension")->isLogged() : null;
@@ -174,7 +173,7 @@ class Component
     public function checkPermissionOption(ComponentDataInterface $component)
     {
         $permission = $component->getOption('access/permission',null);
-        if (strtolower($permission) == 'none') {
+        if (\strtolower($permission) == 'none') {
             return true;
         }
         $access = (empty($permission) == false) ? $this->view->getExtension("Arikaim\\Core\\View\\Template\\Extension")->hasAccess($permission) : null;
@@ -185,8 +184,8 @@ class Component
     /**
      * Procss component options
      *
-     * @param Arikaim\Core\View\Interfaces\ComponentDataInterface $component
-     * @return Arikaim\Core\View\Interfaces\ComponentDataInterface
+     * @param ComponentDataInterface $component
+     * @return ComponentDataInterface
      */
     public function processOptions(ComponentDataInterface $component)
     {         
@@ -196,7 +195,7 @@ class Component
         if ($authAccess === null) {
             // check root component
             $rootComponent = $component->createComponent($component->getRootName());           
-            $authAccess = (is_object($rootComponent) == true) ? $this->checkAuthOption($rootComponent) : true;               
+            $authAccess = (\is_object($rootComponent) == true) ? $this->checkAuthOption($rootComponent) : true;               
         }
         if ($authAccess === false) {
             $component->setError("ACCESS_DENIED",["name" => $component->getName()]);             
@@ -208,7 +207,7 @@ class Component
         if ($permissionsAccess == null) {
             // check root component
             $rootComponent = $component->createComponent($component->getRootName());
-            $permissionsAccess = (is_object($rootComponent) == true) ? $this->checkPermissionOption($rootComponent) : true;
+            $permissionsAccess = (\is_object($rootComponent) == true) ? $this->checkPermissionOption($rootComponent) : true;
         }
         if ($permissionsAccess === false) {
             $component->setError("ACCESS_DENIED",["name" => $component->getName()]);  
@@ -232,17 +231,17 @@ class Component
     /**
      * Apply component include option
      *
-     * @param Arikaim\Core\View\Interfaces\ComponentDataInterface $component
+     * @param ComponentDataInterface $component
      * @param string $key
      * @param string $fileType
-     * @return Arikaim\Core\View\Interfaces\ComponentDataInterface
+     * @return ComponentDataInterface
      */
     protected function applyIncludeOption(ComponentDataInterface $component, $key, $fileType)
     { 
         $option = $component->getOption($key);   
        
         if (empty($option) == false) {
-            if (is_array($option) == true) {              
+            if (\is_array($option) == true) {              
                 // include component files
                 foreach ($option as $item) {                                       
                     $files = $this->resolveIncludeFile($item,$fileType);
@@ -267,7 +266,7 @@ class Component
     protected function resolveIncludeFile($includeFile, $fileType)
     {
         if (Utils::isValidUrl($includeFile) == true) {             
-            $tokens = explode('|',$includeFile);
+            $tokens = \explode('|',$includeFile);
             $url = $tokens[0];
             $tokens[0] = 'external';
             $params = (isset($tokens[1]) == true) ? $tokens : [];                           
@@ -289,12 +288,12 @@ class Component
     public function getComponentFiles($name, $fileType = null)
     {        
         $files = $this->view->getCache()->fetch("component.files." . $name);
-        if (is_array($files) == true) {
+        if (\is_array($files) == true) {
             return $files;
         }
         $componentData = new ComponentData($name,'components',null,'component.json',$this->view->getViewPath(),$this->view->getExtensionsPath());
         
-        $files = (is_object($componentData) == true) ? $componentData->getFiles($fileType) : ['js' => [],'css' => []];
+        $files = (\is_object($componentData) == true) ? $componentData->getFiles($fileType) : ['js' => [],'css' => []];
         $files['js'] = (isset($files['js']) == true) ? $files['js'] : [];
         $files['css'] = (isset($files['css']) == true) ? $files['css'] : [];
 
@@ -362,7 +361,7 @@ class Component
      */
     public static function isFullName($name)
     {
-        return (stripos($name,':') !== false || stripos($name,'>') !== false) ? true : false;          
+        return (\stripos($name,':') !== false || \stripos($name,'>') !== false) ? true : false;          
     } 
 
     /**

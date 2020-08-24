@@ -34,6 +34,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
     public function __construct($data = []) 
     {  
         parent::__construct($data);
+
         $this->data['og'] = [];
         $this->data['twitter'] = [];
         $this->params = [];
@@ -49,6 +50,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
     public function param($name, $value)
     {
         $this->params[$name] = $value;
+
         return $this;
     }
 
@@ -71,15 +73,15 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      */
     public function __call($name, $arguments)
     {       
-        $value = trim($arguments[0]);
+        $value = \trim($arguments[0]);
         $options = (isset($arguments[1]) == true) ? $arguments[1] : [];
 
-        if (substr($name,0,2) == 'og') {
-            $name = strtolower(substr($name,2));
+        if (\substr($name,0,2) == 'og') {
+            $name = \strtolower(\substr($name,2));
             return $this->og($name,$value,$options);          
         }
-        if (substr($name,0,7) == 'twitter') {
-            $name = strtolower(substr($name,7));
+        if (\substr($name,0,7) == 'twitter') {
+            $name = \strtolower(\substr($name,7));
             return $this->twitter($name,$value);
         }
 
@@ -193,7 +195,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
         $words = [];
         foreach ($keywords as $text) {          
             $text = Text::tokenize($text,' ',Text::LOWER_CASE,true);          
-            $words = array_merge($words,$text);
+            $words = \array_merge($words,$text);
         }
        
         return $this->set('keywords',Arrays::toString($words,','));     
@@ -299,7 +301,6 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
     {
         $property = $this->createProperty($name,$value,$options);
         $this->data[$key][$name] = $property;
-       // array_push($this->data[$key],$property);
 
         return $this;
     }
@@ -315,7 +316,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
     protected function createProperty($name, $value, $options = [])
     {        
         return [            
-            'name'      => strtolower($name),
+            'name'      => \strtolower($name),
             'value'     => Text::render($value,$this->getParams()),
             'options'   => $options
         ];
@@ -330,14 +331,14 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
     public function resolveProperties($key)
     {
         $items = (isset($this->data[$key]) == true) ? $this->data[$key] : false;
-        if (is_array($items) == false) {
+        if (\is_array($items) == false) {
             return false;
         }
 
         $properties = [];
         foreach ($items as $name => $value) {
-            $property = (is_array($value) == false) ? $this->createProperty($name,$value,[]) : $value;  
-            array_push($properties,$property);            
+            $property = (\is_array($value) == false) ? $this->createProperty($name,$value,[]) : $value;  
+            \array_push($properties,$property);            
         }
         $this->data[$key] = $properties;
 

@@ -123,7 +123,7 @@ class Page extends Component implements HtmlPageInterface
         if (empty($name) == true) {         
             return false;     
         }
-        if (is_object($params) == true) {
+        if (\is_object($params) == true) {
             $params = $params->toArray();
         }
         $component = $this->render($name,$params,$language);
@@ -156,7 +156,7 @@ class Page extends Component implements HtmlPageInterface
         $body = $this->getCode($component,$params);
         $indexPage = $this->getIndexFile($component);     
         
-        $params = array_merge($params,[
+        $params = \array_merge($params,[
             'body' => $body,
             'head' => $this->head->toArray()
         ]);   
@@ -172,15 +172,15 @@ class Page extends Component implements HtmlPageInterface
     /**
      * Get page index file
      *
-     * @param object $component
+     * @param ComponentDataInterface $component
      * @return string
      */
-    private function getIndexFile($component)
+    private function getIndexFile(ComponentDataInterface $component)
     {
         $type = $component->getType();
         $fullPath = $component->getRootComponentPath() . $component->getBasePath() . DIRECTORY_SEPARATOR . "index.html";
 
-        if (file_exists($fullPath) == true) {
+        if (\file_exists($fullPath) == true) {
             if ($type == ComponentData::EXTENSION_COMPONENT) {
                 return $component->getTemplateName() . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR . $component->getBasePath() . DIRECTORY_SEPARATOR . "index.html"; 
             } 
@@ -227,7 +227,7 @@ class Page extends Component implements HtmlPageInterface
             }
             $this->head->applyDefaultItems($head);
         }
-        $params = array_merge_recursive($params,(array)$properties);
+        $params = \array_merge_recursive($params,(array)$properties);
 
         return $this->view->fetch($component->getTemplateFile(),$params);
     }
@@ -307,11 +307,9 @@ class Page extends Component implements HtmlPageInterface
      */
     public static function getLanguagePath($path, $language = null)
     {
-        if ($language == null) {
-            $language = HtmlComponent::getLanguage();
-        }
-       
-        return (substr($path,-1) == "/") ? $path . "$language/" : "$path/$language/";
+        $language = (empty($language) == true) ?  HtmlComponent::getLanguage() : $language; 
+          
+        return (\substr($path,-1) == "/") ? $path . "$language/" : "$path/$language/";
     }
 
     /**
@@ -337,7 +335,7 @@ class Page extends Component implements HtmlPageInterface
      */
     public static function getUrl($path = '', $full = false, $language = null)
     {       
-        $path = (substr($path,0,1) == "/") ? substr($path,1) : $path;      
+        $path = (\substr($path,0,1) == "/") ? \substr($path,1) : $path;      
         $url = ($full == true) ? Url::BASE_URL : BASE_PATH;        
         $url = ($url == "/") ? $url : $url . "/"; 
         $url .= $path;      
@@ -362,10 +360,10 @@ class Page extends Component implements HtmlPageInterface
     /**
      * Include files
      *
-     * @param Component $component
+     * @param ComponentDataInterface $component
      * @return bool
      */
-    public function includeFiles($component) 
+    public function includeFiles(ComponentDataInterface $component) 
     {
         $files = $this->getPageIncludeOptions($component);
         $files = Arrays::setDefault($files,'library',[]);            
@@ -404,14 +402,14 @@ class Page extends Component implements HtmlPageInterface
     /**
      * Get page include options
      *
-     * @param Component $component
+     * @param ComponentDataInterface $component
      * @return array
     */
-    public function getPageIncludeOptions($component)
+    public function getPageIncludeOptions(ComponentDataInterface $component)
     {
         // from cache 
         $options = $this->view->getCache()->fetch("page.include.files." . $component->getName());
-        if (is_array($options) == true) {          
+        if (\is_array($options) == true) {          
             return $options;
         }
 
@@ -426,18 +424,18 @@ class Page extends Component implements HtmlPageInterface
 
             $url = Url::getExtensionViewUrl($component->getTemplateName());
            
-            $options['js'] = array_map(function($value) use($url) {              
+            $options['js'] = \array_map(function($value) use($url) {              
                 return $url . "/js/" . $value; 
             },$options['js']);
           
-            $options['css'] = array_map(function($value) use($url) {
+            $options['css'] = \array_map(function($value) use($url) {
                 return $url . "/css/" . $value;
             },$options['css']);
 
             if (empty($options['template']) == false) {
-                $options = array_merge_recursive($this->getTemplateIncludeOptions($options['template']),$options);              
+                $options = \array_merge_recursive($this->getTemplateIncludeOptions($options['template']),$options);              
             } elseif ($component->getType() == ComponentData::TEMPLATE_COMPONENT) {              
-                $options = array_merge_recursive($this->getTemplateIncludeOptions($component->getTemplateName()),$options);                 
+                $options = \array_merge_recursive($this->getTemplateIncludeOptions($component->getTemplateName()),$options);                 
             }        
             
             // include components
@@ -468,10 +466,10 @@ class Page extends Component implements HtmlPageInterface
     /**
      * Include components files set in page.json include/components
      *
-     * @param Component $component
+     * @param ComponentDataInterface $component
      * @return void
      */
-    protected function includeComponents($component)
+    protected function includeComponents(ComponentDataInterface $component)
     {
         // include component files
         $components = $component->getOption('include/components',null);        
@@ -496,7 +494,7 @@ class Page extends Component implements HtmlPageInterface
     public function getTemplateIncludeOptions($templateName)
     {
         $options = $this->view->getCache()->fetch("template.include.files." . $templateName);
-        if (is_array($options) == true) {          
+        if (\is_array($options) == true) {          
             return $options;
         }
 
@@ -510,11 +508,11 @@ class Page extends Component implements HtmlPageInterface
 
         $url = Url::getTemplateUrl($templateName);    
       
-        $options['js'] = array_map(function($value) use($url) {
+        $options['js'] = \array_map(function($value) use($url) {
             return $url . "/js/" . $value; 
         },$options['js']);
 
-        $options['css'] = array_map(function($value) use($url) {
+        $options['css'] = \array_map(function($value) use($url) {
             return ResourceLocator::getResourceUrl($value,$url . "/css/" . $value);         
         },$options['css']);
       
@@ -572,7 +570,7 @@ class Page extends Component implements HtmlPageInterface
 
         $options = $this->options->get('library.params',[]);
         $libraryParams = (isset($options[$properties['name']]) == true) ? $options[$properties['name']] : [];
-        $vars = array_merge($vars,$libraryParams);
+        $vars = \array_merge($vars,$libraryParams);
 
         return Text::renderMultiple($params,$vars);    
     }
@@ -586,8 +584,9 @@ class Page extends Component implements HtmlPageInterface
     public function includeLibraryFiles(array $libraryList)
     {          
         $libraryFiles = $this->view->getCache()->fetch("ui.library.files." . $this->templateName);        
-        if (is_array($libraryFiles) == true) {
-            $this->view->properties()->set('ui.library.files',$libraryFiles);   
+        if (\is_array($libraryFiles) == true) {
+            $this->view->properties()->set('ui.library.files',$libraryFiles);  
+
             return true;
         }
 
@@ -595,7 +594,7 @@ class Page extends Component implements HtmlPageInterface
         $includeLib = [];
 
         foreach ($libraryList as $libraryItem) {
-            $nameTokens = explode(":",$libraryItem);
+            $nameTokens = \explode(":",$libraryItem);
             $libraryName = (isset($nameTokens[0]) == true) ? $nameTokens[0] : $libraryItem;
             $libraryVersion = (isset($nameTokens[1]) == true) ? $nameTokens[1] : null;
 
@@ -612,18 +611,18 @@ class Page extends Component implements HtmlPageInterface
                     'async'       => $properties->get('async',false),
                     'crossorigin' => $properties->get('crossorigin',null)
                 ];
-                array_push($includeLib,$item);
+                \array_push($includeLib,$item);
             }           
             if ($properties->get('framework',false) == true) {
-                array_push($frameworks,$libraryName);
+                \array_push($frameworks,$libraryName);
             }
         }
         // save to cache
         $this->view->getCache()->save("ui.library.files." . $this->templateName,$includeLib,1);
         
         $this->view->properties()->set('ui.library.files',$includeLib);       
-        Session::set("ui.included.libraries",json_encode($libraryList));
-        Session::set("ui.included.frameworks",json_encode($frameworks));
+        Session::set("ui.included.libraries",\json_encode($libraryList));
+        Session::set("ui.included.frameworks",\json_encode($frameworks));
 
         return true;
     }

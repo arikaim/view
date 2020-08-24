@@ -22,7 +22,7 @@ class Tests
      */
     public static function isObject($var)
     {
-        return is_object($var);
+        return \is_object($var);
     }
 
     /**
@@ -33,7 +33,7 @@ class Tests
      */
     public static function isString($var)
     {
-        return is_string($var);
+        return \is_string($var);
     }
 
     /**
@@ -45,6 +45,6 @@ class Tests
      */
     public static function versionCompare($version1, $version2)
     {
-        return version_compare($version1,$version2,'>'); 
+        return \version_compare($version1,$version2,'>'); 
     }
 }

@@ -17,7 +17,7 @@ use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
 
 use Arikaim\Core\Interfaces\CacheInterface;
-use Arikaim\Core\Interfaces\Access\AccessInterface;
+use Arikaim\Core\Interfaces\Access\AuthInterface;
 use Arikaim\Core\Interfaces\View\HtmlPageInterface;
 use Arikaim\Core\View\Template\Tags\ComponentTagParser;
 use Arikaim\Core\View\Template\Tags\MdTagParser;
@@ -46,7 +46,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
     /**
      * Permisisons manager
      *
-     * @var AccessInterface
+     * @var AuthInterface
      */
     protected $access;
 
@@ -65,9 +65,9 @@ class Extension extends AbstractExtension implements GlobalsInterface
      * @param string $viewPath
      * @param string $extensionsPath
      * @param HtmlPageInterface $page
-     * @param AccessInterface $access
+     * @param AuthInterface $access
      */
-    public function __construct(CacheInterface $cache, $basePath, $viewPath, HtmlPageInterface $page, AccessInterface $access)
+    public function __construct(CacheInterface $cache, $basePath, $viewPath, HtmlPageInterface $page, AuthInterface $access)
     {
         $this->cache = $cache;
         $this->basePath = $basePath;
@@ -97,7 +97,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
     public function getFunctions() 
     {
         $items = $this->cache->fetch('twig.component.functions');
-        if (is_array($items) == true) {
+        if (\is_array($items) == true) {
             return $items;
         }
                      
@@ -143,7 +143,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
     public function getFilters() 
     {       
         $items = $this->cache->fetch('twig.filters');
-        if (is_array($items) == true) {
+        if (\is_array($items) == true) {
             return $items;
         }
         $items = [          
@@ -381,7 +381,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
     }
 
     /**
-     * Return true if use ris logged 
+     * Return true if user is logged 
      *
      * @return boolean
      */

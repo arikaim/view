@@ -43,9 +43,9 @@ class ComponentNode extends Node implements NodeOutputInterface
         $compiler->addDebugInfo($this);
         $componentName = $this->getAttribute('name');
         $params = $this->getAttribute('params');
-        $exportedParams = var_export($params, true);
+        $exportedParams = \var_export($params, true);
 
-        $count = count($this->getNode('body'));
+        $count = \count($this->getNode('body'));
         $compiler->write("\$componentName = '$componentName';")->raw(PHP_EOL);
         $compiler->write("\$params = $exportedParams;")->raw(PHP_EOL);
         $compiler->write("\$context = array_merge(\$context,\$params);")->raw(PHP_EOL);

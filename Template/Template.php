@@ -90,9 +90,9 @@ class Template
     {
         $framework = Session::get("current.framework");
         if (empty($framework) == true || $framework == null) {
-            $frameworks = json_decode(Self::getFrameworks());
-            $frameworks = (is_array($frameworks) == true) ? $frameworks : [];
-            $framework = end($frameworks);
+            $frameworks = \json_decode(Self::getFrameworks());
+            $frameworks = (\is_array($frameworks) == true) ? $frameworks : [];
+            $framework = \end($frameworks);
             Self::setCurrentFramework($framework);
         }
 

@@ -37,13 +37,13 @@ class ResourceLocator
      */
     public static function getSelectorType($name)
     {
-        if (stripos($name,'::') !== false) {
+        if (\stripos($name,'::') !== false) {
             return Self::EXTENSION_SELECTOR;
         }
-        if (stripos($name,':') !== false) {
+        if (\stripos($name,':') !== false) {
             return Self::TEMPLATE_SELECTOR;
         }
-        if (stripos($name,'>') !== false) {
+        if (\stripos($name,'>') !== false) {
             return Self::RESOLVE_LOCATION_SELECTOR;
         }
 
@@ -120,7 +120,7 @@ class ResourceLocator
             $tokens[0] = $name;
             $type = Self::UNKNOWN;
         } else {
-            $tokens = explode($selectorType,$name); 
+            $tokens = \explode($selectorType,$name); 
             $type = Self::getType($name); 
         } 
         $componentName = (isset($tokens[0]) == true) ? $tokens[0] : null;
@@ -129,7 +129,7 @@ class ResourceLocator
         return [
             'path'           => $path,
             'component_name' => $componentName,
-            'type' => $type
+            'type'           => $type
         ];
     }   
 }

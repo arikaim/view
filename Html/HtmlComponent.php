@@ -13,6 +13,7 @@ use Arikaim\Core\Collection\Arrays;
 use Arikaim\Core\View\Html\Component;
 use Arikaim\Core\View\Html\ComponentData;
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
+use Arikaim\Core\View\Interfaces\ComponentDataInterface;
 
 /**
  * Render html component
@@ -67,13 +68,13 @@ class HtmlComponent extends Component implements HtmlComponentInterface
     /**
      * Render component data
      *
-     * @param ComponentData $component
+     * @param ComponentDataInterface $component
      * @param array $params
      * @return ComponentData
      */
-    public function renderComponentData($component,$params = [])
+    public function renderComponentData(ComponentDataInterface $component,$params = [])
     {
-        if (is_object($component) == false) {
+        if (\is_object($component) == false) {
             return null;               
         }
         if ($component->hasError() == true) {
