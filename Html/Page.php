@@ -593,10 +593,8 @@ class Page extends Component implements HtmlPageInterface
         $frameworks = [];
         $includeLib = [];
 
-        foreach ($libraryList as $libraryItem) {
-            $nameTokens = \explode(":",$libraryItem);
-            $libraryName = (isset($nameTokens[0]) == true) ? $nameTokens[0] : $libraryItem;
-            $libraryVersion = (isset($nameTokens[1]) == true) ? $nameTokens[1] : null;
+        foreach ($libraryList as $libraryItem) {           
+            list($libraryName,$libraryVersion) = Self::parseLibraryName($libraryItem);
 
             $properties = $this->getLibraryProperties($libraryName,$libraryVersion);            
             $params = $this->resolveLibraryParams($properties);
@@ -625,5 +623,48 @@ class Page extends Component implements HtmlPageInterface
         Session::set("ui.included.frameworks",\json_encode($frameworks));
 
         return true;
+    }
+
+    /**
+     * Parse library name   (name:version)
+     *
+     * @param string $libraryName
+     * @return array
+     */
+    public static function parseLibraryName($libraryName)
+    {
+        $nameTokens = \explode(":",$libraryName);
+        $libraryName = (isset($nameTokens[0]) == true) ? $nameTokens[0] : $libraryName;
+        $libraryVersion = (isset($nameTokens[1]) == true) ? $nameTokens[1] : null;
+
+        return [$libraryName,$libraryVersion];
+    }
+
+    /**
+     * Get library details
+     *
+     * @param string $libraryName
+     * @return array
+     */
+    public function getLibraryDetails($libraryName)
+    {
+        list($name, $version) = Self::parseLibraryName($libraryName);
+        $properties = $this->getLibraryProperties($name,$version);                   
+        $files = [];
+
+        foreach($properties->get('files') as $file) {   
+            $libraryFile = $this->view->getViewPath() . 'library' . DIRECTORY_SEPARATOR . $libraryName . DIRECTORY_SEPARATOR . $file; 
+            $fileType = File::getExtension($libraryFile);       
+            $files[$fileType][] = [
+                'url' => (Utils::isValidUrl($file) == true) ? $file : Url::getLibraryFileUrl($name,$file) 
+            ];               
+        }  
+
+        return [
+            'files'       => $files,            
+            'library'     => $libraryName,
+            'async'       => $properties->get('async',false),
+            'crossorigin' => $properties->get('crossorigin',null)
+        ];
     }
 }
