@@ -369,8 +369,6 @@ class Page extends Component implements HtmlPageInterface
         $files = Arrays::setDefault($files,'library',[]);            
         $files = Arrays::setDefault($files,'loader',false);       
         
-        $this->includeComponents($component);
-     
         $this->view->getCache()->save("page.include.files." . $component->getName(),$files,1);
         $this->view->properties()->set('template.files',$files);
         // include ui lib files                
