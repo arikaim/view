@@ -13,6 +13,7 @@ use Twig\Environment;
 use Twig\Extension\ExtensionInterface;
 use Twig\Loader\FilesystemLoader;
 
+use Arikaim\Core\Http\Session;
 use Arikaim\Core\Collection\Collection;
 use Arikaim\Core\Interfaces\View\ViewInterface;
 use Arikaim\Core\Interfaces\CacheInterface;
@@ -22,6 +23,9 @@ use Arikaim\Core\Interfaces\CacheInterface;
  */
 class View implements ViewInterface
 {
+    
+    const DEFAULT_TEMPLATE_NAME = 'blog';
+
     /**
      * Template loader
      *
@@ -110,6 +114,42 @@ class View implements ViewInterface
         if (isset($settings['demo_mode']) == true) {
             $this->environment->addGlobal('demo_mode',$settings['demo_mode']);
         }
+    }
+
+    /**
+     * Get primary template
+     *
+     * @return string
+     */
+    public function getPrimaryTemplate()
+    {              
+        // from properties
+        $primary = $this->properties()->get('primary.template',null);
+        if (empty($primary) == false) {           
+            return $primary;
+        }
+        // from session
+        $primary = Session::get('primary.template',null);
+        if (empty($primary) == false) {          
+            return $primary;
+        }
+        // from cache
+        $primary = $this->cache->fetch('primary.template');
+      
+        return (empty($primary) == false) ? $primary : Self::DEFAULT_TEMPLATE_NAME;
+    }
+
+    /**
+     * Set primary template
+     *
+     * @param string $templateName
+     * @return void
+     */
+    public function setPrimaryTemplate($templateName)
+    {       
+        $this->properties()->set('primary.template',$templateName);
+        $this->cache->save('primary.template',$templateName,2);
+        Session::set('primary.template',$templateName);
     }
 
     /**

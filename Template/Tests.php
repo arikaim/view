@@ -40,11 +40,13 @@ class Tests
      * Compare version (if version1 is > version2 retrun true)
      *
      * @param string $version1
-     * @param string $version2
+     * @param string $version2   
      * @return boolean
      */
     public static function versionCompare($version1, $version2)
     {
-        return \version_compare($version1,$version2,'>'); 
+        $result = \version_compare($version1,$version2); 
+
+        return ($result == -1 || $result == 0) ? false : true;
     }
 }

@@ -81,7 +81,7 @@ class Filters
      * @param string $separator
      * @return string
      */
-    public static function convertToString($value, $separator = " ")
+    public static function convertToString($value, $separator = ' ')
     {
         if (\is_bool($value) === true) {
             return ($value === true) ? 'true' : 'false';

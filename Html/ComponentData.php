@@ -10,12 +10,10 @@
 namespace Arikaim\Core\View\Html;
 
 use Arikaim\Core\Collection\Arrays;
-use Arikaim\Core\Collection\Collection;
-use Arikaim\Core\Utils\File;
 use Arikaim\Core\Utils\Utils;
-use Arikaim\Core\View\Template\Template;
-use Arikaim\Core\View\Interfaces\ComponentDataInterface;
+use Arikaim\Core\Utils\File;
 use Arikaim\Core\Http\Url;
+use Arikaim\Core\View\Interfaces\ComponentDataInterface;
 
 /**
  * Html component data
@@ -26,8 +24,10 @@ class ComponentData implements ComponentDataInterface
     const TEMPLATE_COMPONENT  = 1; 
     const EXTENSION_COMPONENT = 2;
     const GLOBAL_COMPONENT    = 3; 
-    const RESOLVE_LOCATION    = 4;
+    const PRIMARY_TEMLATE     = 4;
     
+    const DEFAULT_CSS_FRAMEWORK = 'fomantic';
+
     /**
      * Component name
      *
@@ -169,14 +169,42 @@ class ComponentData implements ComponentDataInterface
     protected $selectorType;
 
     /**
+     * Primary template name
+     *
+     * @var string
+     */
+    protected $primaryTemplate;
+
+    /**
+     * Framework path
+     *
+     * @var string
+     */
+    protected $frameworkPath;
+
+    /**
      * Constructor
      *
      * @param string $name
      * @param string $basePath
      * @param string $language
-     * @param string $optionsFile
+     * @param string'null $optionsFile
+     * @param string|null $viewPath
+     * @param string|null $extensionsPath
+     * @param string $defaultFramework
+     * @param string|null $framework
+     * @param string|null $primaryTemplate
      */
-    public function __construct($name, $basePath, $language = 'en', $optionsFile = null, $viewPath = null, $extensionsPath = null, $defaultFramework = 'fomantic') 
+    public function __construct(
+        $name,
+        $basePath, 
+        $language = 'en',
+        $optionsFile = null,
+        $viewPath = null,
+        $extensionsPath = null,
+        $defaultFramework = Self::DEFAULT_CSS_FRAMEWORK,
+        $framework = null,
+        $primaryTemplate = null) 
     {
         $this->selectorType = null;
         $this->fullName = $name;
@@ -188,19 +216,53 @@ class ComponentData implements ComponentDataInterface
         $this->error = null;
         $this->files['js'] = [];
         $this->files['css'] = [];
-        $this->htmlCode = "";
+        $this->htmlCode = '';
         $this->defaultFramework = $defaultFramework;
+        $this->primaryTemplate = $primaryTemplate;
         $this->parseName($name);
         $this->resolvePath();
         
-        $this->framework = Template::getCurrentFramework();
+        $this->framework = (empty($framework) == true) ? $this->defaultFramework : $framework;
+        $this->frameworkPath = $this->getFrameworkPath();
 
         $this->resolvePropertiesFileName();
         $this->resolveOptionsFileName();
         $this->resolveComponentFiles();
 
-        $this->properties = $this->loadProperties()->toArray();
-        $this->options = $this->loadOptions()->toArray(); 
+        $this->properties = $this->loadProperties();
+        $this->options = $this->loadOptions(); 
+    }
+
+    /**
+     * Set primary template name
+     *
+     * @param string $name
+     * @return void
+     */
+    public function setPrimaryTemplate($name)
+    {
+        $this->primaryTemplate = $name;
+    }
+
+    /**
+     * Set css framework name
+     *
+     * @param string $framework
+     * @return void
+     */
+    public function setFramework($framework)
+    {
+        $this->framework = $framework;
+    }
+
+    /**
+     * Get css framework name
+     *
+     * @return string
+     */
+    public function getFramework()
+    {
+        return $this->framework;
     }
 
     /**
@@ -256,7 +318,7 @@ class ComponentData implements ComponentDataInterface
             return false;
         }
         $name = (empty($name) == true) ? $this->getParentName() : $name;
-        $child = new Self($name,$this->basePath,$this->language,$this->optionsFile,$this->viewPath,$this->extensionsPath,$this->defaultFramework);
+        $child = new Self($name,$this->basePath,$this->language,$this->optionsFile,$this->viewPath,$this->extensionsPath,$this->defaultFramework,$this->framework);
 
         return (\is_object($child) == true) ? $child : false;
     }
@@ -293,26 +355,28 @@ class ComponentData implements ComponentDataInterface
 
     /**
      * Get template file
-     *
+     * 
+     * @param string|null $frameweork
      * @return string|false
      */
-    public function getTemplateFile()
+    public function getTemplateFile($frameweork = null)
     {
         switch($this->type) {
             case Self::EXTENSION_COMPONENT: 
                 $path = $this->templateName . DIRECTORY_SEPARATOR . 'view';
                 break;
             case Self::TEMPLATE_COMPONENT: 
-                $path = "";
+                $path = '';
                 break;
             case Self::GLOBAL_COMPONENT: 
-                $path = "";
+                $path = '';
                 break;
             case Self::UNKNOWN_COMPONENT: 
                 return false;
         }  
         if (isset($this->files['html'][0]['file_name']) == true) {
-            return $path . $this->filePath . $this->files['html'][0]['file_name'];
+            $frameworkPath = (empty($frameweork) == false) ? $this->getFrameworkPath() : '';
+            return $path . $this->filePath . $frameworkPath . $this->files['html'][0]['file_name'];
         }
 
         return false;
@@ -460,7 +524,7 @@ class ComponentData implements ComponentDataInterface
     /**
      * Get error
      *
-     * @return string
+     * @return array
      */
     public function getError()
     {
@@ -480,15 +544,27 @@ class ComponentData implements ComponentDataInterface
     /**
      * Get option
      *
-     * @param string $name
+     * @param string $path
      * @param mixed $default
      * @return mixed
      */
-    public function getOption($name, $default = null)
+    public function getOption($path, $default = null)
     {
-        $option = Arrays::getValue($this->options,$name);
+        $option = Arrays::getValue($this->options,$path);
 
         return (empty($option) == true) ? $default : $option;          
+    }
+
+    /**
+     * Set option value
+     *
+     * @param string $path
+     * @param mixed $value
+     * @return void
+     */
+    public function setOption($path, $value)
+    {
+        $this->options = Arrays::setValue($this->options,$path,$value);       
     }
 
     /**
@@ -631,7 +707,7 @@ class ComponentData implements ComponentDataInterface
         } elseif (stripos($name,'>') !== false) {
             // resolve location
             $tokens = \explode('>',$name);
-            $type = Self::RESOLVE_LOCATION;
+            $type = Self::PRIMARY_TEMLATE;
             $this->selectorType = '>';
         } else {
             // template component
@@ -650,22 +726,22 @@ class ComponentData implements ComponentDataInterface
             $this->templateName = $tokens[0];          
         }
 
-        if ($type == Self::RESOLVE_LOCATION) {
+        if ($type == Self::PRIMARY_TEMLATE) {
             $this->path = \str_replace('.','/',$tokens[1]);
             $this->templateName = $tokens[0]; 
 
             // resolve component location (template or extension)
-            $templateName = Template::getPrimary($this->templateName);
+            $templateName = (empty($this->primaryTemplate) == true) ? $this->templateName : $this->primaryTemplate;  
             $componentPath = $this->getComponentFullPath(Self::TEMPLATE_COMPONENT,$templateName);
-            if (File::exists($componentPath) == true) {
-                // found in template
+            if (\file_exists($componentPath) == true) {
+                // primary template component
                 $type = Self::TEMPLATE_COMPONENT;
-                $this->templateName = $templateName;     
+                $this->templateName = $templateName; 
             } else {
                 // set extension component
                 $type = Self::EXTENSION_COMPONENT;
                 $this->templateName = $tokens[0];
-            }            
+            }                 
         }
 
         $this->type = $type;
@@ -770,7 +846,7 @@ class ComponentData implements ComponentDataInterface
      */
     public function getUrl()
     {
-        return $this->getTemplateUrl() . "/" . $this->basePath . "/" . $this->path . "/";
+        return $this->getTemplateUrl() . '/' . $this->basePath . '/' . $this->path . '/';
     }
 
     /**
@@ -794,7 +870,7 @@ class ComponentData implements ComponentDataInterface
     {   
         switch($type) {
             case Self::EXTENSION_COMPONENT:
-                return $extensionsPath . $template . DIRECTORY_SEPARATOR . "view" . DIRECTORY_SEPARATOR;
+                return $extensionsPath . $template . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR;
 
             case Self::TEMPLATE_COMPONENT:
                 return $viewPath . 'templates' . DIRECTORY_SEPARATOR . $template . DIRECTORY_SEPARATOR;
@@ -808,7 +884,7 @@ class ComponentData implements ComponentDataInterface
 
     public function getComponentPath()
     {
-       // return Self::getTemplatePath($this->templateName,$this->type,$this->viewPath, $this->extensionsPath)
+        return Self::getTemplatePath($this->templateName,$this->type,$this->viewPath, $this->extensionsPath);
     }
 
     /**
@@ -818,7 +894,7 @@ class ComponentData implements ComponentDataInterface
      */
     public function getFrameworkPath()
     {
-        return ((empty($this->framework) == false) && ($this->framework != $this->defaultFramework)) ? "." . $this->framework . DIRECTORY_SEPARATOR : "";          
+        return ((empty($this->framework) == false) && ($this->framework != $this->defaultFramework)) ? '.' . $this->framework . DIRECTORY_SEPARATOR : '';          
     }
 
     /**
@@ -828,18 +904,21 @@ class ComponentData implements ComponentDataInterface
      * @param string $language
      * @return string|false
      */
-    public function getComponentFile($fileExt = "html", $language = "") 
+    public function getComponentFile($fileExt = 'html', $language = '') 
     {         
-        $fileName = $this->getName() . $language . "." . $fileExt;
+        $fileName = $this->getName() . $language . '.' . $fileExt;
         // try framework path
-        $fullFileName = $this->getFullPath() . $this->getFrameworkPath() . $fileName;
-        if (File::exists($fullFileName) == true) {
-            return $this->getFrameworkPath() . $fileName;
+        if ($fileExt == 'json') {
+            $fullFileName = $this->getFullPath() . $fileName;
+        } else {
+            $fullFileName = $this->getFullPath() . $this->frameworkPath . $fileName;   
+            if (\file_exists($fullFileName) == true) {
+                return $this->frameworkPath . $fileName;
+            }     
+            $fullFileName = $this->getFullPath() . $fileName;
         }
-        // try default path 
-        $fullFileName = $this->getFullPath() . $fileName;
-
-        return File::exists($fullFileName) ? $fileName : false;
+       
+        return \file_exists($fullFileName) ? $fileName : false;
     }
 
     /**
@@ -856,21 +935,25 @@ class ComponentData implements ComponentDataInterface
     /**
      * Load properties json file
      *
-     * @return Collection
+     * @return array
      */
     public function loadProperties()
     {       
-        return Collection::createFromFile($this->getPropertiesFileName());                       
+        $data = File::readJsonFile($this->getPropertiesFileName());  
+
+        return (\is_array($data) == true) ? $data : [];                     
     }
 
     /**
      * Load options json file
      *
-     * @return Collection
+     * @return array
      */
     public function loadOptions()
     {         
-        return Collection::createFromFile($this->getOptionsFileName());            
+        $data = File::readJsonFile($this->getOptionsFileName()); 
+
+        return (\is_array($data) == true) ? $data : [];         
     }
 
     /**
@@ -912,7 +995,7 @@ class ComponentData implements ComponentDataInterface
                 $path = $this->path . DIRECTORY_SEPARATOR; 
                 break;
             default:
-                $templatePath = "";      
+                $templatePath = '';      
         }
         $this->fullPath = $this->getComponentFullPath($this->type);
         $this->filePath = rtrim($templatePath,DIRECTORY_SEPARATOR) . $path;
@@ -925,11 +1008,11 @@ class ComponentData implements ComponentDataInterface
      */
     private function resolvePropertiesFileName()
     {
-        $language = ($this->language != "en") ? "-". $this->language : "";
-        $fileName = $this->getComponentFile("json",$language);
+        $language = ($this->language != 'en') ? '-' . $this->language : '';
+        $fileName = $this->getComponentFile('json',$language);
 
         if ($fileName === false) {
-            $fileName = $this->getComponentFile("json");
+            $fileName = $this->getComponentFile('json');
             if ($fileName === false) {
                 return false;
             }
@@ -946,14 +1029,11 @@ class ComponentData implements ComponentDataInterface
      */
     private function resolveOptionsFileName($path = null, $iterations = 0)
     {   
-        if (empty($path) == true) {
-            $path = $this->getFullPath();
-        } 
-      
-        $fileName = $path . $this->optionsFile;
-        if (File::exists($fileName) == false) {
-            $parentPath = Utils::getParentPath($path) . DIRECTORY_SEPARATOR;  
+        $path = (empty($path) == true) ? $this->getFullPath() : $path;
     
+        $fileName = $path . $this->optionsFile;
+        if (\file_exists($fileName) == false) {
+            $parentPath = Utils::getParentPath($path) . DIRECTORY_SEPARATOR;  
             if (empty($parentPath) == false && $iterations == 0) {
                 return $this->resolveOptionsFileName($parentPath,1);
             }      

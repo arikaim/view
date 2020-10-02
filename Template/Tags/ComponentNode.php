@@ -59,6 +59,6 @@ class ComponentNode extends Node implements NodeOutputInterface
                 $compiler->subcompile($item,true);
             }          
         }
-        $compiler->write('echo $this->env->getExtension("Arikaim\\Core\\View\\Template\\Extension")->loadComponent($componentName,$context);' . PHP_EOL);
+        $compiler->write('echo $this->env->getExtension("Arikaim\\Core\\View\\Template\\Extension")->loadComponent($context,$componentName,$context);' . PHP_EOL);
     }
 }

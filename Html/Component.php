@@ -9,10 +9,6 @@
 */
 namespace Arikaim\Core\View\Html;
 
-use Twig\Environment;
-
-use Arikaim\Core\Http\Session;
-use Arikaim\Core\Utils\Mobile;
 use Arikaim\Core\Utils\Utils;
 use Arikaim\Core\View\Html\ComponentData;
 use Arikaim\Core\View\Interfaces\ComponentDataInterface;
@@ -28,7 +24,7 @@ class Component
      *
      * @var ViewInterface
      */
-    protected $view;
+    public $view;
 
     /**
      * Cache
@@ -80,6 +76,13 @@ class Component
     protected $optionsFile;
 
     /**
+     * Css framework name
+     *
+     * @var string
+     */
+    protected $framework;
+
+    /**
      * Constructor
      *
      * @param ViewInterface $view
@@ -89,20 +92,40 @@ class Component
      * @param string $basePath
      * @param string|null $optionsFile
      * @param boolean $withOptions
+     * @param string|null $framework
      */
-    public function __construct(ViewInterface $view, $name, $params = [], $language = null, $basePath = 'components', $optionsFile = null, $withOptions = true)
+    public function __construct(
+        ViewInterface $view,
+        $name,
+        $params = [],
+        $language = null,
+        $basePath = 'components',
+        $optionsFile = null,
+        $withOptions = true,
+        $framework = null)
     {
         $this->view = $view;
         $this->basePath = $basePath;
         $this->withOptions = $withOptions;
         $this->optionsFile = (empty($optionsFile) == true) ? 'component.json' : $optionsFile;
         $this->name = $name;
-        $this->language = (empty($language) == true) ? Self::getLanguage() : $language;
+        $this->language = (empty($language) == true) ? 'en' : $language;
         $this->params = $params;
+        $this->framework = $framework;
 
         if (empty($name) == false) {
-            $this->componentData = $this->createComponentData($name,$language,$withOptions);
+            $this->componentData = $this->createComponentData($name,$language,$withOptions,$framework); 
         }
+    }
+
+    /**
+     * Get view ref
+     *
+     * @return ViewInterface
+     */
+    public function getVeiw()
+    {
+        return $this->view;
     }
 
     /**
@@ -111,15 +134,27 @@ class Component
      * @param string $name
      * @param string|null $language
      * @param boolean $withOptions
-     * @return ComponentData
+     * @param string|null $framework
+     * @return ComponentDataInterface
      */
-    protected function createComponentData($name, $language = null, $withOptions = true)
+    protected function createComponentData($name, $language = null, $withOptions = true, $framework = null)
     {
         $language = (empty($language) == true) ? $this->language : $language;
-
-        $componentData = new ComponentData($name,$this->basePath,$language,$this->optionsFile,$this->view->getViewPath(),$this->view->getExtensionsPath());
+        $primaryTemplate = $this->view->getPrimaryTemplate();
+ 
+        $componentData = new ComponentData(
+            $name,
+            $this->basePath,
+            $language,
+            $this->optionsFile,
+            $this->view->getViewPath(),
+            $this->view->getExtensionsPath(),
+            ComponentData::DEFAULT_CSS_FRAMEWORK,
+            $framework,
+            $primaryTemplate
+        );
         if ($componentData->isValid() == false) {           
-            $componentData->setError("TEMPLATE_COMPONENT_NOT_FOUND",["full_component_name" => $name]);             
+            $componentData->setError('TEMPLATE_COMPONENT_NOT_FOUND',['full_component_name' => $name]);             
         }
         $componentData = ($withOptions == true) ? $this->processOptions($componentData) : $componentData;  
         
@@ -128,20 +163,20 @@ class Component
 
     /**
      * Fetch component
-     *
-     * @param Environment $env
+     *   
      * @param ComponentDataInterface $component
      * @param array $params
-     * @return Component
+     * @return ComponentDataInterface
      */
     public function fetch(ComponentDataInterface $component, $params = [])
-    {
-        if (empty($component->getTemplateFile()) == true) {
+    {      
+        if ($component->hasContent() == false) {
             return $component;
         }
-        $this->view->getEnvironment()->loadTemplate($component->getTemplateFile());
-    
-        $code = $this->view->getEnvironment()->render($component->getTemplateFile(),$params);
+        $templateFle = $component->getTemplateFile();
+
+        $this->view->getEnvironment()->loadTemplate($templateFle);
+        $code = $this->view->getEnvironment()->render($templateFle,$params);
         $component->setHtmlCode($code);    
 
         return $component;
@@ -159,7 +194,7 @@ class Component
         if (\strtolower($auth) == 'none') {
             return true;
         }
-        $access = (empty($auth) == false) ? $this->view->getExtension("Arikaim\\Core\\View\\Template\\Extension")->isLogged() : null;
+        $access = (empty($auth) == false) ? $this->view->getExtension('Arikaim\\Core\\View\\Template\\Extension')->isLogged() : null;
 
         return $access;
     }
@@ -176,7 +211,7 @@ class Component
         if (\strtolower($permission) == 'none') {
             return true;
         }
-        $access = (empty($permission) == false) ? $this->view->getExtension("Arikaim\\Core\\View\\Template\\Extension")->hasAccess($permission) : null;
+        $access = (empty($permission) == false) ? $this->view->getExtension('Arikaim\\Core\\View\\Template\\Extension')->hasAccess($permission) : null;
         
         return $access;
     }
@@ -198,7 +233,7 @@ class Component
             $authAccess = (\is_object($rootComponent) == true) ? $this->checkAuthOption($rootComponent) : true;               
         }
         if ($authAccess === false) {
-            $component->setError("ACCESS_DENIED",["name" => $component->getName()]);             
+            $component->setError('ACCESS_DENIED',['name' => $component->getFullName()]);             
             return $component;
         }
 
@@ -210,20 +245,12 @@ class Component
             $permissionsAccess = (\is_object($rootComponent) == true) ? $this->checkPermissionOption($rootComponent) : true;
         }
         if ($permissionsAccess === false) {
-            $component->setError("ACCESS_DENIED",["name" => $component->getName()]);  
+            $component->setError('ACCESS_DENIED',['name' => $component->getFullName()]);  
             return $component;
         }
-       
+        
         $component = $this->applyIncludeOption($component,'include/js','js');
         $component = $this->applyIncludeOption($component,'include/css','css');
-
-        // mobile only option
-        $mobileOnly = $component->getOption('mobile-only');      
-        if ($mobileOnly == "true") {
-            if (Mobile::mobile() == false) {    
-                $component->clearContent();               
-            }
-        }
 
         return $component;
     }
@@ -287,17 +314,30 @@ class Component
      */
     public function getComponentFiles($name, $fileType = null)
     {        
-        $files = $this->view->getCache()->fetch("component.files." . $name);
+        $files = $this->view->getCache()->fetch('component.files.' . $name);
         if (\is_array($files) == true) {
             return $files;
         }
-        $componentData = new ComponentData($name,'components',null,'component.json',$this->view->getViewPath(),$this->view->getExtensionsPath());
-        
+        $language = (empty($language) == true) ? $this->language : null;
+        $primaryTemplate = $this->view->getPrimaryTemplate();
+
+        $componentData = new ComponentData(
+            $name,
+            'components',
+            $language,
+            'component.json',
+            $this->view->getViewPath(),
+            $this->view->getExtensionsPath(),
+            ComponentData::DEFAULT_CSS_FRAMEWORK,
+            $this->framework,
+            $primaryTemplate
+        );
+
         $files = (\is_object($componentData) == true) ? $componentData->getFiles($fileType) : ['js' => [],'css' => []];
         $files['js'] = (isset($files['js']) == true) ? $files['js'] : [];
         $files['css'] = (isset($files['css']) == true) ? $files['css'] : [];
 
-        $this->view->getCache()->save("component.files." . $name,$files,10);
+        $this->view->getCache()->save('component.files.' . $name,$files,10);
 
         return $files;
     }
@@ -347,11 +387,11 @@ class Component
         }       
 
         foreach ($files as $item) {          
-            if (empty($item['url']) == false) {
-                $this->view->properties()->prepend('include.components.files',$item,$key); 
+            if (empty($item['url']) == false) {               
+                $this->view->properties()->prepend('include.components.files',$item,$key);     
             }                              
         }
-
+     
         return true;
     }
 
@@ -364,26 +404,5 @@ class Component
     public static function isFullName($name)
     {
         return (\stripos($name,':') !== false || \stripos($name,'>') !== false) ? true : false;          
-    } 
-
-    /**
-     * Return current language
-     *
-     * @return string
-     */
-    public static function getLanguage() 
-    {  
-        return Session::get('language',null);
-    }
-
-    /**
-     * Set current language
-     *
-     * @param string $language Language code
-     * @return void
-     */
-    public static function setLanguage($language) 
-    {
-        Session::set('language',$language);
     }
 }

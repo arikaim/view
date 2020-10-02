@@ -15,6 +15,28 @@ namespace Arikaim\Core\View\Interfaces;
 interface ComponentDataInterface 
 {  
     /**
+     * Set primary template name
+     *
+     * @param string $name
+     * @return void
+     */
+    public function setPrimaryTemplate($name);
+    
+    /**
+     * Get language code
+     *
+     * @return string
+     */
+    public function getLanguage();
+
+    /**
+     * Get error
+     *
+     * @return array
+     */
+    public function getError();
+
+    /**
      * Return true if component have error
      *
      * @return boolean
@@ -28,6 +50,21 @@ interface ComponentDataInterface
      */
     public function hasContent();
  
+    /**
+     * Set css framework name
+     *
+     * @param string $framework
+     * @return void
+     */
+    public function setFramework($framework);
+
+    /**
+     * Get css framework name
+     *
+     * @return string
+     */
+    public function getFramework();
+
     /**
      * Return component files 
      *
@@ -119,11 +156,21 @@ interface ComponentDataInterface
     public function getOption($name, $default = null);
 
     /**
+     * Set option value
+     *
+     * @param string $name
+     * @param mixed $value
+     * @return void
+     */
+    public function setOption($name, $value);
+    
+    /**
      * Get template file
      *
+     * @param string|null $frameweork
      * @return string|false
      */
-    public function getTemplateFile();
+    public function getTemplateFile($frameweork = null);
 
     /**
      * Set html code

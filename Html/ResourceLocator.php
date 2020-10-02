@@ -21,13 +21,13 @@ class ResourceLocator
     const TEMPLATE_COMPONENT  = 1; 
     const EXTENSION_COMPONENT = 2;
     const GLOBAL_COMPONENT    = 3; 
-    const RESOLVE_LOCATION    = 4;  
+    const PRIMARY_TEMLATE     = 4;  
     const URL_RESOURCE        = 5;
     const FILE_RESOURCE       = 6;
 
-    const EXTENSION_SELECTOR         = '::';
-    const TEMPLATE_SELECTOR          = ':';
-    const RESOLVE_LOCATION_SELECTOR  = '>';
+    const EXTENSION_SELECTOR       = '::';
+    const TEMPLATE_SELECTOR        = ':';
+    const PRIMARY_TEMLATE_SELECTOR = '>';
 
     /**
      * Get resource selector type
@@ -44,7 +44,7 @@ class ResourceLocator
             return Self::TEMPLATE_SELECTOR;
         }
         if (\stripos($name,'>') !== false) {
-            return Self::RESOLVE_LOCATION_SELECTOR;
+            return Self::PRIMARY_TEMLATE_SELECTOR;
         }
 
         return null;
@@ -75,8 +75,8 @@ class ResourceLocator
             case Self::TEMPLATE_SELECTOR:             
                 $type = ($tokens[0] == 'components') ? Self::GLOBAL_COMPONENT : Self::TEMPLATE_COMPONENT;   
                 break;
-            case Self::RESOLVE_LOCATION_SELECTOR:
-                $type = Self::RESOLVE_LOCATION;
+            case Self::PRIMARY_TEMLATE_SELECTOR:
+                $type = Self::PRIMARY_TEMLATE;
                 break;
             default:
                 $type = Self::UNKNOWN;           
@@ -99,7 +99,7 @@ class ResourceLocator
             case Self::URL_RESOURCE:
                 return $name;              
             case Self::TEMPLATE_COMPONENT:
-                $templateUrl =  Url::getTemplateUrl($data['component_name']);                 
+                $templateUrl = Url::getTemplateUrl($data['component_name']);                 
                 return  $templateUrl . $data['path'];                          
         }
 
@@ -132,4 +132,44 @@ class ResourceLocator
             'type'           => $type
         ];
     }   
+
+    /**
+     * Get component template name (or extenson)
+     *
+     * @return string|null
+     */
+    public static function getTemplateName($name, $primaryTemplate)
+    {
+        $result = Self::parse($name);
+
+        switch($result['type']) {
+            case Self::UNKNOWN:
+                return null;
+            
+            case Self::EXTENSION_COMPONENT:
+                return (Self::isAdminPath($result['path']) == true) ? 'system' : $primaryTemplate;
+        
+            case Self::GLOBAL_COMPONENT: 
+                return $primaryTemplate;
+
+            case Self::TEMPLATE_COMPONENT:
+                return $result['component_name'];
+
+            case Self::PRIMARY_TEMLATE:
+                return $primaryTemplate;
+        }
+
+        return null;
+    }
+
+    /**
+     * Return true if component is for control panel 
+     *
+     * @param string $path
+     * @return boolean
+     */
+    public static function isAdminPath($path)
+    {
+        return (\substr($path,0,5) == 'admin');
+    }
 }
