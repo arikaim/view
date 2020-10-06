@@ -117,11 +117,12 @@ class HtmlComponent extends Component implements HtmlComponentInterface
     /**
      * Render component
      *
+     * @param bool $withOptions
      * @return ComponentDataInterface
      */
-    public function renderComponent() 
+    public function renderComponent($withOptions = true) 
     { 
-        return $this->render($this->name,$this->params,$this->language);
+        return $this->render($this->name,$this->params,$this->language,$withOptions);
     }
 
     /**
