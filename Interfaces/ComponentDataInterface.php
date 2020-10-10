@@ -15,6 +15,29 @@ namespace Arikaim\Core\View\Interfaces;
 interface ComponentDataInterface 
 {  
     /**
+     * Get component file
+     *
+     * @param string $fileExt
+     * @param string $language
+     * @return string|false
+     */
+    public function getComponentFile($fileExt = 'html', $language = '');
+    
+    /**
+     * Get full path
+     *
+     * @return string
+     */
+    public function getFullPath();
+
+    /**
+     * Convert to array
+     *
+     * @return array
+    */
+    public function toArray();
+
+    /**
      * Set primary template name
      *
      * @param string $name

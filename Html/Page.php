@@ -12,6 +12,7 @@ namespace Arikaim\Core\View\Html;
 use Arikaim\Core\View\Html\ComponentData;
 use Arikaim\Core\View\Html\Component;
 use Arikaim\Core\View\Html\HtmlComponent;
+
 use Arikaim\Core\Collection\Collection;
 use Arikaim\Core\View\Html\PageHead;
 use Arikaim\Core\Packages\PackageManager;
@@ -91,6 +92,26 @@ class Page extends Component implements HtmlPageInterface
     }
 
     /**
+     * Create email component
+     *
+     * @param string $name
+     * @param array $params
+     * @param string|null $framework
+     * @param string|null $language
+     * @return \Arikaim\Core\View\Html\EmailComponent
+     */
+    public function createEmailComponent($name, $params = [], $framework = null, $language = null)
+    {       
+        $templateName = $this->getCurrentTemplate();
+        $language = (empty($language) == true) ? $this->getLanguage() : $language;
+       
+        $component = new \Arikaim\Core\View\Html\EmailComponent($this->view,$name,$params,$language,'emails','component.json',true,$framework);      
+        $component->setCurrentTemplate($templateName);
+
+        return $component;
+    }
+
+    /**
      * Get head properties
      *
      * @return PageHead
@@ -159,8 +180,8 @@ class Page extends Component implements HtmlPageInterface
         $this->setCurrentTemplate($component->getTemplateName());
 
         $body = $this->getCode($component,$params);
-        $indexPage = $this->getIndexFile($component);     
-        
+        $indexPage = Self::getIndexFile($component,$this->getCurrentTemplate());     
+    
         $params = \array_merge($params,[
             'body' => $body,
             'head' => $this->head->toArray()
@@ -180,10 +201,26 @@ class Page extends Component implements HtmlPageInterface
      * @param ComponentDataInterface $component
      * @return string
      */
-    private function getIndexFile(ComponentDataInterface $component)
-    {       
-        $templateName = ($component->getType() != ComponentData::TEMPLATE_COMPONENT) ? $this->getCurrentTemplate() : $component->getTemplateName();
+    public static function getIndexFile(ComponentDataInterface $component, $currentTemlate)
+    {               
+        switch ($component->getType()) {
+            case ComponentData::TEMPLATE_COMPONENT:
+                $templateName = $component->getTemplateName();
+                break;
 
+            case ComponentData::PRIMARY_TEMLATE:
+                $templateName = $currentTemlate;
+                break;
+
+            case ComponentData::EXTENSION_COMPONENT:
+                $templateName = $component->getTemplateName() . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR;
+                break;
+
+            default:
+                $templateName = $currentTemlate;
+                break;
+        }
+    
         return $templateName . DIRECTORY_SEPARATOR . $component->getBasePath() . DIRECTORY_SEPARATOR . 'index.html';            
     }
 
@@ -337,7 +374,7 @@ class Page extends Component implements HtmlPageInterface
      */
     public static function getLanguagePath($path, $language = null)
     {
-        $language = (empty($language) == true) ?  Self::getCurrentLanguage() : $language; 
+        $language = (empty($language) == true) ? Self::getCurrentLanguage() : $language; 
           
         return (\substr($path,-1) == '/') ? $path . $language . '/' : $path . '/' . $language . '/';
     }
@@ -670,7 +707,7 @@ class Page extends Component implements HtmlPageInterface
      * @param string|null $version
      * @return Collection
      */
-    public function getLibraryProperties($name, $version = null)
+    public static function getLibraryProperties($name, $version = null)
     {
         $properties = PackageManager::loadPackageProperties($name,Path::LIBRARY_PATH);
        
@@ -726,7 +763,7 @@ class Page extends Component implements HtmlPageInterface
         foreach ($libraryList as $libraryItem) {           
             list($libraryName,$libraryVersion,$forceInclude) = Self::parseLibraryName($libraryItem);
 
-            $properties = $this->getLibraryProperties($libraryName,$libraryVersion);            
+            $properties = Self::getLibraryProperties($libraryName,$libraryVersion);            
             $params = $this->resolveLibraryParams($properties);
             $libraryFramework = $properties->get('framework',false);
             if ($libraryFramework == true && $libraryName != $currentFramework && $forceInclude == false) {
@@ -734,7 +771,7 @@ class Page extends Component implements HtmlPageInterface
                 continue;
             }
             foreach($properties->get('files') as $file) {
-                $libraryFile = $this->view->getViewPath() . 'library' . DIRECTORY_SEPARATOR . $libraryName . DIRECTORY_SEPARATOR . $file;
+                $libraryFile = $this->view->getLibraryPath($libraryName) . $file;
                 $item = [
                     'file'        => (Utils::isValidUrl($file) == true) ? $file : Url::getLibraryFileUrl($libraryName,$file),
                     'type'        => \pathinfo($libraryFile,PATHINFO_EXTENSION),
@@ -782,11 +819,11 @@ class Page extends Component implements HtmlPageInterface
     public function getLibraryDetails($libraryName)
     {
         list($name, $version) = Self::parseLibraryName($libraryName);
-        $properties = $this->getLibraryProperties($name,$version);                   
+        $properties = Self::getLibraryProperties($name,$version);                   
         $files = [];
 
         foreach($properties->get('files') as $file) {   
-            $libraryFile = $this->view->getViewPath() . 'library' . DIRECTORY_SEPARATOR . $libraryName . DIRECTORY_SEPARATOR . $file; 
+            $libraryFile = $this->view->getLibraryPath($libraryName) . $file; 
             $fileType = \pathinfo($libraryFile,PATHINFO_EXTENSION);       
             $files[$fileType][] = [
                 'url' => (Utils::isValidUrl($file) == true) ? $file : Url::getLibraryFileUrl($name,$file) 

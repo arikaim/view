@@ -253,6 +253,7 @@ class ComponentData implements ComponentDataInterface
     public function setFramework($framework)
     {
         $this->framework = $framework;
+        $this->frameworkPath = $this->getFrameworkPath();
     }
 
     /**
@@ -882,6 +883,11 @@ class ComponentData implements ComponentDataInterface
         return false;
     }
 
+    /**
+     * Get component path
+     *
+     * @return string|false
+     */
     public function getComponentPath()
     {
         return Self::getTemplatePath($this->templateName,$this->type,$this->viewPath, $this->extensionsPath);
@@ -898,7 +904,7 @@ class ComponentData implements ComponentDataInterface
     }
 
     /**
-     * Get component html file
+     * Get component file
      *
      * @param string $fileExt
      * @param string $language

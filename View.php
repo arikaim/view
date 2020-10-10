@@ -23,7 +23,6 @@ use Arikaim\Core\Interfaces\CacheInterface;
  */
 class View implements ViewInterface
 {
-    
     const DEFAULT_TEMPLATE_NAME = 'blog';
 
     /**
@@ -114,6 +113,17 @@ class View implements ViewInterface
         if (isset($settings['demo_mode']) == true) {
             $this->environment->addGlobal('demo_mode',$settings['demo_mode']);
         }
+    }
+
+    /**
+     * Get UI library path
+     *
+     * @param string $libraryName
+     * @return string
+     */
+    public function getLibraryPath($libraryName)
+    {
+        return $this->viewPath . 'library' . DIRECTORY_SEPARATOR . $libraryName . DIRECTORY_SEPARATOR;
     }
 
     /**
