@@ -156,7 +156,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
             $this->includeComponentFiles($component->getFiles('css'),'css');
         }        
         $this->view->getEnvironment()->addGlobal('current_component_name',$component->getName());              
-        $this->view->getCache()->save('html.component.' . $this->currentTenplate . '.' . $component->getName() . '.' . $this->language,$component,Self::CACHE_SAVE_TIME);
+        $this->view->getCache()->save('html.component.' . $this->currentTenplate . '.' . $component->getName() . '.' . $this->language,$component,Self::$cacheSaveTime);
        
         return $component;
     }

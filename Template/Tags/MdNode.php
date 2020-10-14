@@ -19,6 +19,11 @@ use Twig\Node\NodeOutputInterface;
 class MdNode extends Node implements NodeOutputInterface
 {
     /**
+     * Twig extension class   
+     */
+    const TWIG_EXTENSION_CLASS = 'Arikaim\\Core\\View\\Template\\Extension';
+
+    /**
      * Constructor
      *
      * @param Node $body
@@ -26,8 +31,10 @@ class MdNode extends Node implements NodeOutputInterface
      * @param integer $line
      * @param string $tag
      */
-    public function __construct(Node $body, $params = [], $line = 0, $tag = 'md')
+    public function __construct(Node $body, $params = [], $line = 0, $tag = 'md', $twigExtensionClass = null)
     {
+        $this->twigExtensionClass = $twigExtensionClass ?? Self::TWIG_EXTENSION_CLASS;
+
         parent::__construct(['body' => $body],$params,$line,$tag);
     }
 
@@ -47,6 +54,6 @@ class MdNode extends Node implements NodeOutputInterface
             ->write('$lines = explode("\n", $content);' . PHP_EOL)
             ->write('$content = preg_replace(\'/^\' . $matches[0]. \'/\', "", $lines);' . PHP_EOL)
             ->write('$content = join("\n", $content);' . PHP_EOL)
-            ->write('echo $this->env->getExtension("Arikaim\\Core\\View\\Template\\Extension")->parseMarkdown($content,$context);' . PHP_EOL);
+            ->write('echo $this->env->getExtension("' . $this->twigExtensionClass . '")->parseMarkdown($content,$context);' . PHP_EOL);
     }
 }

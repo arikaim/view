@@ -20,15 +20,30 @@ use Twig\Node\SetNode;
 class ComponentNode extends Node implements NodeOutputInterface
 {
     /**
+     * Twig extension class   
+     */
+    const TWIG_EXTENSION_CLASS = 'Arikaim\\Core\\View\\Template\\Extension';
+
+    /**
+     * Twig extension class  
+     *
+     * @var string
+     */
+    protected $twigExtensionClass;
+
+    /**
      * Constructor
      *
      * @param Node $body
      * @param array $params
      * @param integer $line
      * @param string $tag
+     * @param string|null $twigExtensionClass
      */
-    public function __construct(Node $body, $params = [], $line = 0, $tag = 'component')
+    public function __construct(Node $body, $params = [], $line = 0, $tag = 'component', $twigExtensionClass = null)
     {
+        $this->twigExtensionClass = $twigExtensionClass ?? Self::TWIG_EXTENSION_CLASS;
+
         parent::__construct(['body' => $body],$params,$line,$tag);
     }
 
@@ -59,6 +74,6 @@ class ComponentNode extends Node implements NodeOutputInterface
                 $compiler->subcompile($item,true);
             }          
         }
-        $compiler->write('echo $this->env->getExtension("Arikaim\\Core\\View\\Template\\Extension")->loadComponent($context,$componentName,$context);' . PHP_EOL);
+        $compiler->write('echo $this->env->getExtension("' . $this->twigExtensionClass . '")->loadComponent($context,$componentName,$context);' . PHP_EOL);
     }
 }

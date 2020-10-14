@@ -20,6 +20,13 @@ use Arikaim\Core\Interfaces\View\ViewInterface;
 class Component   
 {
     /**
+     * Cache save time
+     *
+     * @var integer
+     */
+    public static $cacheSaveTime = 4;
+ 
+    /**
      * Twig view
      *
      * @var ViewInterface
@@ -113,6 +120,8 @@ class Component
         $this->params = $params;
         $this->framework = $framework;
 
+        Self::$cacheSaveTime = \defined('CACHE_SAVE_TIME') ? \constant('CACHE_SAVE_TIME') : Self::$cacheSaveTime;
+
         if (empty($name) == false) {
             $this->componentData = $this->createComponentData($name,$language,$withOptions,$framework); 
         }
@@ -194,9 +203,8 @@ class Component
         if (\strtolower($auth) == 'none') {
             return true;
         }
-        $access = (empty($auth) == false) ? $this->view->getExtension('Arikaim\\Core\\View\\Template\\Extension')->isLogged() : null;
 
-        return $access;
+        return (empty($auth) == false) ? $this->view->getCurrentExtension()->getAccess()->isLogged() : null;       
     }
 
     /**
@@ -211,7 +219,7 @@ class Component
         if (\strtolower($permission) == 'none') {
             return true;
         }
-        $access = (empty($permission) == false) ? $this->view->getExtension('Arikaim\\Core\\View\\Template\\Extension')->hasAccess($permission) : null;
+        $access = (empty($permission) == false) ? $this->view->getCurrentExtension()->hasAccess($permission) : null;
         
         return $access;
     }
@@ -337,7 +345,7 @@ class Component
         $files['js'] = (isset($files['js']) == true) ? $files['js'] : [];
         $files['css'] = (isset($files['css']) == true) ? $files['css'] : [];
 
-        $this->view->getCache()->save('component.files.' . $name,$files,10);
+        $this->view->getCache()->save('component.files.' . $name,$files,Self::$cacheSaveTime);
 
         return $files;
     }

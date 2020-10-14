@@ -30,6 +30,13 @@ use Arikaim\Core\View\Template\Tags\MdTagParser;
 class Extension extends AbstractExtension implements GlobalsInterface
 {
     /**
+     * Cache save time
+     *
+     * @var integer
+     */
+    public static $cacheSaveTime = 4;
+ 
+    /**
      * Markdown parser
      *
      * @var object
@@ -72,6 +79,8 @@ class Extension extends AbstractExtension implements GlobalsInterface
         $this->viewPath = $viewPath;
         $this->page = $page;
         $this->access = $access;
+
+        Self::$cacheSaveTime = \defined('CACHE_SAVE_TIME') ? \constant('CACHE_SAVE_TIME') : Self::$cacheSaveTime;
     }
 
     /**
@@ -133,7 +142,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('macro',['Arikaim\\Core\\Utils\\Path','getMacroPath']),         
             new TwigFunction('systemMacro',[$this,'getSystemMacroPath'])
         ];
-        $this->page->view->getCache()->save('twig.component.functions',$items,10);
+        $this->page->view->getCache()->save('twig.component.functions',$items,Self::$cacheSaveTime);
 
         return $items;
     }
@@ -192,7 +201,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
             new TwigFilter('md',[$this,'parseMarkdown']),
         ];
 
-        $this->page->view->getCache()->save('twig.filters',$items,10);
+        $this->page->view->getCache()->save('twig.filters',$items,Self::$cacheSaveTime);
 
         return $items;
     }
@@ -215,7 +224,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
             new TwigTest('access',[$this,'hasAccess']),
             new TwigTest('versionCompare',['Arikaim\\Core\\View\\Template\\Tests','versionCompare'])
         ];
-        $this->page->view->getCache()->save('twig.tests',$items,10);
+        $this->page->view->getCache()->save('twig.tests',$items,Self::$cacheSaveTime);
 
         return $items;
     }

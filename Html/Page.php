@@ -25,7 +25,6 @@ use Arikaim\Core\Http\Url;
 use Arikaim\Core\View\Interfaces\ComponentDataInterface;
 use Arikaim\Core\Interfaces\View\HtmlPageInterface;
 use Arikaim\Core\Interfaces\View\ViewInterface;
-use Arikaim\Core\Interfaces\OptionsInterface;
 
 /**
  * Html page
@@ -38,9 +37,16 @@ class Page extends Component implements HtmlPageInterface
     /**
      * Current language
      *
-     * @var string
+     * @var string|null
      */
     private static $currentLanguage = null;
+
+    /**
+     * Default language
+     *
+     * @var string|null
+     */
+    private static $defaultLanguage = null;
 
     /**
      * Page head properties
@@ -50,23 +56,22 @@ class Page extends Component implements HtmlPageInterface
     protected $head;
     
     /**
-     * Options
+     * Ui Library options
      *
-     * @var OptionsInterface
+     * @var array
      */
-    protected $options;
+    protected $libraryOptions;
 
-    
     /**
      * Constructor
      * 
      * @param ViewInterface $view
      */
-    public function __construct(ViewInterface $view, $options, $params = [], $language = null, $basePath = 'pages', $withOptions = true) 
+    public function __construct(ViewInterface $view, array $libraryOptions = [], $params = [], $language = null, $basePath = 'pages', $withOptions = true) 
     {  
         parent::__construct($view,null,$params,$language,$basePath,'page.json',$withOptions);
 
-        $this->options = $options;       
+        $this->libraryOptions = $libraryOptions;       
         $this->head = new PageHead();
     }
 
@@ -190,7 +195,7 @@ class Page extends Component implements HtmlPageInterface
         $component->setHtmlCode($this->view->fetch($indexPage,$params));
 
         // save to cache         
-        $this->view->getCache()->save('html.page.' . $name . '.' . $language,$component,Self::CACHE_SAVE_TIME);
+        $this->view->getCache()->save('html.page.' . $name . '.' . $language,$component,Self::$cacheSaveTime);
       
         return $component;
     }
@@ -410,7 +415,7 @@ class Page extends Component implements HtmlPageInterface
             return $url;
         }
 
-        return (Session::get('default.language') != $language) ? Self::getLanguagePath($url,$language) : $url;
+        return (Self::$defaultLanguage != $language) ? Self::getLanguagePath($url,$language) : $url;
     }
 
     /**
@@ -449,7 +454,7 @@ class Page extends Component implements HtmlPageInterface
                
         $this->setFramework($files['framework'],$component->getTemplateName());                
         // Save to cache
-        $this->view->getCache()->save('page.include.files.' . $component->getName(),$files,Self::CACHE_SAVE_TIME);
+        $this->view->getCache()->save('page.include.files.' . $component->getName(),$files,Self::$cacheSaveTime);
 
         $this->view->properties()->set('template.files',$files);
         // include ui lib files                
@@ -479,6 +484,17 @@ class Page extends Component implements HtmlPageInterface
     }
 
     /**
+     * Set default language
+     *
+     * @param string $language
+     * @return void
+     */
+    public static function setDefaultLanguage($language)
+    {
+        Self::$defaultLanguage = $language;
+    }
+
+    /**
      * Set current language
      *
      * @param string $language Language code
@@ -486,7 +502,7 @@ class Page extends Component implements HtmlPageInterface
     */
     public function setLanguage($language)
     {
-        $this->view->getCache()->save('language',$language,Self::CACHE_SAVE_TIME);
+        $this->view->getCache()->save('language',$language,Self::$cacheSaveTime);
         $this->view->properties()->set('language',$language);
         Self::$currentLanguage = $language;
         Session::set('language',$language);
@@ -559,7 +575,7 @@ class Page extends Component implements HtmlPageInterface
     {
         $item = 'ui.current.framework.' . $templateName;
 
-        $this->view->getCache()->save($item,$name,Self::CACHE_SAVE_TIME);
+        $this->view->getCache()->save($item,$name,Self::$cacheSaveTime);
         $this->view->properties()->set($item,$name);
         Session::set($item,$name);
     }
@@ -696,7 +712,7 @@ class Page extends Component implements HtmlPageInterface
             }    
         }
     
-        $this->view->getCache()->save('template.include.files.' . $templateName,$options,Self::CACHE_SAVE_TIME);
+        $this->view->getCache()->save('template.include.files.' . $templateName,$options,Self::$cacheSaveTime);
       
         return $options;
     }
@@ -735,8 +751,7 @@ class Page extends Component implements HtmlPageInterface
             'base_url'  => Url::BASE_URL
         ];
 
-        $options = $this->options->get('library.params',[]);
-        $libraryParams = (isset($options[$properties['name']]) == true) ? $options[$properties['name']] : [];
+        $libraryParams = (isset($this->libraryOptions[$properties['name']]) == true) ? $this->libraryOptions[$properties['name']] : [];
         $vars = \array_merge($vars,$libraryParams);
 
         return Text::renderMultiple($params,$vars);    
@@ -784,7 +799,7 @@ class Page extends Component implements HtmlPageInterface
             }           
         }
         // Save to cache
-        $this->view->getCache()->save('ui.library.files.' . $templateName,$includeLib,Self::CACHE_SAVE_TIME); 
+        $this->view->getCache()->save('ui.library.files.' . $templateName,$includeLib,Self::$cacheSaveTime); 
         // UI library files
         $this->view->properties()->set('ui.library.files',$includeLib);                   
         // UI Libraries

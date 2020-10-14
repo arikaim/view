@@ -23,7 +23,17 @@ use Arikaim\Core\Interfaces\CacheInterface;
  */
 class View implements ViewInterface
 {
+    /**
+     *  Default template name
+     */
     const DEFAULT_TEMPLATE_NAME = 'blog';
+
+    /**
+     * Cache save time
+     *
+     * @var integer
+     */
+    public static $cacheSaveTime = 4;
 
     /**
      * Template loader
@@ -80,6 +90,13 @@ class View implements ViewInterface
      * @var Collection
      */
     private $pageProperties;
+    
+    /**
+     * Current extension class
+     *
+     * @var string|null
+     */
+    private $currentExtensionClass;
 
     /**
      * Constructor
@@ -91,17 +108,22 @@ class View implements ViewInterface
      * @param string $componentsPath
      * @param array $settings
      */
-    public function __construct(CacheInterface $cache, $viewPath, $extensionsPath, $templatesPath, $componentsPath, $settings = [])
+    public function __construct(
+        CacheInterface $cache,       
+        $viewPath,
+        $extensionsPath,
+        $templatesPath,
+        $componentsPath,
+        $settings = [])
     {
         $this->pageProperties = new Collection();
-        $this->viewPath = $viewPath;
+        $this->viewPath = $viewPath;      
         $this->extensionsPath = $extensionsPath;
         $this->templatesPath = $templatesPath;
-        $this->componentsPath = $componentsPath;
-      
+        $this->componentsPath = $componentsPath;       
         $paths = [
-            $extensionsPath,
             $templatesPath,
+            $extensionsPath,
             $componentsPath
         ];
 
@@ -113,7 +135,23 @@ class View implements ViewInterface
         if (isset($settings['demo_mode']) == true) {
             $this->environment->addGlobal('demo_mode',$settings['demo_mode']);
         }
+
+        Self::$cacheSaveTime = \defined('CACHE_SAVE_TIME') ? \constant('CACHE_SAVE_TIME') : Self::$cacheSaveTime;
     }
+
+    /**
+     * Get extension funciton
+     *
+     * @param string $name
+     * @return object|false
+     */
+    public function getFunction($name = null)
+    {
+        $functions = $this->environment->getFunctions();
+
+        return $functions[$name] ?? false;
+    }
+    
 
     /**
      * Get UI library path
@@ -158,7 +196,7 @@ class View implements ViewInterface
     public function setPrimaryTemplate($templateName)
     {       
         $this->properties()->set('primary.template',$templateName);
-        $this->cache->save('primary.template',$templateName,2);
+        $this->cache->save('primary.template',$templateName,Self::$cacheSaveTime);
         Session::set('primary.template',$templateName);
     }
 
@@ -258,6 +296,7 @@ class View implements ViewInterface
     public function addExtension(ExtensionInterface $extension)
     {
         $this->environment->addExtension($extension);
+        $this->currentExtensionClass = \get_class($extension);
     }
 
     /**
@@ -305,6 +344,16 @@ class View implements ViewInterface
     public function getExtension($class)
     {
         return $this->environment->getExtension($class);
+    }
+
+    /**
+     * Get current extension (last added)
+     *
+     * @return ExtensionInterface
+     */
+    public function getCurrentExtension()
+    {
+        return $this->getExtension($this->currentExtensionClass);
     }
 
     /**

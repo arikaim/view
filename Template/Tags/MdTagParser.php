@@ -20,6 +20,23 @@ use Arikaim\Core\View\Template\Tags\MdNode;
 class MdTagParser extends AbstractTokenParser
 {
     /**
+     * Twig extension class  
+     *
+     * @var string
+     */
+    protected $twigExtensionClass;
+
+    /**
+     * Constructor
+     *
+     * @param string|null $twigExtensionClass
+    */
+    public function __construct($twigExtensionClass = null)
+    {
+        $this->twigExtensionClass = $twigExtensionClass;
+    }
+
+    /**
      * Parse tag 'md'
      *
      * @param Token $token
@@ -34,7 +51,7 @@ class MdTagParser extends AbstractTokenParser
         $body = $this->parser->subparse([$this,'decideTagEnd'],true);
         $stream->expect(Token::BLOCK_END_TYPE);
         
-        return new MdNode($body,[],$line,$this->getTag());
+        return new MdNode($body,[],$line,$this->getTag(),$this->twigExtensionClass);
     }
 
     /**

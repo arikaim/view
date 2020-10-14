@@ -20,6 +20,23 @@ use Arikaim\Core\View\Template\Tags\ComponentNode;
 class ComponentTagParser extends AbstractTokenParser
 {
     /**
+     * Twig extension class  
+     *
+     * @var string
+     */
+    protected $twigExtensionClass;
+
+    /**
+     * Constructor
+     *
+     * @param string|null $twigExtensionClass
+     */
+    public function __construct($twigExtensionClass = null)
+    {
+        $this->twigExtensionClass = $twigExtensionClass;
+    }
+
+    /**
      * Parse tag 'component'
      *
      * @param Token $token
@@ -38,7 +55,13 @@ class ComponentTagParser extends AbstractTokenParser
         $body = $this->parser->subparse([$this,'decideTagEnd'],true);
         $stream->expect(Token::BLOCK_END_TYPE);
         
-        return new ComponentNode($body,['name' => $componentName, 'params' => $params],$line,$this->getTag());
+        return new ComponentNode(
+            $body,
+            ['name' => $componentName,'params' => $params],
+            $line,
+            $this->getTag(),
+            $this->twigExtensionClass
+        );
     }
 
     /**
