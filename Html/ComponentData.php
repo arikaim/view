@@ -448,7 +448,7 @@ class ComponentData implements ComponentDataInterface
             return $this->files;
         }
 
-        return (isset($this->files[$fileType]) == true) ? (array)$this->files[$fileType] : [];          
+        return (array)$this->files[$fileType] ?? [];          
     }
 
     /**

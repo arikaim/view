@@ -28,14 +28,7 @@ use Arikaim\Core\View\Template\Tags\MdTagParser;
  *  Template engine functions, filters and tests.
  */
 class Extension extends AbstractExtension implements GlobalsInterface
-{
-    /**
-     * Cache save time
-     *
-     * @var integer
-     */
-    public static $cacheSaveTime = 4;
- 
+{    
     /**
      * Markdown parser
      *
@@ -78,9 +71,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
         $this->basePath = $basePath;
         $this->viewPath = $viewPath;
         $this->page = $page;
-        $this->access = $access;
-
-        Self::$cacheSaveTime = \defined('CACHE_SAVE_TIME') ? \constant('CACHE_SAVE_TIME') : Self::$cacheSaveTime;
+        $this->access = $access;       
     }
 
     /**
@@ -102,13 +93,8 @@ class Extension extends AbstractExtension implements GlobalsInterface
      * @return array
      */
     public function getFunctions() 
-    {
-        $items = $this->page->view->getCache()->fetch('twig.component.functions');
-        if (\is_array($items) == true) {
-            return $items;
-        }
-                     
-        $items = [
+    {              
+        return [
             // html components
             new TwigFunction('component',[$this,'loadComponent'],[
                 'needs_environment' => false,
@@ -119,32 +105,20 @@ class Extension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('componentOptions',[$this,'getComponentOptions']),
             new TwigFunction('currentFramework',[$this,'getCurrentFramework']),
             new TwigFunction('currentTemplate',[$this,'getCurrentTemplate']),
+            new TwigFunction('getPrimaryTemplate',[$this,'getPrimaryTemplate']),
+            new TwigFunction('getLanguage',[$this,'getLanguage']),
             // page
-            new TwigFunction('getPageFiles',[$this,'getPageFiles']),
-            new TwigFunction('getComponentsFiles',[$this,'getComponentsFiles']),          
             new TwigFunction('url',['Arikaim\\Core\\View\\Html\\Page','getUrl']),        
             new TwigFunction('currentUrl',['Arikaim\\Core\\View\\Html\\Page','getCurrentUrl']),
             // template
-            new TwigFunction('getTemplateFiles',[$this,'getTemplateFiles']),          
-            new TwigFunction('getLibraryFiles',[$this,'getLibraryFiles']),           
-            new TwigFunction('getPrimaryTemplate',[$this,'getPrimaryTemplate']),
-
             new TwigFunction('loadLibraryFile',[$this,'loadLibraryFile']),     
             new TwigFunction('loadComponentCssFile',[$this,'loadComponentCssFile']),  
-            new TwigFunction('getLanguage',[$this,'getLanguage']),
+          
             new TwigFunction('sessionInfo',['Arikaim\\Core\\Http\\Session','getParams']),
-
-            // global vars
-            new TwigFunction('setVar',[$this,'setVar']),   
-            new TwigFunction('getVar',[$this,'getVar']),   
-
             // macros
             new TwigFunction('macro',['Arikaim\\Core\\Utils\\Path','getMacroPath']),         
             new TwigFunction('systemMacro',[$this,'getSystemMacroPath'])
-        ];
-        $this->page->view->getCache()->save('twig.component.functions',$items,Self::$cacheSaveTime);
-
-        return $items;
+        ];       
     }
     
     /**
@@ -175,11 +149,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
      */
     public function getFilters() 
     {       
-        $items = $this->page->view->getCache()->fetch('twig.filters');
-        if (\is_array($items) == true) {
-            return $items;
-        }
-        $items = [          
+        return [          
             // Html
             new TwigFilter('attr',['Arikaim\\Core\\View\\Template\\Filters','attr'],['is_safe' => ['html']]),
             new TwigFilter('tag',['Arikaim\\Core\\Utils\\Html','htmlTag'],['is_safe' => ['html']]),
@@ -199,11 +169,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
             new TwigFilter('sliceText',['Arikaim\\Core\\Utils\\Text','sliceText']),
             new TwigFilter('titleCase',['Arikaim\\Core\\Utils\\Text','convertToTitleCase']),
             new TwigFilter('md',[$this,'parseMarkdown']),
-        ];
-
-        $this->page->view->getCache()->save('twig.filters',$items,Self::$cacheSaveTime);
-
-        return $items;
+        ];        
     }
 
     /**
@@ -212,21 +178,14 @@ class Extension extends AbstractExtension implements GlobalsInterface
      * @return array
      */
     public function getTests() 
-    {
-        $items = $this->page->view->getCache()->fetch('twig.tests');
-        if (\is_array($items) == true) {
-            return $items;
-        }
-        $items = [
+    {       
+        return [
             new TwigTest('haveSubItems',['Arikaim\\Core\\Utils\\Arrays','haveSubItems']),
             new TwigTest('object',['Arikaim\\Core\\View\\Template\\Tests','isObject']),
             new TwigTest('string',['Arikaim\\Core\\View\\Template\\Tests','isString']),
             new TwigTest('access',[$this,'hasAccess']),
             new TwigTest('versionCompare',['Arikaim\\Core\\View\\Template\\Tests','versionCompare'])
-        ];
-        $this->page->view->getCache()->save('twig.tests',$items,Self::$cacheSaveTime);
-
-        return $items;
+        ];       
     }
 
     /**
@@ -260,34 +219,6 @@ class Extension extends AbstractExtension implements GlobalsInterface
             new ComponentTagParser(),
             new MdTagParser()
         ];
-    }
-
-    /**
-     * Set global variable
-     *
-     * @param string $name
-     * @param mixed $value
-     * @return void
-     */
-    public function setVar($name, $value)
-    {
-        $name = 'template.var.' . $name;
-        $GLOBALS[$name] = $value;
-    }
-
-    /**
-     * Get global var
-     *
-     * @param string $name
-     * @param mixed|null $default
-     * @return mixed
-     */
-    public function getVar($name, $default = null)
-    {
-        $name = 'template.var.' . $name;
-        $value = (isset($GLOBALS[$name]) == true) ? $GLOBALS[$name] : $default;
-
-        return $value;
     }
 
     /**
@@ -329,46 +260,6 @@ class Extension extends AbstractExtension implements GlobalsInterface
         $framework = (isset($context['component_framework']) == true) ? $context['component_framework'] : null;
  
         return $this->page->createHtmlComponent($name,$params,$language,true,$framework)->load();     
-    }
-
-    /**
-     * Get page fles
-     *
-     * @return array
-     */
-    public function getPageFiles()
-    {
-        return $this->page->getPageFiles();        
-    }
-
-    /**
-     * Get template files list
-     *
-     * @return array
-     */
-    public function getTemplateFiles()
-    {
-        return $this->page->getTemplateFiles();       
-    }
-
-    /**
-     * Return library files
-     *
-     * @return array
-     */
-    public function getLibraryFiles()
-    {
-        return $this->page->getLibraryFiles();
-    }
-
-    /**
-     * Get page fles
-     *
-     * @return array
-     */
-    public function getComponentsFiles()
-    {
-        return $this->page->getComponentsFiles();        
     }
 
     /**
@@ -434,15 +325,5 @@ class Extension extends AbstractExtension implements GlobalsInterface
     public function hasAccess($name, $type = null, $authId = null)
     {
         return $this->access->hasAccess($name,$type, $authId);
-    }
-
-    /**
-     * Return true if user is logged 
-     *
-     * @return boolean
-     */
-    public function isLogged()
-    {
-        return $this->access->isLogged();
-    }
+    }    
 }

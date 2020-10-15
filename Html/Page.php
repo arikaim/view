@@ -30,8 +30,7 @@ use Arikaim\Core\Interfaces\View\ViewInterface;
  * Html page
  */
 class Page extends Component implements HtmlPageInterface
-{   
-    const CACHE_SAVE_TIME = 2;
+{    
     const SYSTEM_TEMPLATE_NAME = 'system';
   
     /**
@@ -67,7 +66,14 @@ class Page extends Component implements HtmlPageInterface
      * 
      * @param ViewInterface $view
      */
-    public function __construct(ViewInterface $view, array $libraryOptions = [], $params = [], $language = null, $basePath = 'pages', $withOptions = true) 
+    public function __construct(
+        ViewInterface $view,
+        array $libraryOptions = [],
+        $params = [],
+        $language = null,
+        $basePath = 'pages',
+        $withOptions = true
+    ) 
     {  
         parent::__construct($view,null,$params,$language,$basePath,'page.json',$withOptions);
 
@@ -87,8 +93,8 @@ class Page extends Component implements HtmlPageInterface
     public function createHtmlComponent($name, $params = [], $language = null, $withOptions = true, $framework = null)
     {       
         $templateName = $this->getCurrentTemplate();
-        $language = (empty($language) == true) ? $this->language : $language;
-        $framework = (empty($framework) == true) ? $this->getFramework($templateName) : $framework;
+        $language = $language ?? $this->language;
+        $framework = $framework ?? $this->getFramework($templateName);
            
         $component = new HtmlComponent($this->view,$name,$params,$language,'components','component.json',$withOptions,$framework);      
         $component->setCurrentTemplate($templateName);
@@ -152,13 +158,8 @@ class Page extends Component implements HtmlPageInterface
      * @return string
      */
     public function getHtmlCode($name, $params = [], $language = null)
-    {
-        if (empty($name) == true) {         
-            return false;     
-        }
-        if (\is_object($params) == true) {
-            $params = $params->toArray();
-        }
+    {       
+        $params = (\is_object($params) == true) ? $params->toArray() : $params;          
         $component = $this->render($name,$params,$language);
            
         return $component->getHtmlCode();
@@ -174,7 +175,8 @@ class Page extends Component implements HtmlPageInterface
     */
     public function render($name, $params = [], $language = null)
     { 
-        $this->setCurrent($name);
+        Session::set('page.name',$name);
+        
         // fetch from cache
         $component = $this->view->getCache()->fetch('html.page.' . $name . '.' . $language);
         
@@ -183,13 +185,38 @@ class Page extends Component implements HtmlPageInterface
         $params['template_url'] = $component->getTemplateUrl(); 
         // set current page template name      
         $this->setCurrentTemplate($component->getTemplateName());
+        
+        // page include files
+        $pageFiles = $this->getPageIncludeFiles($component);
+        // template include files
+        $templatefiles = $this->getTemplateIncludeFiles($component->getTemplateName());
+        // set page component includ files
+        $pageComponentFiles = $component->getFiles();
+        $this->view->properties()->set('include.page.files',$pageComponentFiles);
+
+        // merge template and page include files
+        $includeFiles = $this->getIncludeFiles($component->getName(),$pageFiles,$templatefiles);
+        $this->view->properties()->set('include.template.files',$includeFiles);
+        $this->setFramework($includeFiles['framework'],$component->getTemplateName());        
+        // UI Libraries
+        $this->view->properties()->set('ui.included.libraries',$includeFiles['library']);
+
+        // include ui lib files                
+        $libraryFiles = $this->getLibraryIncludeFiles($includeFiles['library'],$component->getTemplateName(),$includeFiles['framework']);  
+        // set includes library files
+        $this->view->properties()->set('ui.library.files',$libraryFiles);  
+    
 
         $body = $this->getCode($component,$params);
         $indexPage = Self::getIndexFile($component,$this->getCurrentTemplate());     
     
         $params = \array_merge($params,[
-            'body' => $body,
-            'head' => $this->head->toArray()
+            'body'            => $body,
+            'library_files'   => $libraryFiles,
+            'template_files'  => $includeFiles,
+            'page_files'      => $pageComponentFiles, 
+            'component_files' => $this->getComponentsFiles(),    
+            'head'            => $this->head->toArray()
         ]);   
 
         $component->setHtmlCode($this->view->fetch($indexPage,$params));
@@ -238,10 +265,6 @@ class Page extends Component implements HtmlPageInterface
      */
     public function getCode(ComponentDataInterface $component, $params = [])
     {     
-        // include component files
-        $this->view->properties()->merge('include.page.files',$component->getFiles());
-        $this->includeFiles($component);
-
         $framework = $this->getFramework($this->getCurrentTemplate());
         $component->setFramework($framework);
         $properties = $component->getProperties();
@@ -295,6 +318,16 @@ class Page extends Component implements HtmlPageInterface
     public function setHead(Collection $head)
     {
         $this->head = $head;
+    }
+
+    /**
+     * Return template files
+     *
+     * @return array
+     */
+    public function getTemplateFiles()
+    {
+        return $this->view->properties()->get('include.template.files');
     }
 
     /**
@@ -432,45 +465,32 @@ class Page extends Component implements HtmlPageInterface
     /**
      * Include files
      *
-     * @param ComponentDataInterface $component
-     * @return bool
+     * @param string $component
+     * @return array
      */
-    public function includeFiles(ComponentDataInterface $component) 
-    {
-        $pageFiles = $this->getPageIncludeOptions($component);
-        $files = $this->getTemplateIncludeOptions($component->getTemplateName());
-    
+    public function getIncludeFiles($componentName, $pageFiles, $templateFiles) 
+    {       
+        $files = $this->view->getCache()->fetch('page.include.files.' . $componentName);
+        if (\is_array($files) == true) {        
+            return $files;
+        }
+
         // from component template 
         if (\is_array($pageFiles) == true) {          
             foreach($pageFiles as $key => $value) {
-                if (isset($files[$key]) == false) {
-                    $files[$key] = (\is_array($value) == true) ? [] : $value;
+                if (isset($templateFiles[$key]) == false) {
+                    $templateFiles[$key] = (\is_array($value) == true) ? [] : $value;
                 } 
-                $files[$key] = (\is_array($value) == true) ? \array_unique(\array_merge($files[$key],$value)) : $value;                 
+                $templateFiles[$key] = (\is_array($value) == true) ? \array_unique(\array_merge($templateFiles[$key],$value)) : $value;                 
             }                    
         }
          
-        $files['library'] = (isset($files['library']) == true) ? $files['library'] : [];       
-               
-        $this->setFramework($files['framework'],$component->getTemplateName());                
+        $templateFiles['library'] = $templateFiles['library'] ?? [];       
+                         
         // Save to cache
-        $this->view->getCache()->save('page.include.files.' . $component->getName(),$files,Self::$cacheSaveTime);
+        $this->view->getCache()->save('page.include.files.' . $componentName,$templateFiles,Self::$cacheSaveTime);
 
-        $this->view->properties()->set('template.files',$files);
-        // include ui lib files                
-        $this->includeLibraryFiles($files['library'],$component->getTemplateName(),$files['framework']);  
-      
-        return true;
-    }
-
-    /**
-     * Return template files
-     *
-     * @return array
-     */
-    public function getTemplateFiles()
-    {
-        return $this->view->properties()->get('template.files');
+        return $templateFiles;
     }
 
     /**
@@ -591,28 +611,28 @@ class Page extends Component implements HtmlPageInterface
     }
     
     /**
-     * Get page include options
+     * Get page include files
      *
      * @param ComponentDataInterface $component
-     * @return array|false
+     * @return array
     */
-    public function getPageIncludeOptions(ComponentDataInterface $component)
+    public function getPageIncludeFiles(ComponentDataInterface $component)
     {
         // from cache 
-        $options = $this->view->getCache()->fetch('page.include.files.' . $component->getName());
+        $options = $this->view->getCache()->fetch('cache.page.include.files.' . $component->getName());
         if (empty($options) == false) {              
             return $options;
         }
 
         // from page options
         $options = $component->getOption('include',null);
-      
+
+        $options['template'] = $options['template'] ?? '';
+        $options['js'] = $options['js'] ?? [];
+        $options['css'] = $options['css'] ?? [];
+
         if (empty($options) == false) {  
             // get include options from page.json file  
-            $options['template'] = (isset($options['template']) == true) ? $options['template'] : null;
-            $options['js'] = (isset($options['js']) == true) ? $options['js'] : [];
-            $options['css'] = (isset($options['css']) == true) ? $options['css'] : [];
-
             $url = Url::getExtensionViewUrl($component->getTemplateName());
            
             $options['js'] = \array_map(function($value) use($url) {              
@@ -637,41 +657,19 @@ class Page extends Component implements HtmlPageInterface
                 }    
             }
  
-            return $options;
+            $this->view->getCache()->save('cache.page.include.files.' . $component->getName(),$options,Self::$cacheSaveTime);           
         }
 
-        return false;
+        return $options;
     }
 
     /**
-     * Include components files set in page.json include/components
-     *
-     * @param ComponentDataInterface $component
-     * @return void
-     */
-    protected function includeComponents(ComponentDataInterface $component)
-    {
-        // include component files
-        $components = $component->getOption('include/components',null);        
-        if (empty($components) == true) {
-            return;
-        }  
-
-        foreach ($components as $item) {                        
-            $files = $this->getComponentFiles($item);  
-
-            $this->includeComponentFiles($files['js'],'js');
-            $this->includeComponentFiles($files['css'],'css');              
-        }      
-    }
-
-    /**
-     * Get template include options
+     * Get template include files
      *
      * @param string $templateName
      * @return array
      */
-    public function getTemplateIncludeOptions($templateName)
+    public function getTemplateIncludeFiles($templateName)
     {               
         $options = $this->view->getCache()->fetch('template.include.files.' . $templateName);
         if (\is_array($options) == true) {        
@@ -682,10 +680,10 @@ class Page extends Component implements HtmlPageInterface
        
         $options = $templateOptions->getByPath('include',[]);
     
-        $options['js'] = (isset($options['js']) == true) ? $options['js'] : [];
-        $options['css'] = (isset($options['css']) == true) ? $options['css'] : [];
-        $options['components'] = (isset($options['components']) == true) ? $options['components'] : [];
-        $options['framework'] = (isset($options['framework']) == true) ? $options['framework'] : ComponentData::DEFAULT_CSS_FRAMEWORK;
+        $options['js'] = $options['js'] ?? [];
+        $options['css'] = $options['css'] ?? [];
+        $options['components'] = $options['components'] ?? [];
+        $options['framework'] = $options['framework'] ?? ComponentData::DEFAULT_CSS_FRAMEWORK;
         $frameworPath = ($options['framework'] == ComponentData::DEFAULT_CSS_FRAMEWORK) ? '' : $options['framework'] . '/';
 
         $url = Url::getTemplateUrl($templateName);    
@@ -758,22 +756,22 @@ class Page extends Component implements HtmlPageInterface
     }
 
     /**
-     * Include library files
+     * Get include library files
      *
      * @param array $libraryList
      * @param string $templateName
      * @param string|null $currentFramework
-     * @return bool
+     * @return array
      */
-    public function includeLibraryFiles(array $libraryList, $templateName, $currentFramework = null)
+    public function getLibraryIncludeFiles(array $libraryList, $templateName, $currentFramework = null)
     {          
-        $libraryFiles = $this->view->getCache()->fetch('ui.library.files.' . $templateName);        
-        if (\is_array($libraryFiles) == true) {
-            $this->view->properties()->set('ui.library.files',$libraryFiles); 
+        $files = $this->view->getCache()->fetch('ui.library.files.' . $templateName);        
+        if (\is_array($files) == true) {
+            $this->view->properties()->set('ui.library.files',$files); 
             $this->view->properties()->set('ui.included.libraries',$libraryList); 
-            return true;
+            return $files;
         }
-        $includeLib = [];
+        $files = [];
 
         foreach ($libraryList as $libraryItem) {           
             list($libraryName,$libraryVersion,$forceInclude) = Self::parseLibraryName($libraryItem);
@@ -795,17 +793,13 @@ class Page extends Component implements HtmlPageInterface
                     'async'       => $properties->get('async',false),
                     'crossorigin' => $properties->get('crossorigin',null)
                 ];
-                \array_push($includeLib,$item);
+                \array_push($files,$item);
             }           
         }
         // Save to cache
-        $this->view->getCache()->save('ui.library.files.' . $templateName,$includeLib,Self::$cacheSaveTime); 
-        // UI library files
-        $this->view->properties()->set('ui.library.files',$includeLib);                   
-        // UI Libraries
-        $this->view->properties()->set('ui.included.libraries',$libraryList);
-      
-        return true;
+        $this->view->getCache()->save('ui.library.files.' . $templateName,$files,Self::$cacheSaveTime); 
+                               
+        return $files;
     }
 
     /**

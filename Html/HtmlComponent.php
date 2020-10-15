@@ -23,8 +23,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
     const ACESS_DENIED_ERROR        = 'Access denied for component';
     const NOT_FOUND_ERROR           = 'Component not found';
     const COMPONENT_ERROR_NAME      = 'components:message.error';
-    const CACHE_SAVE_TIME = 2;
-
+ 
     /**
      * Errors messages
      *
@@ -152,8 +151,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
         if ($component->getOption('render') !== false) {      
             $component = $this->fetch($component,$params);
             // include files
-            $this->includeComponentFiles($component->getFiles('js'),'js');
-            $this->includeComponentFiles($component->getFiles('css'),'css');
+            $this->includeComponentFiles($component->getFiles('js'));          
         }        
         $this->view->getEnvironment()->addGlobal('current_component_name',$component->getName());              
         $this->view->getCache()->save('html.component.' . $this->currentTenplate . '.' . $component->getName() . '.' . $this->language,$component,Self::$cacheSaveTime);

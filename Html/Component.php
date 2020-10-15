@@ -258,8 +258,7 @@ class Component
         }
         
         $component = $this->applyIncludeOption($component,'include/js','js');
-        $component = $this->applyIncludeOption($component,'include/css','css');
-
+       
         return $component;
     }
 
@@ -276,16 +275,12 @@ class Component
         $option = $component->getOption($key);   
        
         if (empty($option) == false) {
-            if (\is_array($option) == true) {              
-                // include component files
-                foreach ($option as $item) {                                       
-                    $files = $this->resolveIncludeFile($item,$fileType);
-                    $component->addFiles($files,$fileType);
-                }
-            } else {   
-                $files = $this->resolveIncludeFile($option,$fileType);                        
+            $option = (\is_array($option) == false) ? [$option] : $option;            
+            // include component files
+            foreach ($option as $item) {                                       
+                $files = $this->resolveIncludeFile($item,$fileType);
                 $component->addFiles($files,$fileType);
-            }
+            }           
         }
         
         return $component;
@@ -386,21 +381,15 @@ class Component
      *
      * @param array $files
      * @param string $key
-     * @return boolean
+     * @return void
      */
-    public function includeComponentFiles($files, $key)
+    public function includeComponentFiles(array $files)
     {
-        if (empty($files) == true) {
-            return false;
-        }       
-
         foreach ($files as $item) {          
             if (empty($item['url']) == false) {               
-                $this->view->properties()->prepend('include.components.files',$item,$key);     
+                $this->view->properties()->prepend('include.components.files',$item,'js');     
             }                              
-        }
-     
-        return true;
+        }   
     }
 
     /**
