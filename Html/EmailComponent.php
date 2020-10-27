@@ -16,7 +16,7 @@ use Arikaim\Core\Utils\File;
 use Arikaim\Core\Utils\Utils;
 
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
-use Arikaim\Core\View\Interfaces\ComponentDataInterface;
+use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
 use Arikaim\Core\Interfaces\EmailCompilerInterface;
 
 /**
@@ -34,23 +34,26 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
     /**
      * Render email component data
      *
-     * @param ComponentDataInterface $component
+     * @param ComponentDescriptorInterface $component
      * @param array $params   
-     * @return ComponentDataInterface
+     * @return ComponentDescriptorInterface
      */
-    public function renderComponentData(ComponentDataInterface $component, $params = [])
+    public function renderComponentDescriptor(ComponentDescriptorInterface $component, $params = [])
     {       
         if ($component->hasError() == true) {         
             $error = $component->getError();
             $params['message'] = $this->getErrorText($error['code'],$component->getFullName());
-            $component = $this->createComponentData(Self::COMPONENT_ERROR_NAME,$this->language,true,$this->framework);  
+            $component = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true,$this->framework);  
             $component->setError($error['code'],$error['params'],$params['message']);           
         }   
         // default params      
-        $params['component_url'] = $component->getUrl();
-        $params['template_url'] = $component->getTemplateUrl(); 
-        $params['component_framework'] = $component->getFramework(); 
-     
+        $defaultParams = [
+            'component_url'       => $component->getUrl(),
+            'template_url'        => $component->getTemplateUrl()
+        ]; 
+        $params = $params ?? [];
+        $params = \array_merge($params,$defaultParams);
+
         $params = Arrays::merge($component->getProperties(),$params);
 
         if (empty($this->framework) == true) {
@@ -77,6 +80,7 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
             $params['component_css_file'] = ($file !== false) ? File::read($component->getFullPath() . $file) : null;              
             $params['library_code'] = (empty($framework) == false) ? $this->readLibraryCode($framework) : [];
             $params['body'] = $templateCode;
+
             $indexFile = Page::getIndexFile($component,$this->view->getPrimaryTemplate());
             $templateCode = $this->view->fetch($indexFile,$params);                    
         }
@@ -95,7 +99,7 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
      */
     public function compileCssFrameworkCode($code, $framework)
     {
-        $compilerClass = (isset($this->emailCompilers[$framework]) == true) ? $this->emailCompilers[$framework] : null;
+        $compilerClass = $this->emailCompilers[$framework] ?? null;
 
         if (empty($compilerClass) == true) {
             return $code;

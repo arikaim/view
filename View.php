@@ -13,7 +13,6 @@ use Twig\Environment;
 use Twig\Extension\ExtensionInterface;
 use Twig\Loader\FilesystemLoader;
 
-use Arikaim\Core\Http\Session;
 use Arikaim\Core\Collection\Collection;
 use Arikaim\Core\Interfaces\View\ViewInterface;
 use Arikaim\Core\Interfaces\CacheInterface;
@@ -38,16 +37,16 @@ class View implements ViewInterface
     /**
      * Template loader
      *
-     * @var Twig\Loader\FilesystemLoader
+     * @var Twig\Loader\FilesystemLoader|null
      */
-    private $loader;
+    private $loader = null;
     
     /**
      * Twig env
      *
-     * @var Twig\Environment
+     * @var Twig\Environment|null
      */
-    private $environment;
+    private $environment = null;
 
     /**
      * Cache
@@ -96,7 +95,28 @@ class View implements ViewInterface
      *
      * @var string|null
      */
-    private $currentExtensionClass;
+    private $currentExtensionClass = null;
+
+    /**
+     * Twig view settigns
+     *
+     * @var array
+     */
+    private $settings = [];
+
+    /**
+     * Component include files (js)
+     *
+     * @var array
+    */
+    protected $componentFiles = [];
+
+    /**
+     * Primary template
+     *
+     * @var string|null
+     */
+    protected $primaryTemplate;
 
     /**
      * Constructor
@@ -114,29 +134,46 @@ class View implements ViewInterface
         $extensionsPath,
         $templatesPath,
         $componentsPath,
-        $settings = [])
+        $settings = [],
+        $primaryTemplate = null)
     {
         $this->pageProperties = new Collection();
         $this->viewPath = $viewPath;      
         $this->extensionsPath = $extensionsPath;
         $this->templatesPath = $templatesPath;
         $this->componentsPath = $componentsPath;       
-        $paths = [
-            $templatesPath,
-            $extensionsPath,
-            $componentsPath
-        ];
-
-        $this->loader = $this->createLoader($paths);  
+        $this->settings = $settings;      
         $this->cache = $cache;      
-        $this->environment = new Environment($this->loader,$settings);
-        
-        $this->environment->addGlobal('current_component_name','');
-        if (isset($settings['demo_mode']) == true) {
-            $this->environment->addGlobal('demo_mode',$settings['demo_mode']);
-        }
+        $this->primaryTemplate = $primaryTemplate ?? Self::DEFAULT_TEMPLATE_NAME;
 
         Self::$cacheSaveTime = \defined('CACHE_SAVE_TIME') ? \constant('CACHE_SAVE_TIME') : Self::$cacheSaveTime;
+    }
+
+    /**
+     * Add include file if not exists
+     *
+     * @param array $file
+     * @param string $key
+     * @return void
+     */
+    public function addIncludeFile(array $file, $key)
+    {
+        $this->componentFiles[$key] = $this->componentFiles[$key] ?? [];
+
+        $found = \in_array($file['url'],\array_column($this->componentFiles[$key],'url'));
+        if ($found === false) {
+            $this->componentFiles[$key][] = $file;
+        }      
+    }
+
+    /**
+     * Get components include files
+     *
+     * @return array
+     */
+    public function getComponentFiles()
+    {
+        return $this->componentFiles;
     }
 
     /**
@@ -147,7 +184,7 @@ class View implements ViewInterface
      */
     public function getFunction($name = null)
     {
-        $functions = $this->environment->getFunctions();
+        $functions = $this->getEnvironment()->getFunctions();
 
         return $functions[$name] ?? false;
     }
@@ -171,20 +208,7 @@ class View implements ViewInterface
      */
     public function getPrimaryTemplate()
     {              
-        // from properties
-        $primary = $this->properties()->get('primary.template',null);
-        if (empty($primary) == false) {           
-            return $primary;
-        }
-        // from session
-        $primary = Session::get('primary.template',null);
-        if (empty($primary) == false) {          
-            return $primary;
-        }
-        // from cache
-        $primary = $this->cache->fetch('primary.template');
-      
-        return (empty($primary) == false) ? $primary : Self::DEFAULT_TEMPLATE_NAME;
+        return $this->primaryTemplate;
     }
 
     /**
@@ -195,24 +219,7 @@ class View implements ViewInterface
      */
     public function setPrimaryTemplate($templateName)
     {       
-        $this->properties()->set('primary.template',$templateName);
-        $this->cache->save('primary.template',$templateName,Self::$cacheSaveTime);
-        Session::set('primary.template',$templateName);
-    }
-
-    /**
-     * Create twig environment
-     *
-     * @param string $path
-     * @param array $settings
-     * @return Environment
-     */
-    public function createEnvironment($path, $settings = [])
-    {
-        $loader = new FilesystemLoader([$path]);
-        $environment = new Environment($loader,$settings);
-        
-        return $environment;
+        $this->primaryTemplate = $templateName;
     }
 
     /**
@@ -224,7 +231,7 @@ class View implements ViewInterface
      */
     public function addGlobal($name, $value)
     {
-        $this->environment->addGlobal($name,$value);
+        $this->getEnvironment()->addGlobal($name,$value);
     }
 
     /**
@@ -295,7 +302,7 @@ class View implements ViewInterface
      */
     public function addExtension(ExtensionInterface $extension)
     {
-        $this->environment->addExtension($extension);
+        $this->getEnvironment()->addExtension($extension);
         $this->currentExtensionClass = \get_class($extension);
     }
 
@@ -308,7 +315,7 @@ class View implements ViewInterface
      */
     public function fetch($template, $params = [])
     {       
-        return $this->environment->render($template,$params);
+        return $this->getEnvironment()->render($template,$params);
     }
 
     /**
@@ -321,7 +328,7 @@ class View implements ViewInterface
      */
     public function fetchBlock($template, $block, $params = [])
     {
-        return $this->environment->loadTemplate($template)->renderBlock($block,$params);
+        return $this->getEnvironment()->loadTemplate($template)->renderBlock($block,$params);
     }
 
     /**
@@ -333,7 +340,7 @@ class View implements ViewInterface
      */
     public function fetchFromString($string, $params = [])
     {
-        return $this->environment->createTemplate($string)->render($params);
+        return $this->getEnvironment()->createTemplate($string)->render($params);
     }
 
     /**
@@ -343,7 +350,7 @@ class View implements ViewInterface
      */
     public function getExtension($class)
     {
-        return $this->environment->getExtension($class);
+        return $this->getEnvironment()->getExtension($class);
     }
 
     /**
@@ -373,30 +380,62 @@ class View implements ViewInterface
      */
     public function getEnvironment()
     {
+        if (empty($this->environment) == true) {
+            $this->resolveEnvironment();
+        }
+
         return $this->environment;
     }
 
     /**
-     * Add path to loader
+     * Create twig environment
      *
-     * @param string $path
+     * @param string|array|null $paths
+     * @param array|null $settings
+     * @return Environment
+     */
+    public function createEnvironment($paths = null, $settings = null)
+    {
+        $loader = $this->createLoader($paths);
+        $settings = $settings ?? $this->settings;
+
+        $environment = new Environment($loader,$settings);
+        
+        return $environment;
+    }
+
+    /**
+     * Create env instance
+     *
      * @return void
      */
-    public function addPath($path)
+    protected function resolveEnvironment()
     {
-        return $this->environment->getLoader()->addPath($path); 
+        $this->environment = $this->createEnvironment();
+        $demoMode = $settings['demo_mode'] ?? false;
+        $this->environment->addGlobal('demo_mode',$demoMode);
+        $this->environment->addGlobal('current_component_name',$demoMode);   
+        $this->environment->addGlobal('current_language',null);      
+        $this->environment->addGlobal('current_url_path',null);      
     }
 
     /**
      * Create template loader
-     *
-     * @param array $paths
+     *   
+     * @param string|array|null $paths
      * @return FilesystemLoader
      */
-    private function createLoader($paths)
-    {
-        $paths = (\is_array($paths) == false) ? $paths = [$paths] : $paths;
-        
+    private function createLoader($paths = null)
+    {      
+        $paths = (\is_string($paths) == true) ? [$paths] : $paths;
+        if (empty($paths) == true) {
+            $paths = [
+                $this->extensionsPath,
+                $this->templatesPath,
+                $this->componentsPath
+            ];
+        }
+     
         return new FilesystemLoader($paths);
     }
 }

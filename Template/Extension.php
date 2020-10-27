@@ -108,8 +108,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('getPrimaryTemplate',[$this,'getPrimaryTemplate']),
             new TwigFunction('getLanguage',[$this,'getLanguage']),
             // page
-            new TwigFunction('url',['Arikaim\\Core\\View\\Html\\Page','getUrl']),        
-            new TwigFunction('currentUrl',['Arikaim\\Core\\View\\Html\\Page','getCurrentUrl']),
+            new TwigFunction('url',['Arikaim\\Core\\View\\Html\\Page','getUrl']),                
             // template
             new TwigFunction('loadLibraryFile',[$this,'loadLibraryFile']),     
             new TwigFunction('loadComponentCssFile',[$this,'loadComponentCssFile']),  
@@ -151,10 +150,7 @@ class Extension extends AbstractExtension implements GlobalsInterface
     {       
         return [          
             // Html
-            new TwigFilter('attr',['Arikaim\\Core\\View\\Template\\Filters','attr'],['is_safe' => ['html']]),
-            new TwigFilter('tag',['Arikaim\\Core\\Utils\\Html','htmlTag'],['is_safe' => ['html']]),
-            new TwigFilter('singleTag',['Arikaim\\Core\\Utils\\Html','htmlSingleTag'],['is_safe' => ['html']]),
-            new TwigFilter('startTag',['Arikaim\\Core\\Utils\\Html','htmlStartTag'],['is_safe' => ['html']]),
+            new TwigFilter('attr',['Arikaim\\Core\\View\\Template\\Filters','attr'],['is_safe' => ['html']]),          
             new TwigFilter('getAttr',['Arikaim\\Core\\Utils\\Html','getAttributes'],['is_safe' => ['html']]),
             new TwigFilter('decode',['Arikaim\\Core\\Utils\\Html','specialcharsDecode'],['is_safe' => ['html']]),
             // other

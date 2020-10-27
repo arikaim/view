@@ -12,7 +12,8 @@ namespace Arikaim\Core\View\Html;
 use Arikaim\Core\Collection\Arrays;
 use Arikaim\Core\View\Html\Component;
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
-use Arikaim\Core\View\Interfaces\ComponentDataInterface;
+use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
+use Arikaim\Core\Interfaces\View\ComponentDataInterface;
 
 /**
  * Render html component
@@ -36,31 +37,13 @@ class HtmlComponent extends Component implements HtmlComponentInterface
     ];
 
     /**
-     * Current template name
-     *
-     * @var string
-     */
-    protected $currentTenplate;
-
-    /**
-     * Set current template name
-     *
-     * @param string $name
-     * @return void
-     */
-    public function setCurrentTemplate($name)
-    {
-        $this->currentTenplate = $name;
-    }
-
-    /**
      * Get component data
      *
-     * @return ComponentDataInterface
+     * @return ComponentDescriptorInterface
      */
     public function getComponentData()
     {
-        return $this->componentData;
+        return $this->componentDescriptor;
     }
 
     /**
@@ -71,9 +54,9 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      */
     public function getErrorMessage($message)
     {        
-        $componentData = $this->createComponentData(Self::COMPONENT_ERROR_NAME,$this->language,true,$this->framework);
+        $componentDescriptor = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true,$this->framework);
 
-        return $this->renderComponentData($componentData,['message' => $message]);
+        return $this->renderComponentDescriptor($componentDescriptor,['message' => $message]);
     }
 
     /**
@@ -85,7 +68,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      */
     public function getErrorText($code, $name = '')
     {
-        $error = (isset(Self::$errors[$code]) == true) ? Self::$errors[$code] : $code;
+        $error = Self::$errors[$code] ?? $code;
 
         return $error . ' ' . $name;
     } 
@@ -99,12 +82,6 @@ class HtmlComponent extends Component implements HtmlComponentInterface
     {      
         $component = $this->render($this->name,$this->params,$this->language,true);
        
-        if (\is_object($component) == false) {
-            if (Arrays::getDefaultValue($this->params,'show_error') !== false) {              
-                return $this->getErrorMessage($this->getErrorText('NOT_VALID_COMPONENT',$this->name));
-            }
-            return '';
-        }
         if ($component->hasError() == true) {
             $error = $component->getError();
             return $this->getErrorMessage($this->getErrorText($error['code'],$this->name));
@@ -117,7 +94,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * Render component
      *
      * @param bool $withOptions
-     * @return ComponentDataInterface
+     * @return ComponentDescriptorInterface
      */
     public function renderComponent($withOptions = true) 
     { 
@@ -127,33 +104,55 @@ class HtmlComponent extends Component implements HtmlComponentInterface
     /**
      * Render component data
      *
-     * @param ComponentDataInterface $component
+     * @param ComponentDescriptorInterface $component
      * @param array $params   
-     * @return ComponentDataInterface
+     * @return ComponentDescriptorInterface
      */
-    public function renderComponentData(ComponentDataInterface $component, $params = [])
+    public function renderComponentDescriptor(ComponentDescriptorInterface $component, $params = [])
     {       
         if ($component->hasError() == true) {         
             $error = $component->getError();
             $redirect = $component->getOption('access/redirect');
             $params['message'] = $this->getErrorText($error['code'],$component->getFullName());
-            $component = $this->createComponentData(Self::COMPONENT_ERROR_NAME,$this->language,true,$this->framework);  
+            $component = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true,$this->framework);  
             $component->setError($error['code'],$error['params'],$params['message']); 
             $component->setOption('access/redirect',$redirect);            
         }   
         // default params      
-        $params['component_url'] = $component->getUrl();
-        $params['template_url'] = $component->getTemplateUrl(); 
-        $params['component_framework'] = $component->getFramework(); 
-     
+        $defaultParams = [
+            'component_url'       => $component->getUrl(),
+            'template_url'        => $component->getTemplateUrl(),
+            'component_framework' => $component->getFramework(),
+            'current_language'    => $component->getLanguage()
+        ]; 
+        $params = $params ?? [];
+        $params = \array_merge($params,$defaultParams);
+
+        // check data file
+        $dataFile = $component->getDataFile();
+        if (empty($dataFile) == false) {
+            // include data file
+            $componentData = require $dataFile;                       
+            if ($componentData instanceof ComponentDataInterface) {               
+                $data = $componentData->getData($params);
+                $params = \array_merge($params,$data);
+            }          
+        }
+
         $params = Arrays::merge($component->getProperties(),$params);
+        
         $component->setHtmlCode('');  
         if ($component->getOption('render') !== false) {      
             $component = $this->fetch($component,$params);
             // include files
             $this->includeComponentFiles($component->getFiles('js'));          
-        }        
-        $this->view->getEnvironment()->addGlobal('current_component_name',$component->getName());              
+        }  
+        // add global vars      
+        $this->view->getEnvironment()->addGlobal('current_component_name',$component->getName());        
+        $this->view->getEnvironment()->addGlobal('current_language',$component->getLanguage());
+        // curent route path        
+        $this->view->getEnvironment()->addGlobal('current_url_path',$params['current_path'] ?? '');
+
         $this->view->getCache()->save('html.component.' . $this->currentTenplate . '.' . $component->getName() . '.' . $this->language,$component,Self::$cacheSaveTime);
        
         return $component;
@@ -164,26 +163,26 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      *
      * @param string $name
      * @param array $params
-     * @param string|null $language
+     * @param string $language
      * @param boolean $withOptions    
-     * @return ComponentDataInterface
+     * @return ComponentDescriptorInterface
      */
-    public function render($name, $params = [], $language = null, $withOptions = true) 
+    public function render($name, $params = [], $language, $withOptions = true) 
     {                 
         $component = $this->view->getCache()->fetch('html.component.' . $this->currentTenplate . '.' . $name . '.' . $language);
-        $component = (empty($component) == true) ? $this->createComponentData($name,$language,$withOptions,$this->framework) : $component;
+        $component = (empty($component) == true) ? $this->createComponentDescriptor($name,$language,$withOptions,$this->framework) : $component;
       
-        return $this->renderComponentData($component,$params);
+        return $this->renderComponentDescriptor($component,$params);
     }
 
     /**
      * Get properties
      *    
-     * @return array|null
+     * @return array
      */
     public function getProperties()
     {             
-        return $this->componentData->getProperties();
+        return $this->componentDescriptor->getProperties();
     }
 
     /**
@@ -193,6 +192,6 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      */
     public function getOptions()
     {             
-        return $this->componentData->getOptions();
+        return $this->componentDescriptor->getOptions();
     }
 }

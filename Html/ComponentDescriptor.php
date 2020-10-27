@@ -13,12 +13,12 @@ use Arikaim\Core\Collection\Arrays;
 use Arikaim\Core\Utils\Utils;
 use Arikaim\Core\Utils\File;
 use Arikaim\Core\Http\Url;
-use Arikaim\Core\View\Interfaces\ComponentDataInterface;
+use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
 
 /**
- * Html component data
+ * Html component descriptor
  */
-class ComponentData implements ComponentDataInterface
+class ComponentDescriptor implements ComponentDescriptorInterface
 {
     const UNKNOWN_COMPONENT   = 0;
     const TEMPLATE_COMPONENT  = 1; 
@@ -89,14 +89,14 @@ class ComponentData implements ComponentDataInterface
      *
      * @var string
      */
-    protected $htmlCode;
+    protected $htmlCode = '';
 
     /**
      * Component render error
      *
      * @var array
      */
-    protected $error;
+    protected $error = null;
 
     /**
      * Base path
@@ -117,7 +117,7 @@ class ComponentData implements ComponentDataInterface
      *
      * @var array
      */
-    protected $files;
+    protected $files = [];
 
     /**
      * Options
@@ -166,7 +166,7 @@ class ComponentData implements ComponentDataInterface
      *
      * @var string|null
      */
-    protected $selectorType;
+    protected $selectorType = null;
 
     /**
      * Primary template name
@@ -181,6 +181,13 @@ class ComponentData implements ComponentDataInterface
      * @var string
      */
     protected $frameworkPath;
+
+    /**
+     * Component data file
+     *
+     * @var string|null
+     */
+    protected $dataFile = null;
 
     /**
      * Constructor
@@ -206,23 +213,23 @@ class ComponentData implements ComponentDataInterface
         $framework = null,
         $primaryTemplate = null) 
     {
-        $this->selectorType = null;
         $this->fullName = $name;
         $this->language = $language;
         $this->optionsFile = $optionsFile;
         $this->basePath = $basePath;
         $this->viewPath = $viewPath; 
-        $this->extensionsPath = $extensionsPath; 
-        $this->error = null;
-        $this->files['js'] = [];
-        $this->files['css'] = [];
-        $this->htmlCode = '';
+        $this->extensionsPath = $extensionsPath;    
         $this->defaultFramework = $defaultFramework;
         $this->primaryTemplate = $primaryTemplate;
+
+        $this->files = [
+            'js'  => [],
+            'css' => []
+        ];
         $this->parseName($name);
         $this->resolvePath();
         
-        $this->framework = (empty($framework) == true) ? $this->defaultFramework : $framework;
+        $this->framework = $framework ?? $this->defaultFramework;
         $this->frameworkPath = $this->getFrameworkPath();
 
         $this->resolvePropertiesFileName();
@@ -231,6 +238,18 @@ class ComponentData implements ComponentDataInterface
 
         $this->properties = $this->loadProperties();
         $this->options = $this->loadOptions(); 
+
+        $this->resolveDataFile();
+    }
+
+    /**
+     * Get component data file.
+     * 
+     * @return string|null
+     */
+    public function getDataFile()
+    {
+        return $this->dataFile;
     }
 
     /**
@@ -311,7 +330,7 @@ class ComponentData implements ComponentDataInterface
      * Create component
      *
      * @param string|null $name If name is null parent component name is used
-     * @return ComponentDataInterface|false
+     * @return ComponentDescriptorInterface|false
      */
     public function createComponent($name = null)
     {
@@ -411,7 +430,7 @@ class ComponentData implements ComponentDataInterface
     public function hasProperties()
     {
         if (isset($this->files['properties']) == true) {
-            return (\count($this->files['properties']) > 0) ? true : false;
+            return (\count($this->files['properties']) > 0);
         }
 
         return false;
@@ -426,11 +445,11 @@ class ComponentData implements ComponentDataInterface
     public function hasFiles($fileType = null)
     {
         if ($fileType == null) {
-            return (isset($this->files[$fileType]) == true) ? true: false;
+            return (isset($this->files[$fileType]) == true);
         }
 
         if (isset($this->files[$fileType]) == true) {
-            return (\count($this->files[$fileType]) > 0) ? true : false;
+            return (\count($this->files[$fileType]) > 0);
         }
 
         return false;
@@ -609,7 +628,7 @@ class ComponentData implements ComponentDataInterface
         $content += ($this->hasFiles('css') == true) ?  1 : 0;
         $content += ($this->hasProperties() == true) ?  1 : 0;
 
-        return ($content > 0) ? true : false;
+        return ($content > 0);
     }
 
     /**
@@ -619,26 +638,24 @@ class ComponentData implements ComponentDataInterface
      */
     public function clearContent()
     {
-        $this->files['js'] = [];
-        $this->files['css'] = [];
-        $this->files['html'] = [];
+        $this->files = [
+            'js'   => [],
+            'css'  => [],
+            'html' => []
+        ];
     }
 
     /**
      * Add files
      *
-     * @param string|array $files
+     * @param array $files
      * @param string $fileType
      * @return bool
      */
-    public function addFiles($files, $fileType)
+    public function addFiles(array $files, $fileType)
     {
-        if (\is_array($files) == false) {
-            return false;
-        }
-        if (isset($this->files[$fileType]) == false) {
-            $this->files[$fileType] = [];
-        }
+        $this->files[$fileType] = $this->files[$fileType] ?? [];
+       
         foreach ($files as $file) {
             if (empty($file) == false) {
                 \array_push($this->files[$fileType],$file);     
@@ -673,19 +690,14 @@ class ComponentData implements ComponentDataInterface
     /**
      * Add file
      *
-     * @param string $file
+     * @param array $file
      * @param string $fileType
      * @return void
      */
-    public function addFile($file, $fileType)
+    public function addFile(array $file, $fileType)
     {
-        if (\is_array($file) == false) {
-            return false;
-        }
+        $this->files[$fileType] = $this->files[$fileType] ?? [];
 
-        if (isset($this->files[$fileType]) == false) {
-            $this->files[$fileType] = [];
-        }
         \array_push($this->files[$fileType],$file);
     }
 
@@ -757,7 +769,7 @@ class ComponentData implements ComponentDataInterface
      */
     public function getPropertiesFileName() 
     {
-        return (isset($this->files['properties']['file_name']) == true) ? $this->files['properties']['file_name'] : false;        
+        return $this->files['properties']['file_name'] ?? false;       
     }
 
     /**
@@ -778,7 +790,7 @@ class ComponentData implements ComponentDataInterface
      */
     public function getOptionsFileName()
     {
-        return (isset($this->files['options']['file_name']) == true) ? $this->files['options']['file_name'] : false;           
+        return $this->files['options']['file_name'] ?? false;         
     }
 
     /**
@@ -796,7 +808,7 @@ class ComponentData implements ComponentDataInterface
      * Init component from array
      *
      * @param array $componentData
-     * @return ComponentData
+     * @return ComponentDescriptor
      */
     public static function createFromArray(array $data)
     {
@@ -857,7 +869,7 @@ class ComponentData implements ComponentDataInterface
      */
     public function getRootComponentPath()
     {
-        return Self::getTemplatePath($this->templateName,$this->type,$this->viewPath, $this->extensionsPath);
+        return Self::getTemplatePath($this->templateName,$this->type,$this->viewPath,$this->extensionsPath);
     }
 
     /**
@@ -890,7 +902,7 @@ class ComponentData implements ComponentDataInterface
      */
     public function getComponentPath()
     {
-        return Self::getTemplatePath($this->templateName,$this->type,$this->viewPath, $this->extensionsPath);
+        return Self::getTemplatePath($this->templateName,$this->type,$this->viewPath,$this->extensionsPath);
     }
 
     /**
@@ -947,7 +959,7 @@ class ComponentData implements ComponentDataInterface
     {       
         $data = File::readJsonFile($this->getPropertiesFileName());  
 
-        return (\is_array($data) == true) ? $data : [];                     
+        return ($data === false) ? [] : $data;                 
     }
 
     /**
@@ -959,7 +971,7 @@ class ComponentData implements ComponentDataInterface
     {         
         $data = File::readJsonFile($this->getOptionsFileName()); 
 
-        return (\is_array($data) == true) ? $data : [];         
+        return ($data === false) ? [] : $data;         
     }
 
     /**
@@ -970,13 +982,24 @@ class ComponentData implements ComponentDataInterface
      */
     public function getComponentFullPath($type, $templateName = null)
     {
-        $templateName = (empty($templateName) == true) ? $this->templateName : $templateName;
-
+        $templateName = $templateName ?? $this->templateName;
         $templateFullPath = Self::getTemplatePath($templateName,$type,$this->viewPath,$this->extensionsPath); 
-        $basePath = (empty($this->basePath) == false) ? $this->basePath : '';
+        
+        $basePath = $this->basePath ?? '';
         $path = $basePath . DIRECTORY_SEPARATOR . $this->path . DIRECTORY_SEPARATOR;   
         
         return $templateFullPath . $path;     
+    }
+
+    /**
+     * Resolve component data file
+     *
+     * @return void
+     */
+    protected function resolveDataFile()
+    {
+        $fileName = $this->fullPath . 'data.php';
+        $this->dataFile = (\file_exists($fileName) == true) ? $fileName : null;       
     }
 
     /**
@@ -1004,7 +1027,7 @@ class ComponentData implements ComponentDataInterface
                 $templatePath = '';      
         }
         $this->fullPath = $this->getComponentFullPath($this->type);
-        $this->filePath = rtrim($templatePath,DIRECTORY_SEPARATOR) . $path;
+        $this->filePath = \rtrim($templatePath,DIRECTORY_SEPARATOR) . $path;
     }
 
     /**
@@ -1035,7 +1058,7 @@ class ComponentData implements ComponentDataInterface
      */
     private function resolveOptionsFileName($path = null, $iterations = 0)
     {   
-        $path = (empty($path) == true) ? $this->getFullPath() : $path;
+        $path = $path ?? $this->getFullPath();
     
         $fileName = $path . $this->optionsFile;
         if (\file_exists($fileName) == false) {

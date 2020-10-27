@@ -10,8 +10,8 @@
 namespace Arikaim\Core\View\Html;
 
 use Arikaim\Core\Utils\Utils;
-use Arikaim\Core\View\Html\ComponentData;
-use Arikaim\Core\View\Interfaces\ComponentDataInterface;
+use Arikaim\Core\View\Html\ComponentDescriptor;
+use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
 use Arikaim\Core\Interfaces\View\ViewInterface;
 
 /**
@@ -71,9 +71,9 @@ class Component
     /**
      * Component data
      *
-     * @var ComponentDataInterface
+     * @var ComponentDescriptorInterface
      */
-    protected $componentData;
+    protected $componentDescriptor;
 
     /**
      * Options file name
@@ -88,6 +88,13 @@ class Component
      * @var string
      */
     protected $framework;
+
+    /**
+     * Current template name
+     *
+     * @var string
+     */
+    protected $currentTenplate;
 
     /**
      * Constructor
@@ -114,17 +121,28 @@ class Component
         $this->view = $view;
         $this->basePath = $basePath;
         $this->withOptions = $withOptions;
-        $this->optionsFile = (empty($optionsFile) == true) ? 'component.json' : $optionsFile;
+        $this->optionsFile = $optionsFile ?? 'component.json';
         $this->name = $name;
-        $this->language = (empty($language) == true) ? 'en' : $language;
+        $this->language = $language ?? 'en';
         $this->params = $params;
         $this->framework = $framework;
 
         Self::$cacheSaveTime = \defined('CACHE_SAVE_TIME') ? \constant('CACHE_SAVE_TIME') : Self::$cacheSaveTime;
 
         if (empty($name) == false) {
-            $this->componentData = $this->createComponentData($name,$language,$withOptions,$framework); 
+            $this->componentDescriptor = $this->createComponentDescriptor($name,$language,$withOptions,$framework); 
         }
+    }
+
+    /**
+     * Set current template name
+     *
+     * @param string $name
+     * @return void
+     */
+    public function setCurrentTemplate($name)
+    {
+        $this->currentTenplate = $name;
     }
 
     /**
@@ -144,40 +162,40 @@ class Component
      * @param string|null $language
      * @param boolean $withOptions
      * @param string|null $framework
-     * @return ComponentDataInterface
+     * @return ComponentDescriptorInterface
      */
-    protected function createComponentData($name, $language = null, $withOptions = true, $framework = null)
+    protected function createComponentDescriptor($name, $language = null, $withOptions = true, $framework = null)
     {
-        $language = (empty($language) == true) ? $this->language : $language;
+        $language = $language ?? $this->language;
         $primaryTemplate = $this->view->getPrimaryTemplate();
  
-        $componentData = new ComponentData(
+        $descriptor = new ComponentDescriptor(
             $name,
             $this->basePath,
             $language,
             $this->optionsFile,
             $this->view->getViewPath(),
             $this->view->getExtensionsPath(),
-            ComponentData::DEFAULT_CSS_FRAMEWORK,
+            ComponentDescriptor::DEFAULT_CSS_FRAMEWORK,
             $framework,
             $primaryTemplate
         );
-        if ($componentData->isValid() == false) {           
-            $componentData->setError('TEMPLATE_COMPONENT_NOT_FOUND',['full_component_name' => $name]);             
+        if ($descriptor->isValid() == false) {           
+            $descriptor->setError('TEMPLATE_COMPONENT_NOT_FOUND',['full_component_name' => $name]);             
         }
-        $componentData = ($withOptions == true) ? $this->processOptions($componentData) : $componentData;  
+        $descriptor = ($withOptions == true) ? $this->processOptions($descriptor) : $descriptor;  
         
-        return $componentData;
+        return $descriptor;
     }
 
     /**
      * Fetch component
      *   
-     * @param ComponentDataInterface $component
+     * @param ComponentDescriptorInterface $component
      * @param array $params
-     * @return ComponentDataInterface
+     * @return ComponentDescriptorInterface
      */
-    public function fetch(ComponentDataInterface $component, $params = [])
+    public function fetch(ComponentDescriptorInterface $component, $params = [])
     {      
         if ($component->hasContent() == false) {
             return $component;
@@ -194,10 +212,10 @@ class Component
     /**
      * Check auth and permissions access
      *
-     * @param ComponentDataInterface $component       
+     * @param ComponentDescriptorInterface $component       
      * @return boolean|null
      */
-    public function checkAuthOption(ComponentDataInterface $component)
+    public function checkAuthOption(ComponentDescriptorInterface $component)
     {
         $auth = $component->getOption('access/auth',null);   
         if (\strtolower($auth) == 'none') {
@@ -210,27 +228,26 @@ class Component
     /**
      * Check auth and permissions access
      *
-     * @param ComponentDataInterface $component   
+     * @param ComponentDescriptorInterface $component   
      * @return boolean|null
      */
-    public function checkPermissionOption(ComponentDataInterface $component)
+    public function checkPermissionOption(ComponentDescriptorInterface $component)
     {
         $permission = $component->getOption('access/permission',null);
         if (\strtolower($permission) == 'none') {
             return true;
         }
-        $access = (empty($permission) == false) ? $this->view->getCurrentExtension()->hasAccess($permission) : null;
         
-        return $access;
+        return (empty($permission) == false) ? $this->view->getCurrentExtension()->hasAccess($permission) : null;      
     }
 
     /**
      * Procss component options
      *
-     * @param ComponentDataInterface $component
-     * @return ComponentDataInterface
+     * @param ComponentDescriptorInterface $component
+     * @return ComponentDescriptorInterface
      */
-    public function processOptions(ComponentDataInterface $component)
+    public function processOptions(ComponentDescriptorInterface $component)
     {         
         // check auth access 
         $authAccess = $this->checkAuthOption($component);
@@ -257,20 +274,18 @@ class Component
             return $component;
         }
         
-        $component = $this->applyIncludeOption($component,'include/js','js');
-       
-        return $component;
+        return $this->applyIncludeOption($component,'include/js','js');      
     }
 
     /**
      * Apply component include option
      *
-     * @param ComponentDataInterface $component
+     * @param ComponentDescriptorInterface $component
      * @param string $key
      * @param string $fileType
-     * @return ComponentDataInterface
+     * @return ComponentDescriptorInterface
      */
-    protected function applyIncludeOption(ComponentDataInterface $component, $key, $fileType)
+    protected function applyIncludeOption(ComponentDescriptorInterface $component, $key, $fileType)
     { 
         $option = $component->getOption($key);   
        
@@ -324,21 +339,21 @@ class Component
         $language = (empty($language) == true) ? $this->language : null;
         $primaryTemplate = $this->view->getPrimaryTemplate();
 
-        $componentData = new ComponentData(
+        $descriptor = new ComponentDescriptor(
             $name,
             'components',
             $language,
             'component.json',
             $this->view->getViewPath(),
             $this->view->getExtensionsPath(),
-            ComponentData::DEFAULT_CSS_FRAMEWORK,
+            ComponentDescriptor::DEFAULT_CSS_FRAMEWORK,
             $this->framework,
             $primaryTemplate
         );
 
-        $files = (\is_object($componentData) == true) ? $componentData->getFiles($fileType) : ['js' => [],'css' => []];
-        $files['js'] = (isset($files['js']) == true) ? $files['js'] : [];
-        $files['css'] = (isset($files['css']) == true) ? $files['css'] : [];
+        $files = (\is_object($descriptor) == true) ? $descriptor->getFiles($fileType) : ['js' => [],'css' => []];
+        $files['js'] = $files['js'] ?? [];
+        $files['css'] = $files['css'] ?? [];
 
         $this->view->getCache()->save('component.files.' . $name,$files,Self::$cacheSaveTime);
 
@@ -352,7 +367,7 @@ class Component
      */
     public function isValid()
     {
-        $this->componentData->isValid();
+        $this->componentDescriptor->isValid();
     }
 
     /**
@@ -362,7 +377,7 @@ class Component
      */
     public function hasContent()
     {
-        return $this->componentData->hasContent();
+        return $this->componentDescriptor->hasContent();
     }
     
     /**
@@ -373,7 +388,7 @@ class Component
      */
     public function getOptions()
     {       
-        return $this->componentData->getOptions();
+        return $this->componentDescriptor->getOptions();
     }
 
     /**
@@ -386,8 +401,8 @@ class Component
     public function includeComponentFiles(array $files)
     {
         foreach ($files as $item) {          
-            if (empty($item['url']) == false) {               
-                $this->view->properties()->prepend('include.components.files',$item,'js');     
+            if (empty($item['url']) == false) {                   
+                $this->view->addIncludeFile($item,'js');
             }                              
         }   
     }
@@ -400,6 +415,6 @@ class Component
      */
     public static function isFullName($name)
     {
-        return (\stripos($name,':') !== false || \stripos($name,'>') !== false) ? true : false;          
+        return (\stripos($name,':') !== false || \stripos($name,'>') !== false);       
     }
 }

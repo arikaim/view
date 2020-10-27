@@ -12,8 +12,15 @@ namespace Arikaim\Core\View\Interfaces;
 /**
  * Html component data interface
  */
-interface ComponentDataInterface 
+interface ComponentDescriptorInterface 
 {  
+    /**
+     * Get component data file.
+     * 
+     * @return string|null
+     */
+    public function getDataFile();
+
     /**
      * Get component file
      *
@@ -156,18 +163,18 @@ interface ComponentDataInterface
      * Create component
      *
      * @param string|null $name If name is null parent component name is used
-     * @return ComponentDataInterface|false
+     * @return ComponentDescriptorInterface|false
     */
     public function createComponent($name = null);
 
     /**
      * Add files
      *
-     * @param string|array $files
+     * @param array $files
      * @param string $fileType
      * @return bool
      */
-    public function addFiles($files, $fileType);
+    public function addFiles(array $files, $fileType);
 
     /**
      * Get option

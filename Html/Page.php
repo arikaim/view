@@ -9,7 +9,7 @@
 */
 namespace Arikaim\Core\View\Html;
 
-use Arikaim\Core\View\Html\ComponentData;
+use Arikaim\Core\View\Html\ComponentDescriptor;
 use Arikaim\Core\View\Html\Component;
 use Arikaim\Core\View\Html\HtmlComponent;
 
@@ -19,10 +19,9 @@ use Arikaim\Core\Packages\PackageManager;
 use Arikaim\Core\Utils\Utils;
 use Arikaim\Core\Utils\Text;
 use Arikaim\Core\Utils\Path;
-use Arikaim\Core\Http\Session;
 use Arikaim\Core\Http\Url;
 
-use Arikaim\Core\View\Interfaces\ComponentDataInterface;
+use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
 use Arikaim\Core\Interfaces\View\HtmlPageInterface;
 use Arikaim\Core\Interfaces\View\ViewInterface;
 
@@ -31,21 +30,31 @@ use Arikaim\Core\Interfaces\View\ViewInterface;
  */
 class Page extends Component implements HtmlPageInterface
 {    
+    /**
+     *  Control panel template name
+     */
     const SYSTEM_TEMPLATE_NAME = 'system';
   
     /**
-     * Current language
-     *
-     * @var string|null
+     *  Error page names
      */
-    private static $currentLanguage = null;
+    const PAGE_NOT_FOUND         = 'page-not-found';
+    const SYSTEM_ERROR_PAGE      = 'system-error';
+    const APPLICATION_ERROR_PAGE = 'application-error';
 
     /**
      * Default language
      *
-     * @var string|null
+     * @var string
      */
-    private static $defaultLanguage = null;
+    private static $defaultLanguage;
+
+    /**
+     * Current language
+     *
+     * @var string
+     */
+    private static $currentLanguage;
 
     /**
      * Page head properties
@@ -68,6 +77,7 @@ class Page extends Component implements HtmlPageInterface
      */
     public function __construct(
         ViewInterface $view,
+        $defaultLanguage,
         array $libraryOptions = [],
         $params = [],
         $language = null,
@@ -79,6 +89,8 @@ class Page extends Component implements HtmlPageInterface
 
         $this->libraryOptions = $libraryOptions;       
         $this->head = new PageHead();
+
+        Self::$defaultLanguage = $defaultLanguage;
     }
 
     /**
@@ -94,7 +106,7 @@ class Page extends Component implements HtmlPageInterface
     {       
         $templateName = $this->getCurrentTemplate();
         $language = $language ?? $this->language;
-        $framework = $framework ?? $this->getFramework($templateName);
+        $framework = $framework ?? $this->getFramework();
            
         $component = new HtmlComponent($this->view,$name,$params,$language,'components','component.json',$withOptions,$framework);      
         $component->setCurrentTemplate($templateName);
@@ -114,7 +126,7 @@ class Page extends Component implements HtmlPageInterface
     public function createEmailComponent($name, $params = [], $framework = null, $language = null)
     {       
         $templateName = $this->getCurrentTemplate();
-        $language = (empty($language) == true) ? $this->getLanguage() : $language;
+        $language = $language ?? $this->getLanguage();
        
         $component = new \Arikaim\Core\View\Html\EmailComponent($this->view,$name,$params,$language,'emails','component.json',true,$framework);      
         $component->setCurrentTemplate($templateName);
@@ -133,118 +145,109 @@ class Page extends Component implements HtmlPageInterface
     }
 
     /**
-     * Load page
-     *
-     * @param Response $response
-     * @param string $name
-     * @param array|object $params
-     * @param string|null $language
-     * @return Response|false
-     */
-    public function load($response, $name, $params = [], $language = null)
-    {
-        $html = $this->getHtmlCode($name,$params,$language);
-        $response->getBody()->write($html);
-
-        return $response;
-    }
-
-    /**
-     * Get page html code
-     *
-     * @param string $name
-     * @param array|object $params
-     * @param string|null $language
-     * @return string
-     */
-    public function getHtmlCode($name, $params = [], $language = null)
-    {       
-        $params = (\is_object($params) == true) ? $params->toArray() : $params;          
-        $component = $this->render($name,$params,$language);
-           
-        return $component->getHtmlCode();
-    }   
-
-    /**
      * Render page
      *
      * @param string $name
      * @param array $params
-     * @param string|null $language    
-     * @return ComponentDataInterface
+     * @param string $language    
+     * @return ComponentDescriptorInterface
     */
-    public function render($name, $params = [], $language = null)
-    { 
-        Session::set('page.name',$name);
-        
+    public function render($name, $params = [], $language)
+    {    
         // fetch from cache
-        $component = $this->view->getCache()->fetch('html.page.' . $name . '.' . $language);
-        
-        $component = (empty($component) == true) ? $this->createComponentData($name,$language) : $component;
-        $params['component_url'] = $component->getUrl();
-        $params['template_url'] = $component->getTemplateUrl(); 
+        $component = $this->view->getCache()->fetch('html.page.component.' . $name . '.' . $language);
+        $component = (empty($component) == true) ? $this->createComponentDescriptor($name,$language) : $component;
+           
         // set current page template name      
         $this->setCurrentTemplate($component->getTemplateName());
-        
-        // page include files
-        $pageFiles = $this->getPageIncludeFiles($component);
-        // template include files
-        $templatefiles = $this->getTemplateIncludeFiles($component->getTemplateName());
-        // set page component includ files
-        $pageComponentFiles = $component->getFiles();
-        $this->view->properties()->set('include.page.files',$pageComponentFiles);
+        // add global variables 
+        $this->view->getEnvironment()->addGlobal('current_language',$language);
+        $this->view->getEnvironment()->addGlobal('page_name',$name);
+        // curent route path        
+        $this->view->getEnvironment()->addGlobal('current_url_path',$params['current_path'] ?? '');
 
-        // merge template and page include files
-        $includeFiles = $this->getIncludeFiles($component->getName(),$pageFiles,$templatefiles);
-        $this->view->properties()->set('include.template.files',$includeFiles);
-        $this->setFramework($includeFiles['framework'],$component->getTemplateName());        
-        // UI Libraries
-        $this->view->properties()->set('ui.included.libraries',$includeFiles['library']);
+        $includes = $this->getPageIncludes($component,$name,$language);        
+        $this->setFramework($includes['template_files']['framework']); 
 
-        // include ui lib files                
-        $libraryFiles = $this->getLibraryIncludeFiles($includeFiles['library'],$component->getTemplateName(),$includeFiles['framework']);  
-        // set includes library files
-        $this->view->properties()->set('ui.library.files',$libraryFiles);  
-    
-
+        $params['template_url'] = $component->getTemplateUrl();
         $body = $this->getCode($component,$params);
-        $indexPage = Self::getIndexFile($component,$this->getCurrentTemplate());     
-    
+
         $params = \array_merge($params,[
-            'body'            => $body,
-            'library_files'   => $libraryFiles,
-            'template_files'  => $includeFiles,
-            'page_files'      => $pageComponentFiles, 
-            'component_files' => $this->getComponentsFiles(),    
-            'head'            => $this->head->toArray()
+            'component_url'       => $component->getUrl(),            
+            'component_framework' => $component->getFramework(),
+            'body'                => $body,
+            'library_files'       => $includes['library_files'],
+            'template_files'      => $includes['template_files'],
+            'page_files'          => $includes['page_files'], 
+            'component_files'     => $this->getComponentsFiles(),
+            'language'            => $language,  
+            'head'                => $this->head->toArray()
         ]);   
 
-        $component->setHtmlCode($this->view->fetch($indexPage,$params));
-
+        $htmlCode = $this->view->fetch($includes['index'],$params);
+        $component->setHtmlCode($htmlCode);
         // save to cache         
-        $this->view->getCache()->save('html.page.' . $name . '.' . $language,$component,Self::$cacheSaveTime);
+        $this->view->getCache()->save('html.page.component.' . $name . '.' . $language,$component,Self::$cacheSaveTime);
       
         return $component;
     }
 
     /**
+     * Get page includes
+     *
+     * @param ComponentDescriptorInterface $component    
+     * @param string $language
+     * @return void
+     */
+    protected function getPageIncludes(ComponentDescriptorInterface $component, $language)
+    {
+        $includes = $this->view->getCache()->fetch('html.page.includes.' . $component->getName() . '.' . $language);
+        if (empty($includes) == false) {
+            return $includes;
+        }
+
+        $result = [];
+        // page include files
+        $pageFiles = $this->getPageIncludeFiles($component);
+        // template include files
+        $templatefiles = $this->getTemplateIncludeFiles($component->getTemplateName());       
+        // set page component includ files
+        $result['page_files'] = $component->getFiles();
+        // merge template and page include files
+        $result['template_files'] = $this->getIncludeFiles($component->getName(),$pageFiles,$templatefiles);
+           
+        // UI Libraries                    
+        $result['library_files'] = $this->getLibraryIncludeFiles(
+            $result['template_files']['library'],
+            $component->getTemplateName(), 
+            $result['template_files']['framework']
+        );         
+        // get index file
+        $result['index'] = Self::getIndexFile($component,$this->getCurrentTemplate());   
+        // save to cache
+        $this->view->getCache()->save('html.page.includes.' . $component->getName() . '.' . $language,$result,Self::$cacheSaveTime * 2);
+
+        return $result;      
+    }
+
+    /**
      * Get page index file
      *
-     * @param ComponentDataInterface $component
+     * @param ComponentDescriptorInterface $component
      * @return string
      */
-    public static function getIndexFile(ComponentDataInterface $component, $currentTemlate)
+    public static function getIndexFile(ComponentDescriptorInterface $component, $currentTemlate)
     {               
         switch ($component->getType()) {
-            case ComponentData::TEMPLATE_COMPONENT:
+            case ComponentDescriptor::TEMPLATE_COMPONENT:
                 $templateName = $component->getTemplateName();
                 break;
 
-            case ComponentData::PRIMARY_TEMLATE:
+            case ComponentDescriptor::PRIMARY_TEMLATE:
                 $templateName = $currentTemlate;
                 break;
 
-            case ComponentData::EXTENSION_COMPONENT:
+            case ComponentDescriptor::EXTENSION_COMPONENT:
                 $templateName = $component->getTemplateName() . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR;
                 break;
 
@@ -259,18 +262,18 @@ class Page extends Component implements HtmlPageInterface
     /**
      * Get page code
      *
-     * @param ComponentDataInterface $component
+     * @param ComponentDescriptorInterface $component
      * @param array $params
      * @return string
      */
-    public function getCode(ComponentDataInterface $component, $params = [])
+    public function getCode(ComponentDescriptorInterface $component, $params = [])
     {     
-        $framework = $this->getFramework($this->getCurrentTemplate());
+        $framework = $this->getFramework();
         $component->setFramework($framework);
         $properties = $component->getProperties();
         
         if (isset($properties['head']) == true) {
-            $templateUrl = (isset($params['template_url']) == true) ? $params['template_url'] : '';
+            $templateUrl = $params['template_url'] ?? '';
             $this->head->param('template_url',$templateUrl);           
             $head = Text::renderMultiple($properties['head'],$this->head->getParams());  
 
@@ -290,9 +293,11 @@ class Page extends Component implements HtmlPageInterface
             }
             $this->head->applyDefaultItems($head);
         }
+
         $params = \array_merge_recursive($params,(array)$properties);
-       
-        return $this->view->fetch($component->getTemplateFile($framework),$params);
+        $code = $this->view->fetch($component->getTemplateFile($framework),$params);
+      
+        return $code;
     }
     
     /**
@@ -304,7 +309,7 @@ class Page extends Component implements HtmlPageInterface
      */
     public function has($pageName, $language = null) 
     {      
-        $page = $this->createComponentData($pageName,$language);
+        $page = $this->createComponentDescriptor($pageName,$language);
 
         return $page->isValid();        
     }
@@ -321,56 +326,13 @@ class Page extends Component implements HtmlPageInterface
     }
 
     /**
-     * Return template files
-     *
-     * @return array
-     */
-    public function getTemplateFiles()
-    {
-        return $this->view->properties()->get('include.template.files');
-    }
-
-    /**
-     * Get page fles
-     *
-     * @return array
-     */
-    public function getPageFiles()
-    {
-        return $this->view->properties()->get('include.page.files');        
-    }
-
-    /**
      * Get component files
      *
      * @return array
      */
     public function getComponentsFiles()
     {    
-        return $this->view->properties()->get('include.components.files');       
-    }
-
-    /**
-     * Set curret page
-     *
-     * @param string $name
-     * @return void
-     */
-    public function setCurrent($name)
-    {   
-        Session::set('page.name',$name);
-    }
-
-    /**
-     * Set current template
-     *
-     * @param string $name
-     * @return void
-     */
-    public function setCurrentTemplate($name)
-    { 
-        $this->view->properties()->set('current.template',$name);    
-        Session::set('current.template',$name);
+        return $this->view->getComponentFiles();       
     }
 
     /**
@@ -380,54 +342,19 @@ class Page extends Component implements HtmlPageInterface
      */
     public function getCurrentTemplate()
     { 
-        $name = $this->view->properties()->get('current.template',null);   
-        if (empty($name) == false) {
-            return $name;
-        } 
-
-        $name = Session::get('current.template',null);
-        if (empty($name) == false) {
-            return $name;
-        } 
-
-        return $this->view->getPrimaryTemplate();
-    }
-
-    /**
-     * Get current page name
-     *
-     * @return string
-     */
-    public static function getCurrent()
-    {
-        return Session::get('page.name');
+        return $this->currentTenplate ?? $this->view->getPrimaryTemplate();
     }
 
     /**
      * Get language path
      *
      * @param string $path
-     * @param string|null $language
+     * @param string $language
      * @return string
      */
-    public static function getLanguagePath($path, $language = null)
-    {
-        $language = (empty($language) == true) ? Self::getCurrentLanguage() : $language; 
-          
+    public static function getLanguagePath($path, $language)
+    {   
         return (\substr($path,-1) == '/') ? $path . $language . '/' : $path . '/' . $language . '/';
-    }
-
-    /**
-     * Get curret page url
-     *
-     * @param boolean $full
-     * @return string
-     */
-    public static function getCurrentUrl($full = true)
-    {       
-        $path = Session::get('current.path');
-
-        return ($full == true) ? Self::getFullUrl($path) : $path;
     }
 
     /**
@@ -494,16 +421,6 @@ class Page extends Component implements HtmlPageInterface
     }
 
     /**
-     * Return library files
-     *
-     * @return array
-     */
-    public function getLibraryFiles()
-    {
-        return $this->view->properties()->get('ui.library.files',[]);
-    }
-
-    /**
      * Set default language
      *
      * @param string $language
@@ -522,10 +439,8 @@ class Page extends Component implements HtmlPageInterface
     */
     public function setLanguage($language)
     {
-        $this->view->getCache()->save('language',$language,Self::$cacheSaveTime);
-        $this->view->properties()->set('language',$language);
+        $this->language = $language;
         Self::$currentLanguage = $language;
-        Session::set('language',$language);
     }
 
     /**
@@ -535,7 +450,7 @@ class Page extends Component implements HtmlPageInterface
      */
     public static function getCurrentLanguage()
     {
-        return (empty(Self::$currentLanguage) == false) ? Self::$currentLanguage : Session::get('language','en');
+        return Self::$currentLanguage;
     }
 
     /**
@@ -545,19 +460,7 @@ class Page extends Component implements HtmlPageInterface
      */
     public function getLanguage() 
     {  
-        $language = $this->view->properties()->get('language',null);
-        if (empty($language) == false) {
-            return $language; 
-        } 
-
-        $language = Session::get('language',null); 
-        if (empty($language) == false) {
-            return $language;
-        }
-
-        $language = $this->view->getCache()->fetch('language');
-
-        return (empty($language) == false) ? $language : 'en';        
+        return $this->language;
     }
 
     /**
@@ -566,22 +469,9 @@ class Page extends Component implements HtmlPageInterface
      * @param string $templateName
      * @return array
      */
-    public function getFramework($templateName)
+    public function getFramework()
     {
-        $item = 'ui.current.framework.' . $templateName;
-        $frameowrk = $this->view->properties()->get($item,null);
-        if (empty($frameowrk) == false) {
-            return $frameowrk; 
-        } 
-
-        $frameowrk = Session::get($item,null);
-        if (empty($frameowrk) == false) {
-            return $frameowrk; 
-        } 
-
-        $frameowrk = $this->view->getCache()->fetch($item);
-
-        return (empty($frameowrk) == false) ? $frameowrk : ComponentData::DEFAULT_CSS_FRAMEWORK;          
+        return $this->framework ?? ComponentDescriptor::DEFAULT_CSS_FRAMEWORK;          
     }
 
     /**
@@ -591,32 +481,18 @@ class Page extends Component implements HtmlPageInterface
      * @param string $templateName
      * @return void
      */
-    public function setFramework($name, $templateName)
+    public function setFramework($name)
     {
-        $item = 'ui.current.framework.' . $templateName;
-
-        $this->view->getCache()->save($item,$name,Self::$cacheSaveTime);
-        $this->view->properties()->set($item,$name);
-        Session::set($item,$name);
+        $this->framework = $name;
     }
 
-    /**
-     * Get included ui librarues
-     *
-     * @return array
-     */
-    public function getIncludedLibraries()
-    {
-        return $this->view->properties()->set('ui.included.libraries',[]);
-    }
-    
     /**
      * Get page include files
      *
-     * @param ComponentDataInterface $component
+     * @param ComponentDescriptorInterface $component
      * @return array
     */
-    public function getPageIncludeFiles(ComponentDataInterface $component)
+    public function getPageIncludeFiles(ComponentDescriptorInterface $component)
     {
         // from cache 
         $options = $this->view->getCache()->fetch('cache.page.include.files.' . $component->getName());
@@ -683,8 +559,8 @@ class Page extends Component implements HtmlPageInterface
         $options['js'] = $options['js'] ?? [];
         $options['css'] = $options['css'] ?? [];
         $options['components'] = $options['components'] ?? [];
-        $options['framework'] = $options['framework'] ?? ComponentData::DEFAULT_CSS_FRAMEWORK;
-        $frameworPath = ($options['framework'] == ComponentData::DEFAULT_CSS_FRAMEWORK) ? '' : $options['framework'] . '/';
+        $options['framework'] = $options['framework'] ?? ComponentDescriptor::DEFAULT_CSS_FRAMEWORK;
+        $frameworPath = ($options['framework'] == ComponentDescriptor::DEFAULT_CSS_FRAMEWORK) ? '' : $options['framework'] . '/';
 
         $url = Url::getTemplateUrl($templateName);    
       
@@ -766,9 +642,7 @@ class Page extends Component implements HtmlPageInterface
     public function getLibraryIncludeFiles(array $libraryList, $templateName, $currentFramework = null)
     {          
         $files = $this->view->getCache()->fetch('ui.library.files.' . $templateName);        
-        if (\is_array($files) == true) {
-            $this->view->properties()->set('ui.library.files',$files); 
-            $this->view->properties()->set('ui.included.libraries',$libraryList); 
+        if (empty($files) == false) {            
             return $files;
         }
         $files = [];
@@ -811,10 +685,10 @@ class Page extends Component implements HtmlPageInterface
     public static function parseLibraryName($libraryName)
     {
         $nameTokens = \explode(':',$libraryName);
-        $libraryName = (isset($nameTokens[0]) == true) ? $nameTokens[0] : $libraryName;
-        $libraryVersion = (isset($nameTokens[1]) == true) ? $nameTokens[1] : null;
-        $libraryOption = (isset($nameTokens[2]) == true) ? $nameTokens[2] : $libraryVersion;
-        $include = ($libraryOption == 'include') ? true : false;
+        $libraryName = $nameTokens[0] ?? $libraryName;
+        $libraryVersion = $nameTokens[1] ?? null;
+        $libraryOption = $nameTokens[2] ?? $libraryVersion;
+        $include = ($libraryOption == 'include');
 
         return [$libraryName,$libraryVersion,$include];
     }
@@ -845,5 +719,48 @@ class Page extends Component implements HtmlPageInterface
             'async'       => $properties->get('async',false),
             'crossorigin' => $properties->get('crossorigin',null)
         ];
+    }
+
+    /**
+     * Render page not found 
+     *
+     * @param array $data
+     * @param string|null $language    
+     * @return ComponentDescriptorInterface
+    */
+    public function renderPageNotFound(array $data = [], $language = null)
+    {
+        $templateName = $this->getCurrentTemplate();
+        $language = $language ?? $this->language;
+
+        return $this->render($templateName . '>' . Self::PAGE_NOT_FOUND,['error' => $data],$language);
+    }
+
+    /**
+     * Render application error
+     *
+     * @param array $data
+     * @param string|null $language    
+     * @return ComponentDescriptorInterface
+     */
+    public function renderApplicationError(array $data = [], $language = null)
+    {
+        $language = $language ?? $this->language;
+
+        return $this->render('system:' . Self::APPLICATION_ERROR_PAGE,['error' => $data],$language);
+    }
+
+    /**
+     * Render system error(s)
+     *
+     * @param array $data
+     * @param string|null $language    
+     * @return ComponentDescriptorInterface
+     */
+    public function renderSystemError(array $data = [], $language = null)
+    {            
+        $language = $language ?? $this->language;
+
+        return $this->render('system:' . Self::SYSTEM_ERROR_PAGE,['error' => $data],$language);      
     }
 }

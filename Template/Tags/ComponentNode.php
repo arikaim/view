@@ -13,6 +13,7 @@ use Twig\Compiler;
 use Twig\Node\Node;
 use Twig\Node\NodeOutputInterface;
 use Twig\Node\SetNode;
+use Twig\Node\TextNode;
 
 /**
  * Component tag node
@@ -57,23 +58,15 @@ class ComponentNode extends Node implements NodeOutputInterface
     {
         $compiler->addDebugInfo($this);
         $componentName = $this->getAttribute('name');
-        $params = $this->getAttribute('params');
-        $exportedParams = \var_export($params, true);
-
-        $count = \count($this->getNode('body'));
-        $compiler->write("\$componentName = '$componentName';")->raw(PHP_EOL);
-        $compiler->write("\$params = $exportedParams;")->raw(PHP_EOL);
-        $compiler->write("\$context = array_merge(\$context,\$params);")->raw(PHP_EOL);
-        $compiler->write('ob_start();')->raw(PHP_EOL);
-        $compiler->subcompile($this->getNode('body'),true);
-        $compiler->write("\$context['content'] = ob_get_clean();")->raw(PHP_EOL);
-     
-        for ($i = 0; ($i < $count); $i++) {
-            $item = $this->getNode('body')->getNode($i);         
-            if ($item instanceof SetNode) {
-                $compiler->subcompile($item,true);
-            }          
-        }
-        $compiler->write('echo $this->env->getExtension("' . $this->twigExtensionClass . '")->loadComponent($context,$componentName,$context);' . PHP_EOL);
+        $body = $this->getNode('body');
+        
+        $compiler
+            ->write('ob_start();')
+            ->raw(PHP_EOL)
+            ->subcompile($body,true)
+            ->write("\$context['content'] = ob_get_clean();")
+            ->raw(PHP_EOL)
+            ->write('echo $this->env->getExtension("' . $this->twigExtensionClass . '")->loadComponent($context,"' . $componentName . '",$context);')
+            ->raw(PHP_EOL);       
     }
 }
