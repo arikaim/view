@@ -412,7 +412,8 @@ class View implements ViewInterface
     protected function resolveEnvironment()
     {
         $this->environment = $this->createEnvironment();
-        $demoMode = $settings['demo_mode'] ?? false;
+        $demoMode = $this->settings['demo_mode'] ?? false;
+       
         $this->environment->addGlobal('demo_mode',$demoMode);
         $this->environment->addGlobal('current_component_name',$demoMode);   
         $this->environment->addGlobal('current_language',null);      
