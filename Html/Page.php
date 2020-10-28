@@ -625,7 +625,7 @@ class Page extends Component implements HtmlPageInterface
             'base_url'  => Url::BASE_URL
         ];
 
-        $libraryParams = (isset($this->libraryOptions[$properties['name']]) == true) ? $this->libraryOptions[$properties['name']] : [];
+        $libraryParams = $this->libraryOptions[$properties['name']] ?? [];
         $vars = \array_merge($vars,$libraryParams);
 
         return Text::renderMultiple($params,$vars);    
@@ -657,6 +657,11 @@ class Page extends Component implements HtmlPageInterface
                 // Skip framework library which is not current
                 continue;
             }
+            if ($properties->get('disabled',false) == true) {
+                // Library is disabled
+                continue;
+            }
+        
             foreach($properties->get('files') as $file) {
                 $libraryFile = $this->view->getLibraryPath($libraryName) . $file;
                 $item = [
