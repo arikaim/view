@@ -271,8 +271,9 @@ class Page extends Component implements HtmlPageInterface
         $framework = $this->getFramework();
         $component->setFramework($framework);
         $properties = $component->getProperties();
+        $head = $properties['head'] ?? null;
         
-        if (isset($properties['head']) == true) {
+        if (\is_array($head) == true) {
             $templateUrl = $params['template_url'] ?? '';
             $this->head->param('template_url',$templateUrl);           
             $head = Text::renderMultiple($properties['head'],$this->head->getParams());  
