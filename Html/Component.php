@@ -83,13 +83,6 @@ class Component
     protected $optionsFile;
 
     /**
-     * Css framework name
-     *
-     * @var string
-     */
-    protected $framework;
-
-    /**
      * Current template name
      *
      * @var string
@@ -106,7 +99,6 @@ class Component
      * @param string $basePath
      * @param string|null $optionsFile
      * @param boolean $withOptions
-     * @param string|null $framework
      */
     public function __construct(
         ViewInterface $view,
@@ -115,8 +107,7 @@ class Component
         $language = null,
         $basePath = 'components',
         $optionsFile = null,
-        $withOptions = true,
-        $framework = null)
+        $withOptions = true)
     {
         $this->view = $view;
         $this->basePath = $basePath;
@@ -125,12 +116,11 @@ class Component
         $this->name = $name;
         $this->language = $language ?? 'en';
         $this->params = $params;
-        $this->framework = $framework;
-
+    
         Self::$cacheSaveTime = \defined('CACHE_SAVE_TIME') ? \constant('CACHE_SAVE_TIME') : Self::$cacheSaveTime;
 
         if (empty($name) == false) {
-            $this->componentDescriptor = $this->createComponentDescriptor($name,$language,$withOptions,$framework); 
+            $this->componentDescriptor = $this->createComponentDescriptor($name,$language,$withOptions); 
         }
     }
 
@@ -161,10 +151,9 @@ class Component
      * @param string $name
      * @param string|null $language
      * @param boolean $withOptions
-     * @param string|null $framework
      * @return ComponentDescriptorInterface
      */
-    protected function createComponentDescriptor($name, $language = null, $withOptions = true, $framework = null)
+    protected function createComponentDescriptor($name, $language = null, $withOptions = true)
     {
         $language = $language ?? $this->language;
         $primaryTemplate = $this->view->getPrimaryTemplate();
@@ -176,8 +165,6 @@ class Component
             $this->optionsFile,
             $this->view->getViewPath(),
             $this->view->getExtensionsPath(),
-            ComponentDescriptor::DEFAULT_CSS_FRAMEWORK,
-            $framework,
             $primaryTemplate
         );
         if ($descriptor->isValid() == false) {           
@@ -345,9 +332,7 @@ class Component
             $language,
             'component.json',
             $this->view->getViewPath(),
-            $this->view->getExtensionsPath(),
-            ComponentDescriptor::DEFAULT_CSS_FRAMEWORK,
-            $this->framework,
+            $this->view->getExtensionsPath(),      
             $primaryTemplate
         );
 

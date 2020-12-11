@@ -81,21 +81,6 @@ interface ComponentDescriptorInterface
     public function hasContent();
  
     /**
-     * Set css framework name
-     *
-     * @param string $framework
-     * @return void
-     */
-    public function setFramework($framework);
-
-    /**
-     * Get css framework name
-     *
-     * @return string
-     */
-    public function getFramework();
-
-    /**
      * Return component files 
      *
      * @param string $fileType
@@ -197,10 +182,9 @@ interface ComponentDescriptorInterface
     /**
      * Get template file
      *
-     * @param string|null $frameweork
      * @return string|false
      */
-    public function getTemplateFile($frameweork = null);
+    public function getTemplateFile();
 
     /**
      * Set html code

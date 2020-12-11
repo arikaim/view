@@ -43,7 +43,7 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
         if ($component->hasError() == true) {         
             $error = $component->getError();
             $params['message'] = $this->getErrorText($error['code'],$component->getFullName());
-            $component = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true,$this->framework);  
+            $component = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true);  
             $component->setError($error['code'],$error['params'],$params['message']);           
         }   
         // default params      
@@ -53,32 +53,20 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
         ]; 
         $params = $params ?? [];
         $params = \array_merge($params,$defaultParams);
-
         $params = Arrays::merge($component->getProperties(),$params);
-
-        if (empty($this->framework) == true) {
-            $framework = $component->getOption('framework',null);
-            if (empty($framework) == false) {
-                $component->setFramework($framework);                
-            }
-            $templateFile = $component->getTemplateFile($framework);
-        } else {
-            $framework = $this->framework;
-            $templateFile = $component->getTemplateFile();
-        }
-       
+        $library = $component->getOption('library',null);
+        $templateFile = $component->getTemplateFile();
         $templateCode = $this->view->fetch($templateFile,$params);
 
-        if (empty($framework) == false) {
-            $component->setFramework($framework);
-            $templateCode = $this->compileCssFrameworkCode($templateCode,$framework);
+        if (empty($library) == false) {
+            $templateCode = $this->compileCssFrameworkCode($templateCode,$library);
         }
      
         if (Utils::hasHtml($templateCode) == true) {
             // Email is html  
             $file = $component->getComponentFile('css');           
             $params['component_css_file'] = ($file !== false) ? File::read($component->getFullPath() . $file) : null;              
-            $params['library_code'] = (empty($framework) == false) ? $this->readLibraryCode($framework) : [];
+            $params['library_code'] = (empty($library) == false) ? $this->readLibraryCode($library) : [];
             $params['body'] = $templateCode;
 
             $indexFile = Page::getIndexFile($component,$this->view->getPrimaryTemplate());
@@ -94,12 +82,12 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
      * Compile email code
      *
      * @param string $code
-     * @param string $framework
+     * @param string $library
      * @return string
      */
-    public function compileCssFrameworkCode($code, $framework)
+    public function compileCssFrameworkCode($code, $library)
     {
-        $compilerClass = $this->emailCompilers[$framework] ?? null;
+        $compilerClass = $this->emailCompilers[$library] ?? null;
 
         if (empty($compilerClass) == true) {
             return $code;

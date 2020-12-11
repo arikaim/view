@@ -54,7 +54,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      */
     public function getErrorMessage($message)
     {        
-        $componentDescriptor = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true,$this->framework);
+        $componentDescriptor = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true);
 
         return $this->renderComponentDescriptor($componentDescriptor,['message' => $message]);
     }
@@ -79,7 +79,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * @return string
      */
     public function load()
-    {      
+    {          
         $component = $this->render($this->name,$this->params,$this->language,true);
        
         if ($component->hasError() == true) {
@@ -114,15 +114,15 @@ class HtmlComponent extends Component implements HtmlComponentInterface
             $error = $component->getError();
             $redirect = $component->getOption('access/redirect');
             $params['message'] = $this->getErrorText($error['code'],$component->getFullName());
-            $component = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true,$this->framework);  
-            $component->setError($error['code'],$error['params'],$params['message']); 
-            $component->setOption('access/redirect',$redirect);            
+            $component = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true);             
+            $component->setOption('access/redirect',$redirect);    
+            $component->setError($error['code']);                
         }   
+       
         // default params      
         $defaultParams = [
             'component_url'       => $component->getUrl(),
             'template_url'        => $component->getTemplateUrl(),
-            'component_framework' => $component->getFramework(),
             'current_language'    => $component->getLanguage()
         ]; 
         $params = $params ?? [];
@@ -133,8 +133,9 @@ class HtmlComponent extends Component implements HtmlComponentInterface
         if (empty($dataFile) == false) {
             // include data file
             $componentData = require $dataFile;                       
-            if ($componentData instanceof ComponentDataInterface) {               
-                $data = $componentData->getData($params);
+            if ($componentData instanceof ComponentDataInterface) {   
+                $container = $this->view->getCurrentExtension()->getContainer();            
+                $data = $componentData->getData($params,$container);
                 $params = \array_merge($params,$data);
             }          
         }
@@ -153,7 +154,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
         // curent route path        
         $this->view->getEnvironment()->addGlobal('current_url_path',$params['current_path'] ?? '');
 
-        $this->view->getCache()->save('html.component.' . $this->currentTenplate . '.' . $component->getName() . '.' . $this->language,$component,Self::$cacheSaveTime);
+        $this->view->getCache()->save('html.component.' . $this->currentTenplate . '.' . $component->getFullName() . '.' . $this->language,$component,Self::$cacheSaveTime);
        
         return $component;
     }
@@ -170,7 +171,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
     public function render($name, $params = [], $language, $withOptions = true) 
     {                 
         $component = $this->view->getCache()->fetch('html.component.' . $this->currentTenplate . '.' . $name . '.' . $language);
-        $component = (empty($component) == true) ? $this->createComponentDescriptor($name,$language,$withOptions,$this->framework) : $component;
+        $component = (empty($component) == true) ? $this->createComponentDescriptor($name,$language,$withOptions) : $component;
       
         return $this->renderComponentDescriptor($component,$params);
     }

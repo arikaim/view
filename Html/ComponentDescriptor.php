@@ -26,8 +26,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     const GLOBAL_COMPONENT    = 3; 
     const PRIMARY_TEMLATE     = 4;
     
-    const DEFAULT_CSS_FRAMEWORK = 'fomantic';
-
     /**
      * Component name
      *
@@ -106,13 +104,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     protected $basePath;
 
     /**
-     * UI framework name
-     *
-     * @var string|null
-     */
-    protected $framework;
-
-    /**
      * Component files
      *
      * @var array
@@ -155,13 +146,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     protected $extensionsPath;
 
     /**
-     * Default ui framework
-     *
-     * @var string
-     */
-    protected $defaultFramework;
-
-    /**
      * Component name selector type
      *
      * @var string|null
@@ -174,13 +158,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @var string
      */
     protected $primaryTemplate;
-
-    /**
-     * Framework path
-     *
-     * @var string
-     */
-    protected $frameworkPath;
 
     /**
      * Component data file
@@ -198,8 +175,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string'null $optionsFile
      * @param string|null $viewPath
      * @param string|null $extensionsPath
-     * @param string $defaultFramework
-     * @param string|null $framework
      * @param string|null $primaryTemplate
      */
     public function __construct(
@@ -209,8 +184,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         $optionsFile = null,
         $viewPath = null,
         $extensionsPath = null,
-        $defaultFramework = Self::DEFAULT_CSS_FRAMEWORK,
-        $framework = null,
         $primaryTemplate = null) 
     {
         $this->fullName = $name;
@@ -219,7 +192,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         $this->basePath = $basePath;
         $this->viewPath = $viewPath; 
         $this->extensionsPath = $extensionsPath;    
-        $this->defaultFramework = $defaultFramework;
         $this->primaryTemplate = $primaryTemplate;
 
         $this->files = [
@@ -228,10 +200,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         ];
         $this->parseName($name);
         $this->resolvePath();
-        
-        $this->framework = $framework ?? $this->defaultFramework;
-        $this->frameworkPath = $this->getFrameworkPath();
-
         $this->resolvePropertiesFileName();
         $this->resolveOptionsFileName();
         $this->resolveComponentFiles();
@@ -261,28 +229,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     public function setPrimaryTemplate($name)
     {
         $this->primaryTemplate = $name;
-    }
-
-    /**
-     * Set css framework name
-     *
-     * @param string $framework
-     * @return void
-     */
-    public function setFramework($framework)
-    {
-        $this->framework = $framework;
-        $this->frameworkPath = $this->getFrameworkPath();
-    }
-
-    /**
-     * Get css framework name
-     *
-     * @return string
-     */
-    public function getFramework()
-    {
-        return $this->framework;
     }
 
     /**
@@ -338,7 +284,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
             return false;
         }
         $name = (empty($name) == true) ? $this->getParentName() : $name;
-        $child = new Self($name,$this->basePath,$this->language,$this->optionsFile,$this->viewPath,$this->extensionsPath,$this->defaultFramework,$this->framework);
+        $child = new Self($name,$this->basePath,$this->language,$this->optionsFile,$this->viewPath,$this->extensionsPath);
 
         return (\is_object($child) == true) ? $child : false;
     }
@@ -376,10 +322,9 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Get template file
      * 
-     * @param string|null $frameweork
      * @return string|false
      */
-    public function getTemplateFile($frameweork = null)
+    public function getTemplateFile()
     {
         switch($this->type) {
             case Self::EXTENSION_COMPONENT: 
@@ -395,8 +340,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
                 return false;
         }  
         if (isset($this->files['html'][0]['file_name']) == true) {
-            $frameworkPath = (empty($frameweork) == false) ? $this->getFrameworkPath() : '';
-            return $path . $this->filePath . $frameworkPath . $this->files['html'][0]['file_name'];
+            return $path . $this->filePath . $this->files['html'][0]['file_name'];
         }
 
         return false;
@@ -906,16 +850,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     }
 
     /**
-     * Get UI framework path
-     *
-     * @return string
-     */
-    public function getFrameworkPath()
-    {
-        return ((empty($this->framework) == false) && ($this->framework != $this->defaultFramework)) ? '.' . $this->framework . DIRECTORY_SEPARATOR : '';          
-    }
-
-    /**
      * Get component file
      *
      * @param string $fileExt
@@ -924,16 +858,13 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function getComponentFile($fileExt = 'html', $language = '') 
     {         
-        $fileName = $this->getName() . $language . '.' . $fileExt;
-        // try framework path
         if ($fileExt == 'json') {
+            $fileName = $this->getName() . $language . '.' . $fileExt;
             $fullFileName = $this->getFullPath() . $fileName;
         } else {
-            $fullFileName = $this->getFullPath() . $this->frameworkPath . $fileName;   
-            if (\file_exists($fullFileName) == true) {
-                return $this->frameworkPath . $fileName;
-            }     
-            $fullFileName = $this->getFullPath() . $fileName;
+            $fileName = $this->getName() . '.' . $fileExt;
+            $fullFileName = $this->getFullPath() . $fileName;   
+           
         }
        
         return \file_exists($fullFileName) ? $fileName : false;
@@ -998,7 +929,8 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     protected function resolveDataFile()
     {
-        $fileName = $this->fullPath . 'data.php';
+        $fileName = $this->fullPath . $this->getName() . '.php';
+       
         $this->dataFile = (\file_exists($fileName) == true) ? $fileName : null;       
     }
 

@@ -195,16 +195,6 @@ class Extension extends AbstractExtension implements GlobalsInterface
     }
 
     /**
-     * Get current framework
-     *
-     * @return string
-     */
-    public function getCurrentFramework()
-    {
-        return $this->page->getFramework($this->page->getCurrentTemplate());
-    }
-
-    /**
      * Template engine tags
      *
      * @return array
@@ -253,9 +243,8 @@ class Extension extends AbstractExtension implements GlobalsInterface
     public function loadComponent(&$context, $name, $params = [])
     {        
         $language = $this->page->getLanguage();   
-        $framework = (isset($context['component_framework']) == true) ? $context['component_framework'] : null;
- 
-        return $this->page->createHtmlComponent($name,$params,$language,true,$framework)->load();     
+      
+        return $this->page->createHtmlComponent($name,$params,$language,true)->load();     
     }
 
     /**
