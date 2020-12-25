@@ -339,18 +339,6 @@ class Page extends Component implements HtmlPageInterface
     }
 
     /**
-     * Get language path
-     *
-     * @param string $path
-     * @param string $language
-     * @return string
-     */
-    public static function getLanguagePath($path, $language)
-    {   
-        return (\substr($path,-1) == '/') ? $path . $language . '/' : $path . '/' . $language . '/';
-    }
-
-    /**
      * Return url link with current language code
      *
      * @param string $path
@@ -360,26 +348,19 @@ class Page extends Component implements HtmlPageInterface
      */
     public static function getUrl($path = '', $full = false, $language = null)
     {       
-        $path = (\substr($path,0,1) == '/') ? \substr($path,1) : $path;      
-        $url = ($full == true) ? Url::BASE_URL : BASE_PATH;        
-        $url = ($url == '/') ? $url : $url . '/'; 
-        $url .= $path;      
-        if (empty($language) == true) {
-            return $url;
-        }
-
-        return (Self::$defaultLanguage != $language) ? Self::getLanguagePath($url,$language) : $url;
+        return Url::getUrl($path,!$full,$language,Self::$defaultLanguage);
     }
 
     /**
      * Get full page url
      *
      * @param string $path
+     * @param string|null $language
      * @return string
      */
-    public static function getFullUrl($path)
+    public static function getFullUrl($path, $language = null)
     {
-        return Self::getUrl($path,true);
+        return Self::getUrl($path,false);
     }
 
     /**
