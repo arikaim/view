@@ -205,9 +205,9 @@ class View implements ViewInterface
     /**
      * Get primary template
      *
-     * @return string|null
+     * @return string
      */
-    public function getPrimaryTemplate(): ?string
+    public function getPrimaryTemplate(): string
     {              
         return $this->primaryTemplate;
     }
@@ -215,10 +215,10 @@ class View implements ViewInterface
     /**
      * Set primary template
      *
-     * @param string|null $templateName
+     * @param string $templateName
      * @return void
      */
-    public function setPrimaryTemplate(?string $templateName): void
+    public function setPrimaryTemplate(string $templateName): void
     {       
         $this->primaryTemplate = $templateName;
     }

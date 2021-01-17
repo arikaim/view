@@ -335,9 +335,9 @@ class Page extends Component implements HtmlPageInterface
     /**
      * Get current template name
      *
-     * @return string|null
+     * @return string
      */
-    public function getCurrentTemplate(): ?string
+    public function getCurrentTemplate(): string
     { 
         return $this->currentTenplate ?? $this->view->getPrimaryTemplate();
     }

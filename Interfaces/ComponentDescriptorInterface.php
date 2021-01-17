@@ -47,10 +47,10 @@ interface ComponentDescriptorInterface
     /**
      * Set primary template name
      *
-     * @param string|null $name
+     * @param string $name
      * @return void
      */
-    public function setPrimaryTemplate(?string $name): void;
+    public function setPrimaryTemplate(string $name): void;
     
     /**
      * Get language code
