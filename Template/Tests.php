@@ -9,6 +9,8 @@
 */
 namespace Arikaim\Core\View\Template;
 
+use Arikaim\Core\Utils\Utils;
+
 /**
  * Tmplate tests functions
  */
@@ -37,16 +39,14 @@ class Tests
     }
 
     /**
-     * Compare version (if version1 is > version2 retrun true)
+     * Compare version (if requiredVersion is > currentVersion retrun true)
      *
-     * @param string $version1
-     * @param string $version2   
+     * @param string|null $requiredVersion
+     * @param string|null $currentVersion   
      * @return boolean
      */
-    public static function versionCompare($version1, $version2)
+    public static function versionCompare($requiredVersion, $currentVersion)
     {
-        $result = \version_compare($version1,$version2); 
-
-        return ($result == -1 || $result == 0) ? false : true;
+        return Utils::checkVersion(Utils::formatVersion($currentVersion),Utils::formatVersion($requiredVersion));  
     }
 }

@@ -33,9 +33,9 @@ class ResourceLocator
      * Get resource selector type
      *
      * @param string $name
-     * @return void
+     * @return string|null
      */
-    public static function getSelectorType($name)
+    public static function getSelectorType(string $name): ?string
     {
         if (\stripos($name,'::') !== false) {
             return Self::EXTENSION_SELECTOR;
@@ -54,9 +54,10 @@ class ResourceLocator
      * Get resource type
      *
      * @param string $name
+     * @param string|null $selectorType
      * @return integer
      */
-    public static function getType($name, $selectorType = null)
+    public static function getType(string $name, ?string $selectorType = null): int
     {
         if (Utils::isValidUrl($name) == true) {
             return Self::URL_RESOURCE;
@@ -66,7 +67,7 @@ class ResourceLocator
         if (empty($selectorType) == true) {
             return Self::UNKNOWN;
         }
-        $tokens = explode($selectorType,$name);  
+        $tokens = \explode($selectorType,$name);  
 
         switch ($selectorType) {
             case Self::EXTENSION_SELECTOR:
@@ -89,9 +90,10 @@ class ResourceLocator
      * Get resource url
      *
      * @param string $name
-     * @return string $default
+     * @param string $default
+     * @return string 
      */
-    public static function getResourceUrl($name, $default = '')
+    public static function getResourceUrl(string $name, string $default = ''): string
     {
         $data = Self::parse($name);
     
@@ -112,7 +114,7 @@ class ResourceLocator
      * @param string $name
      * @return array
      */
-    public static function parse($name)
+    public static function parse(string $name): array
     {
         $selectorType = Self::getSelectorType($name);
       
@@ -136,9 +138,11 @@ class ResourceLocator
     /**
      * Get component template name (or extenson)
      *
+     * @param string $name
+     * @param string|null $primaryTemplate
      * @return string|null
      */
-    public static function getTemplateName($name, $primaryTemplate)
+    public static function getTemplateName(string $name, ?string $primaryTemplate): ?string
     {
         $result = Self::parse($name);
 
@@ -168,7 +172,7 @@ class ResourceLocator
      * @param string $path
      * @return boolean
      */
-    public static function isAdminPath($path)
+    public static function isAdminPath(string $path): bool
     {
         return (\substr($path,0,5) == 'admin');
     }

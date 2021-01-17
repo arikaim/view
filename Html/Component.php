@@ -60,14 +60,7 @@ class Component
      * @var string
      */
     protected $basePath;
-
-    /**
-     * Component name
-     *
-     * @var string
-     */
-    protected $name;
-
+    
     /**
      * Component data
      *
@@ -90,10 +83,17 @@ class Component
     protected $currentTenplate;
 
     /**
+     * Component name
+     *
+     * @var string|null
+     */
+    protected $name;
+
+    /**
      * Constructor
      *
      * @param ViewInterface $view
-     * @param string $name
+     * @param string|null $name
      * @param array $params
      * @param string|null $language
      * @param string $basePath
@@ -102,21 +102,21 @@ class Component
      */
     public function __construct(
         ViewInterface $view,
-        $name,
-        $params = [],
-        $language = null,
-        $basePath = 'components',
-        $optionsFile = null,
-        $withOptions = true)
+        ?string $name,
+        ?array $params = [],
+        ?string $language = null,
+        string $basePath = 'components',
+        ?string $optionsFile = null,
+        bool $withOptions = true)
     {
         $this->view = $view;
         $this->basePath = $basePath;
         $this->withOptions = $withOptions;
         $this->optionsFile = $optionsFile ?? 'component.json';
-        $this->name = $name;
         $this->language = $language ?? 'en';
-        $this->params = $params;
-    
+        $this->params = $params ?? [];
+        $this->name = $name;
+
         Self::$cacheSaveTime = \defined('CACHE_SAVE_TIME') ? \constant('CACHE_SAVE_TIME') : Self::$cacheSaveTime;
 
         if (empty($name) == false) {
@@ -130,7 +130,7 @@ class Component
      * @param string $name
      * @return void
      */
-    public function setCurrentTemplate($name)
+    public function setCurrentTemplate(string $name): void
     {
         $this->currentTenplate = $name;
     }
@@ -153,7 +153,7 @@ class Component
      * @param boolean $withOptions
      * @return ComponentDescriptorInterface
      */
-    protected function createComponentDescriptor($name, $language = null, $withOptions = true)
+    protected function createComponentDescriptor(string $name, ?string $language = null, bool $withOptions = true)
     {
         $language = $language ?? $this->language;
         $primaryTemplate = $this->view->getPrimaryTemplate();
@@ -182,7 +182,7 @@ class Component
      * @param array $params
      * @return ComponentDescriptorInterface
      */
-    public function fetch(ComponentDescriptorInterface $component, $params = [])
+    public function fetch(ComponentDescriptorInterface $component, array $params = [])
     {      
         if ($component->hasContent() == false) {
             return $component;
@@ -272,7 +272,7 @@ class Component
      * @param string $fileType
      * @return ComponentDescriptorInterface
      */
-    protected function applyIncludeOption(ComponentDescriptorInterface $component, $key, $fileType)
+    protected function applyIncludeOption(ComponentDescriptorInterface $component, string $key, string $fileType)
     { 
         $option = $component->getOption($key);   
        
@@ -292,10 +292,10 @@ class Component
      * Resolve include file
      *
      * @param string $includeFile
-     * @param string $fileType
+     * @param string|null $fileType
      * @return array
      */
-    protected function resolveIncludeFile($includeFile, $fileType)
+    protected function resolveIncludeFile(string $includeFile, ?string $fileType): array
     {
         if (Utils::isValidUrl($includeFile) == true) {             
             $tokens = \explode('|',$includeFile);
@@ -317,7 +317,7 @@ class Component
      * @param string $fileType
      * @return array
      */
-    public function getComponentFiles($name, $fileType = null)
+    public function getComponentFiles(string $name, ?string $fileType = null): array
     {        
         $files = $this->view->getCache()->fetch('component.files.' . $name);
         if (\is_array($files) == true) {
@@ -350,9 +350,9 @@ class Component
      *
      * @return boolean
      */
-    public function isValid()
+    public function isValid(): bool
     {
-        $this->componentDescriptor->isValid();
+        return $this->componentDescriptor->isValid();
     }
 
     /**
@@ -360,7 +360,7 @@ class Component
      *
      * @return boolean
      */
-    public function hasContent()
+    public function hasContent(): bool
     {
         return $this->componentDescriptor->hasContent();
     }
@@ -369,9 +369,9 @@ class Component
      * Get component options
      *
      * @param string $name   
-     * @return array|null
+     * @return array
      */
-    public function getOptions()
+    public function getOptions(): array
     {       
         return $this->componentDescriptor->getOptions();
     }
@@ -380,10 +380,9 @@ class Component
      * Inlcude componnent files
      *
      * @param array $files
-     * @param string $key
      * @return void
      */
-    public function includeComponentFiles(array $files)
+    public function includeComponentFiles(array $files): void
     {
         foreach ($files as $item) {          
             if (empty($item['url']) == false) {                   
@@ -398,7 +397,7 @@ class Component
      * @param string $name
      * @return boolean
      */
-    public static function isFullName($name)
+    public static function isFullName(string $name): bool
     {
         return (\stripos($name,':') !== false || \stripos($name,'>') !== false);       
     }

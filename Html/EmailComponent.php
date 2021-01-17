@@ -38,7 +38,7 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
      * @param array $params   
      * @return ComponentDescriptorInterface
      */
-    public function renderComponentDescriptor(ComponentDescriptorInterface $component, $params = [])
+    public function renderComponentDescriptor(ComponentDescriptorInterface $component, array $params = [])
     {       
         if ($component->hasError() == true) {         
             $error = $component->getError();
@@ -48,8 +48,8 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
         }   
         // default params      
         $defaultParams = [
-            'component_url'       => $component->getUrl(),
-            'template_url'        => $component->getTemplateUrl()
+            'component_url' => $component->getUrl(),
+            'template_url'  => $component->getTemplateUrl()
         ]; 
         $params = $params ?? [];
         $params = \array_merge($params,$defaultParams);
@@ -82,10 +82,10 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
      * Compile email code
      *
      * @param string $code
-     * @param string $library
+     * @param string|null $library
      * @return string
      */
-    public function compileCssFrameworkCode($code, $library)
+    public function compileCssFrameworkCode(string $code, ?string $library): string
     {
         $compilerClass = $this->emailCompilers[$library] ?? null;
 
@@ -109,7 +109,7 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
      * @param string $name
      * @return array
      */
-    public function readLibraryCode($name)
+    public function readLibraryCode(string $name): array
     {
         list($libraryName,$libraryVersion,$forceInclude) = Page::parseLibraryName($name);
         $properties = Page::getLibraryProperties($libraryName,$libraryVersion); 
@@ -129,7 +129,7 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
      * @param array $compilers
      * @return void
      */
-    public function setEmailCompillers(array $compilers)
+    public function setEmailCompillers(array $compilers): void
     {
         $this->emailCompilers = $compilers;       
     }

@@ -19,7 +19,7 @@ interface ComponentDescriptorInterface
      * 
      * @return string|null
      */
-    public function getDataFile();
+    public function getDataFile(): ?string;
 
     /**
      * Get component file
@@ -28,57 +28,57 @@ interface ComponentDescriptorInterface
      * @param string $language
      * @return string|false
      */
-    public function getComponentFile($fileExt = 'html', $language = '');
+    public function getComponentFile(string $fileExt = 'html', string $language = '');
     
     /**
      * Get full path
      *
      * @return string
      */
-    public function getFullPath();
+    public function getFullPath(): string;
 
     /**
      * Convert to array
      *
      * @return array
     */
-    public function toArray();
+    public function toArray(): array;
 
     /**
      * Set primary template name
      *
-     * @param string $name
+     * @param string|null $name
      * @return void
      */
-    public function setPrimaryTemplate($name);
+    public function setPrimaryTemplate(?string $name): void;
     
     /**
      * Get language code
      *
      * @return string
      */
-    public function getLanguage();
+    public function getLanguage(): string;
 
     /**
      * Get error
      *
-     * @return array
+     * @return array|null
      */
-    public function getError();
+    public function getError(): ?array;
 
     /**
      * Return true if component have error
      *
      * @return boolean
      */
-    public function hasError();
+    public function hasError(): bool;
 
     /**
      * Return true if component is not empty
      *
      * @return boolean
      */
-    public function hasContent();
+    public function hasContent(): bool;
  
     /**
      * Return component files 
@@ -86,71 +86,72 @@ interface ComponentDescriptorInterface
      * @param string $fileType
      * @return array
      */
-    public function getFiles($fileType = null);
+    public function getFiles(?string $fileType = null): array;
 
     /**
      * Get properties
      *
-     * @return void
+     * @param array $default
+     * @return array
      */
-    public function getProperties();
+    public function getProperties(array $default = []): array;
 
     /**
      * Get options
      *
      * @return array
      */
-    public function getOptions();
+    public function getOptions(): array;
 
     /**
      * Get name
      *
      * @return string
      */
-    public function getName();
+    public function getName(): string;
 
     /**
      * Get component type
      *
      * @return integer
      */
-    public function getType();
+    public function getType(): int;
 
     /**
      * Check if component is valid 
      *
      * @return boolean
      */
-    public function isValid();
+    public function isValid(): bool;
 
     /**
      * Get component html code
      *
      * @return string
      */
-    public function getHtmlCode();
+    public function getHtmlCode(): string;
 
     /**
-     * Undocumented function
+     * Get url
      *
-     * @return void
+     * @return string
      */
-    public function getUrl();
+    public function getUrl(): string;
 
     /**
      * Return true if component has parent component 
      *
      * @return boolean
      */
-    public function hasParent();
+    public function hasParent(): bool;
 
     /**
      * Create component
      *
      * @param string|null $name If name is null parent component name is used
-     * @return ComponentDescriptorInterface|false
+     * @return ComponentDescriptorInterface|null
     */
-    public function createComponent($name = null);
+    public function createComponent(?string $name = null);
 
     /**
      * Add files
@@ -159,7 +160,7 @@ interface ComponentDescriptorInterface
      * @param string $fileType
      * @return bool
      */
-    public function addFiles(array $files, $fileType);
+    public function addFiles(array $files, string $fileType): bool;
 
     /**
      * Get option
@@ -168,7 +169,7 @@ interface ComponentDescriptorInterface
      * @param mixed $default
      * @return mixed
      */
-    public function getOption($name, $default = null);
+    public function getOption(string $name, $default = null);
 
     /**
      * Set option value
@@ -177,14 +178,14 @@ interface ComponentDescriptorInterface
      * @param mixed $value
      * @return void
      */
-    public function setOption($name, $value);
+    public function setOption(string $name, $value): void;
     
     /**
      * Get template file
      *
      * @return string|false
      */
-    public function getTemplateFile();
+    public function getTemplateFile(): ?string;
 
     /**
      * Set html code
@@ -192,14 +193,14 @@ interface ComponentDescriptorInterface
      * @param string $code
      * @return void
      */
-    public function setHtmlCode($code);
+    public function setHtmlCode(string $code): void;
 
     /**
      * Get root component name
      *
      * @return string
      */
-    public function getRootName();
+    public function getRootName(): string;
 
     /**
      * Set error
@@ -209,54 +210,54 @@ interface ComponentDescriptorInterface
      * @param string|null $msssage
      * @return void
      */
-    public function setError($code, $params = [], $msssage = null);
+    public function setError(string $code, array $params = [], ?string $msssage = null): void;
 
     /**
      * Clear content
      *
      * @return void
      */
-    public function clearContent();    
+    public function clearContent(): void;    
 
     /**
      * Get template url
      *
-     * @return string|false
+     * @return string|null
      */
-    public function getTemplateUrl();
+    public function getTemplateUrl(): ?string;
 
     /**
      * Get component full name
      *
      * @return string
      */
-    public function getFullName();
+    public function getFullName(): ?string;
 
     /**
      * Load properties json file
      *
-     * @return Collection
+     * @return array
      */
-    public function loadProperties();
+    public function loadProperties(): array;
 
     /**
      * Get template or extension name
      *
-     * @return string
+     * @return string|null
      */
-    public function getTemplateName();
+    public function getTemplateName(): ?string ;
 
     /**
      * Return root component name
      *
      * @return string
      */
-    public function getRootComponentPath();
+    public function getRootComponentPath(): string;
 
     /**
      * Return base path
      *
      * @return string
      */
-    public function getBasePath();    
+    public function getBasePath(): string;    
 }

@@ -52,11 +52,11 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * @param string $message
      * @return string
      */
-    public function getErrorMessage($message)
+    public function getErrorMessage(string $message): string
     {        
         $componentDescriptor = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true);
 
-        return $this->renderComponentDescriptor($componentDescriptor,['message' => $message]);
+        return $this->renderComponentDescriptor($componentDescriptor,['message' => $message])->getHtmlCode();
     }
 
     /**
@@ -66,7 +66,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * @param string $name
      * @return string
      */
-    public function getErrorText($code, $name = '')
+    public function getErrorText(string $code, string $name = ''): string
     {
         $error = Self::$errors[$code] ?? $code;
 
@@ -78,7 +78,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      *    
      * @return string
      */
-    public function load()
+    public function load(): string
     {          
         $component = $this->render($this->name,$this->params,$this->language,true);
        
@@ -96,7 +96,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * @param bool $withOptions
      * @return ComponentDescriptorInterface
      */
-    public function renderComponent($withOptions = true) 
+    public function renderComponent(bool $withOptions = true) 
     { 
         return $this->render($this->name,$this->params,$this->language,$withOptions);
     }
@@ -108,7 +108,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * @param array $params   
      * @return ComponentDescriptorInterface
      */
-    public function renderComponentDescriptor(ComponentDescriptorInterface $component, $params = [])
+    public function renderComponentDescriptor(ComponentDescriptorInterface $component, array $params = [])
     {       
         if ($component->hasError() == true) {         
             $error = $component->getError();
@@ -121,11 +121,10 @@ class HtmlComponent extends Component implements HtmlComponentInterface
        
         // default params      
         $defaultParams = [
-            'component_url'       => $component->getUrl(),
-            'template_url'        => $component->getTemplateUrl(),
-            'current_language'    => $component->getLanguage()
-        ]; 
-        $params = $params ?? [];
+            'component_url'    => $component->getUrl(),
+            'template_url'     => $component->getTemplateUrl(),
+            'current_language' => $component->getLanguage()
+        ];       
         $params = \array_merge($params,$defaultParams);
 
         // check data file
@@ -168,7 +167,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * @param boolean $withOptions    
      * @return ComponentDescriptorInterface
      */
-    public function render($name, $params = [], $language, $withOptions = true) 
+    public function render(string $name, array $params = [], string $language, bool $withOptions = true) 
     {                 
         $component = $this->view->getCache()->fetch('html.component.' . $this->currentTenplate . '.' . $name . '.' . $language);
         $component = (empty($component) == true) ? $this->createComponentDescriptor($name,$language,$withOptions) : $component;
@@ -181,7 +180,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      *    
      * @return array
      */
-    public function getProperties()
+    public function getProperties(): array
     {             
         return $this->componentDescriptor->getProperties();
     }
@@ -191,7 +190,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      *
      * @return array
      */
-    public function getOptions()
+    public function getOptions(): array
     {             
         return $this->componentDescriptor->getOptions();
     }

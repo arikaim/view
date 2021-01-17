@@ -12,8 +12,6 @@ namespace Arikaim\Core\View\Template\Tags;
 use Twig\Compiler;
 use Twig\Node\Node;
 use Twig\Node\NodeOutputInterface;
-use Twig\Node\SetNode;
-use Twig\Node\TextNode;
 
 /**
  * Component tag node

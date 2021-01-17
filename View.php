@@ -114,7 +114,7 @@ class View implements ViewInterface
     /**
      * Primary template
      *
-     * @var string|null
+     * @var string
      */
     protected $primaryTemplate;
 
@@ -127,15 +127,16 @@ class View implements ViewInterface
      * @param string $templatesPath
      * @param string $componentsPath
      * @param array $settings
+     * @param string|null $primaryTemplate
      */
     public function __construct(
         CacheInterface $cache,       
-        $viewPath,
-        $extensionsPath,
-        $templatesPath,
-        $componentsPath,
-        $settings = [],
-        $primaryTemplate = null)
+        string $viewPath,
+        string $extensionsPath,
+        string $templatesPath,
+        string $componentsPath,
+        array $settings = [],
+        ?string $primaryTemplate = null)
     {
         $this->pageProperties = new Collection();
         $this->viewPath = $viewPath;      
@@ -156,7 +157,7 @@ class View implements ViewInterface
      * @param string $key
      * @return void
      */
-    public function addIncludeFile(array $file, $key)
+    public function addIncludeFile(array $file, string $key): void
     {
         $this->componentFiles[$key] = $this->componentFiles[$key] ?? [];
 
@@ -171,7 +172,7 @@ class View implements ViewInterface
      *
      * @return array
      */
-    public function getComponentFiles()
+    public function getComponentFiles(): array
     {
         return $this->componentFiles;
     }
@@ -179,14 +180,14 @@ class View implements ViewInterface
     /**
      * Get extension funciton
      *
-     * @param string $name
-     * @return object|false
+     * @param string|null $name
+     * @return object|null
      */
-    public function getFunction($name = null)
+    public function getFunction(?string $name = null)
     {
         $functions = $this->getEnvironment()->getFunctions();
 
-        return $functions[$name] ?? false;
+        return $functions[$name] ?? null;
     }
     
 
@@ -196,7 +197,7 @@ class View implements ViewInterface
      * @param string $libraryName
      * @return string
      */
-    public function getLibraryPath($libraryName)
+    public function getLibraryPath(string $libraryName): string
     {
         return $this->viewPath . 'library' . DIRECTORY_SEPARATOR . $libraryName . DIRECTORY_SEPARATOR;
     }
@@ -204,9 +205,9 @@ class View implements ViewInterface
     /**
      * Get primary template
      *
-     * @return string
+     * @return string|null
      */
-    public function getPrimaryTemplate()
+    public function getPrimaryTemplate(): ?string
     {              
         return $this->primaryTemplate;
     }
@@ -214,10 +215,10 @@ class View implements ViewInterface
     /**
      * Set primary template
      *
-     * @param string $templateName
+     * @param string|null $templateName
      * @return void
      */
-    public function setPrimaryTemplate($templateName)
+    public function setPrimaryTemplate(?string $templateName): void
     {       
         $this->primaryTemplate = $templateName;
     }
@@ -229,7 +230,7 @@ class View implements ViewInterface
      * @param mixed $value
      * @return void
      */
-    public function addGlobal($name, $value)
+    public function addGlobal(string $name, $value): void
     {
         $this->getEnvironment()->addGlobal($name,$value);
     }
@@ -239,7 +240,7 @@ class View implements ViewInterface
      *
      * @return string
      */
-    public function getComponentsPath()
+    public function getComponentsPath(): string
     {
         return $this->componentsPath;
     }
@@ -249,7 +250,7 @@ class View implements ViewInterface
      *
      * @return string
      */
-    public function getTemplatesPath()
+    public function getTemplatesPath(): string
     {
         return $this->templatesPath;
     }
@@ -269,7 +270,7 @@ class View implements ViewInterface
      *
      * @return string
      */
-    public function getExtensionsPath()
+    public function getExtensionsPath(): string
     {
         return $this->extensionsPath;
     }
@@ -279,7 +280,7 @@ class View implements ViewInterface
      *
      * @return string
      */
-    public function getViewPath()
+    public function getViewPath(): string
     {
         return $this->viewPath;
     }
@@ -300,7 +301,7 @@ class View implements ViewInterface
      * @param ExtensionInterface $extension
      * @return void
      */
-    public function addExtension(ExtensionInterface $extension)
+    public function addExtension(ExtensionInterface $extension): void
     {
         $this->getEnvironment()->addExtension($extension);
         $this->currentExtensionClass = \get_class($extension);
@@ -311,9 +312,9 @@ class View implements ViewInterface
      *
      * @param string $template
      * @param array $params
-     * @return string
+     * @return string|null
      */
-    public function fetch($template, $params = [])
+    public function fetch(string $template, array $params = []): ?string
     {       
         return $this->getEnvironment()->render($template,$params);
     }
@@ -324,9 +325,9 @@ class View implements ViewInterface
      * @param string $template
      * @param string $block
      * @param array $params
-     * @return string
+     * @return string|null
      */
-    public function fetchBlock($template, $block, $params = [])
+    public function fetchBlock(string $template, string $block, array $params = []): ?string
     {
         return $this->getEnvironment()->loadTemplate($template)->renderBlock($block,$params);
     }
@@ -338,7 +339,7 @@ class View implements ViewInterface
      * @param array $params
      * @return string
      */
-    public function fetchFromString($string, $params = [])
+    public function fetchFromString(string $string, array $params = []): string
     {
         return $this->getEnvironment()->createTemplate($string)->render($params);
     }
@@ -348,7 +349,7 @@ class View implements ViewInterface
      *
      * @return ExtensionInterface
      */
-    public function getExtension($class)
+    public function getExtension(string $class)
     {
         return $this->getEnvironment()->getExtension($class);
     }
@@ -394,7 +395,7 @@ class View implements ViewInterface
      * @param array|null $settings
      * @return Environment
      */
-    public function createEnvironment($paths = null, $settings = null)
+    public function createEnvironment($paths = null, ?array $settings = null)
     {
         $loader = $this->createLoader($paths);
         $settings = $settings ?? $this->settings;
@@ -409,7 +410,7 @@ class View implements ViewInterface
      *
      * @return void
      */
-    protected function resolveEnvironment()
+    protected function resolveEnvironment(): void
     {
         $this->environment = $this->createEnvironment();
         $demoMode = $this->settings['demo_mode'] ?? false;

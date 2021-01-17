@@ -92,7 +92,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Component render error
      *
-     * @var array
+     * @var array|null
      */
     protected $error = null;
 
@@ -115,7 +115,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @var array
      */
-    protected $options;
+    protected $options = [];
 
     /**
      * Optins file
@@ -155,7 +155,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Primary template name
      *
-     * @var string
+     * @var string|null
      */
     protected $primaryTemplate;
 
@@ -172,19 +172,19 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string $name
      * @param string $basePath
      * @param string $language
-     * @param string'null $optionsFile
+     * @param string|null $optionsFile
      * @param string|null $viewPath
      * @param string|null $extensionsPath
      * @param string|null $primaryTemplate
      */
     public function __construct(
-        $name,
-        $basePath, 
-        $language = 'en',
-        $optionsFile = null,
-        $viewPath = null,
-        $extensionsPath = null,
-        $primaryTemplate = null) 
+        string $name,
+        string $basePath, 
+        string $language = 'en',
+        ?string $optionsFile = null,
+        ?string $viewPath = null,
+        ?string $extensionsPath = null,
+        ?string $primaryTemplate = null) 
     {
         $this->fullName = $name;
         $this->language = $language;
@@ -215,7 +215,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * 
      * @return string|null
      */
-    public function getDataFile()
+    public function getDataFile(): ?string
     {
         return $this->dataFile;
     }
@@ -223,10 +223,10 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Set primary template name
      *
-     * @param string $name
+     * @param string|null $name
      * @return void
      */
-    public function setPrimaryTemplate($name)
+    public function setPrimaryTemplate(?string $name): void
     {
         $this->primaryTemplate = $name;
     }
@@ -236,7 +236,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return boolean
      */
-    public function hasParent()
+    public function hasParent(): bool
     {
         if (empty($this->path) == true) {
             return false;
@@ -251,11 +251,11 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return string
      */
-    public function getParentName()
+    public function getParentName(): string
     {
         $tokens = \explode('/',$this->path);
         $count = \count($tokens) - 1;
-        $path = $tokens[$count];
+        $path = $tokens[$count] ?? '';
 
         return $this->templateName . $this->selectorType . $path;
     }
@@ -265,7 +265,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return string
      */
-    public function getRootName()
+    public function getRootName(): string
     {
         $tokens = \explode('/',$this->path);
 
@@ -276,9 +276,9 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * Create component
      *
      * @param string|null $name If name is null parent component name is used
-     * @return ComponentDescriptorInterface|false
+     * @return ComponentDescriptorInterface|null
      */
-    public function createComponent($name = null)
+    public function createComponent(?string $name = null)
     {
         if ($this->hasParent() == false) {
             return false;
@@ -286,7 +286,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         $name = (empty($name) == true) ? $this->getParentName() : $name;
         $child = new Self($name,$this->basePath,$this->language,$this->optionsFile,$this->viewPath,$this->extensionsPath);
 
-        return (\is_object($child) == true) ? $child : false;
+        return (\is_object($child) == true) ? $child : null;
     }
 
     /**
@@ -294,7 +294,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return string
      */
-    public function getBasePath()
+    public function getBasePath(): string
     {
         return $this->basePath;
     }
@@ -304,7 +304,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -314,7 +314,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return string
      */
-    public function getFullName()
+    public function getFullName(): string
     {
         return $this->fullName;
     }
@@ -322,9 +322,9 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Get template file
      * 
-     * @return string|false
+     * @return string|null
      */
-    public function getTemplateFile()
+    public function getTemplateFile(): ?string
     {
         switch($this->type) {
             case Self::EXTENSION_COMPONENT: 
@@ -337,13 +337,13 @@ class ComponentDescriptor implements ComponentDescriptorInterface
                 $path = '';
                 break;
             case Self::UNKNOWN_COMPONENT: 
-                return false;
+                return null;
         }  
         if (isset($this->files['html'][0]['file_name']) == true) {
             return $path . $this->filePath . $this->files['html'][0]['file_name'];
         }
 
-        return false;
+        return null;
     }
 
     /**
@@ -351,7 +351,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return boolean
      */
-    public function hasError()
+    public function hasError(): bool
     {
         return !empty($this->error);
     }
@@ -361,9 +361,9 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return boolean
      */
-    public function hasContent()
+    public function hasContent(): bool
     {
-        return ($this->getTemplateFile() == false) ? false : true;          
+        return (empty($this->getTemplateFile()) == false);     
     }
 
     /**
@@ -371,7 +371,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return boolean
      */
-    public function hasProperties()
+    public function hasProperties(): bool
     {
         if (isset($this->files['properties']) == true) {
             return (\count($this->files['properties']) > 0);
@@ -386,7 +386,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string $fileType
      * @return boolean
      */
-    public function hasFiles($fileType = null)
+    public function hasFiles(?string $fileType = null): bool
     {
         if ($fileType == null) {
             return (isset($this->files[$fileType]) == true);
@@ -405,7 +405,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string $fileType
      * @return array
      */
-    public function getFiles($fileType = null)
+    public function getFiles(?string $fileType = null): array
     {
         if ($fileType == null) {
             return $this->files;
@@ -420,7 +420,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param array $default
      * @return array
      */
-    public function getProperties($default = [])
+    public function getProperties(array $default = []): array
     {
         return (\is_array($this->properties) == true) ? $this->properties : $default;
     }
@@ -430,7 +430,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return array
      */
-    public function getOptions()
+    public function getOptions(): array
     {
         return $this->options;
     }
@@ -440,7 +440,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return string
      */
-    public function getPath()
+    public function getPath(): ?string
     {
         return $this->path;
     }
@@ -450,7 +450,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return string
      */
-    public function getFullPath()
+    public function getFullPath(): string
     {
         return $this->fullPath;
     }
@@ -460,7 +460,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return integer
      */
-    public function getType()
+    public function getType(): int
     {
         return $this->type;
     }
@@ -470,7 +470,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return string
      */
-    public function getTemplateName()
+    public function getTemplateName(): ?string
     {
         return $this->templateName;
     }
@@ -480,7 +480,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return string
      */
-    public function getLanguage() 
+    public function getLanguage(): string 
     {
         return $this->language;
     }
@@ -488,9 +488,9 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Get error
      *
-     * @return array
+     * @return array|null
      */
-    public function getError()
+    public function getError(): ?array
     {
         return $this->error;
     }
@@ -500,7 +500,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return string
      */
-    public function getHtmlCode() 
+    public function getHtmlCode(): string 
     {
         return $this->htmlCode;
     }
@@ -512,7 +512,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param mixed $default
      * @return mixed
      */
-    public function getOption($path, $default = null)
+    public function getOption(string $path, $default = null)
     {
         $option = Arrays::getValue($this->options,$path);
 
@@ -526,7 +526,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param mixed $value
      * @return void
      */
-    public function setOption($path, $value)
+    public function setOption(string $path, $value): void
     {
         $this->options = Arrays::setValue($this->options,$path,$value);       
     }
@@ -537,7 +537,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string $code
      * @return void
      */
-    public function setHtmlCode($code) 
+    public function setHtmlCode(string $code): void 
     {
         $this->htmlCode = $code;
     }
@@ -550,7 +550,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string|null $msssage
      * @return void
      */
-    public function setError($code, $params = [], $msssage = null) 
+    public function setError(string $code, array $params = [], ?string $msssage = null): void 
     {
         $this->error = [
             'code'    => $code,
@@ -564,7 +564,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return boolean
      */
-    public function isValid()
+    public function isValid(): bool
     {
         $content = 0;
         $content += ($this->hasContent() == true)    ?  1 : 0;
@@ -580,7 +580,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return void
      */
-    public function clearContent()
+    public function clearContent(): void
     {
         $this->files = [
             'js'   => [],
@@ -596,7 +596,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string $fileType
      * @return bool
      */
-    public function addFiles(array $files, $fileType)
+    public function addFiles(array $files, string $fileType): bool
     {
         $this->files[$fileType] = $this->files[$fileType] ?? [];
        
@@ -613,9 +613,9 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * Add component file
      *
      * @param string $fileExt
-     * @return void
+     * @return mixed
      */
-    public function addComponentFile($fileExt)
+    public function addComponentFile(string $fileExt)
     {
         $fileName = $this->getComponentFile($fileExt);
         if ($fileName === false) {
@@ -638,7 +638,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string $fileType
      * @return void
      */
-    public function addFile(array $file, $fileType)
+    public function addFile(array $file, string $fileType)
     {
         $this->files[$fileType] = $this->files[$fileType] ?? [];
 
@@ -654,7 +654,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string $name
      * @return void
      */
-    protected function parseName($name)
+    protected function parseName(string $name): void
     {
         if (\stripos($name,'::') !== false) {
             // extension component
@@ -709,11 +709,11 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Get properties file name
      *
-     * @return string|false
+     * @return string|null
      */
-    public function getPropertiesFileName() 
+    public function getPropertiesFileName(): ?string 
     {
-        return $this->files['properties']['file_name'] ?? false;       
+        return $this->files['properties']['file_name'] ?? null;       
     }
 
     /**
@@ -722,7 +722,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string $fileName
      * @return void
      */
-    public function setPropertiesFileName($fileName) 
+    public function setPropertiesFileName(string $fileName): void 
     { 
         $this->files['properties']['file_name'] = $fileName;          
     }
@@ -730,11 +730,11 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Get options file name
      *
-     * @return string|false
+     * @return string|null
      */
-    public function getOptionsFileName()
+    public function getOptionsFileName(): ?string
     {
-        return $this->files['options']['file_name'] ?? false;         
+        return $this->files['options']['file_name'] ?? null;         
     }
 
     /**
@@ -743,7 +743,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string $fileName
      * @return void
      */
-    public function setOptionsFileName($fileName)
+    public function setOptionsFileName(string $fileName): void
     {
         $this->files['options']['file_name'] = $fileName;
     }
@@ -769,7 +769,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {       
         return (array)$this;
     }
@@ -777,9 +777,9 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Get template url
      *
-     * @return string|false
+     * @return string|null
      */
-    public function getTemplateUrl()
+    public function getTemplateUrl(): ?string
     {
         switch ($this->type) {
             case Self::TEMPLATE_COMPONENT:
@@ -790,9 +790,8 @@ class ComponentDescriptor implements ComponentDescriptorInterface
                
             case Self::GLOBAL_COMPONENT:
                 return Url::VIEW_URL;
-
             default: 
-                return false;            
+                return null;            
         }       
     }
 
@@ -801,7 +800,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return string
      */
-    public function getUrl()
+    public function getUrl(): string
     {
         return $this->getTemplateUrl() . '/' . $this->basePath . '/' . $this->path . '/';
     }
@@ -811,7 +810,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return string
      */
-    public function getRootComponentPath()
+    public function getRootComponentPath(): string
     {
         return Self::getTemplatePath($this->templateName,$this->type,$this->viewPath,$this->extensionsPath);
     }
@@ -820,10 +819,12 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * Get template path
      *
      * @param string $template
-     * @param string $type
-     * @return string|false
+     * @param int $type
+     * @param string $viewPath
+     * @param string $extensionsPath
+     * @return string|null
      */
-    public static function getTemplatePath($template, $type, $viewPath, $extensionsPath) 
+    public static function getTemplatePath(string $template, int $type, $viewPath, $extensionsPath): ?string 
     {   
         switch($type) {
             case Self::EXTENSION_COMPONENT:
@@ -836,15 +837,15 @@ class ComponentDescriptor implements ComponentDescriptorInterface
                 return $viewPath;
         }           
         
-        return false;
+        return null;
     }
 
     /**
      * Get component path
      *
-     * @return string|false
+     * @return string|null
      */
-    public function getComponentPath()
+    public function getComponentPath(): ?string
     {
         return Self::getTemplatePath($this->templateName,$this->type,$this->viewPath,$this->extensionsPath);
     }
@@ -856,15 +857,14 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string $language
      * @return string|false
      */
-    public function getComponentFile($fileExt = 'html', $language = '') 
+    public function getComponentFile(string $fileExt = 'html', string $language = '') 
     {         
         if ($fileExt == 'json') {
             $fileName = $this->getName() . $language . '.' . $fileExt;
             $fullFileName = $this->getFullPath() . $fileName;
         } else {
             $fileName = $this->getName() . '.' . $fileExt;
-            $fullFileName = $this->getFullPath() . $fileName;   
-           
+            $fullFileName = $this->getFullPath() . $fileName;              
         }
        
         return \file_exists($fullFileName) ? $fileName : false;
@@ -876,7 +876,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string $fileName
      * @return string
      */
-    public function getFileUrl($fileName)
+    public function getFileUrl(?string $fileName): string
     {
         return $this->getUrl() . $fileName;
     }
@@ -886,11 +886,11 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return array
      */
-    public function loadProperties()
+    public function loadProperties(): array
     {       
-        $data = File::readJsonFile($this->getPropertiesFileName());  
+        $fileName = $this->getPropertiesFileName();
 
-        return ($data === false) ? [] : $data;                 
+        return (empty($fileName) == true) ? [] : File::readJsonFile($fileName);                   
     }
 
     /**
@@ -898,7 +898,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return array
      */
-    public function loadOptions()
+    public function loadOptions(): array
     {         
         $data = File::readJsonFile($this->getOptionsFileName()); 
 
@@ -911,7 +911,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param integer $type
      * @return string
      */
-    public function getComponentFullPath($type, $templateName = null)
+    public function getComponentFullPath(int $type, ?string $templateName = null): string
     {
         $templateName = $templateName ?? $this->templateName;
         $templateFullPath = Self::getTemplatePath($templateName,$type,$this->viewPath,$this->extensionsPath); 
@@ -927,7 +927,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return void
      */
-    protected function resolveDataFile()
+    protected function resolveDataFile(): void
     {
         $fileName = $this->fullPath . $this->getName() . '.php';
        
@@ -939,7 +939,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return void
      */
-    protected function resolvePath() 
+    protected function resolvePath(): void 
     {                 
         $basePath = (empty($this->basePath) == false) ? DIRECTORY_SEPARATOR . $this->basePath : '';
         $path = $basePath . DIRECTORY_SEPARATOR . $this->path . DIRECTORY_SEPARATOR;   
@@ -967,7 +967,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return void
      */
-    private function resolvePropertiesFileName()
+    private function resolvePropertiesFileName(): void
     {
         $language = ($this->language != 'en') ? '-' . $this->language : '';
         $fileName = $this->getComponentFile('json',$language);
@@ -975,7 +975,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         if ($fileName === false) {
             $fileName = $this->getComponentFile('json');
             if ($fileName === false) {
-                return false;
+                return;
             }
         } 
         $this->setPropertiesFileName($this->getFullPath() . $fileName);   
@@ -985,10 +985,10 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * Resolve options file name
      *
      * @param string|null $path
-     * @param integer     $iterations
-     * @return bool
+     * @param integer $iterations
+     * @return mixed
      */
-    private function resolveOptionsFileName($path = null, $iterations = 0)
+    private function resolveOptionsFileName(?string $path = null, int $iterations = 0)
     {   
         $path = $path ?? $this->getFullPath();
     
@@ -1008,7 +1008,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @return void
      */
-    private function resolveComponentFiles()
+    private function resolveComponentFiles(): void
     {
         // js files
         $this->addComponentFile('js');

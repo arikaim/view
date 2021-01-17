@@ -10,8 +10,6 @@
 namespace Arikaim\Core\View\Template\Tags;
 
 use Twig\Token;
-use Twig\Node\PrintNode;
-use Twig\Node\Node;
 use Twig\TokenParser\AbstractTokenParser;
 
 use Arikaim\Core\View\Template\Tags\ComponentNode;
