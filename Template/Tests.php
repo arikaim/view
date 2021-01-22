@@ -47,6 +47,6 @@ class Tests
      */
     public static function versionCompare($requiredVersion, $currentVersion)
     {
-        return Utils::checkVersion(Utils::formatVersion($currentVersion),Utils::formatVersion($requiredVersion));  
+        return Utils::checkVersion($currentVersion,$requiredVersion,'>');  
     }
 }
