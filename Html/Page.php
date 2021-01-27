@@ -234,7 +234,7 @@ class Page extends Component implements HtmlPageInterface
      * @return string
      */
     public static function getIndexFile(ComponentDescriptorInterface $component, string $currentTemlate): string
-    {               
+    {        
         switch ($component->getType()) {
             case ComponentDescriptor::TEMPLATE_COMPONENT:
                 $templateName = $component->getTemplateName();

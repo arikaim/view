@@ -661,7 +661,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
             $tokens = \explode('::',$name);     
             $type = Self::EXTENSION_COMPONENT;
             $this->selectorType = '::';
-        } elseif (stripos($name,'>') !== false) {
+        } elseif (\stripos($name,'>') !== false) {
             // resolve location
             $tokens = \explode('>',$name);
             $type = Self::PRIMARY_TEMLATE;
