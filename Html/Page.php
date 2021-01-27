@@ -582,7 +582,7 @@ class Page extends Component implements HtmlPageInterface
         $params = $properties->get('params',[]);
         $vars = [
             'domian'    => DOMAIN,
-            'base_url'  => Url::BASE_URL
+            'base_url'  => BASE_PATH
         ];
 
         $libraryParams = $this->libraryOptions[$properties['name']] ?? [];
