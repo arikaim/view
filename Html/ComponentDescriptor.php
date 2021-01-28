@@ -194,11 +194,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         $this->extensionsPath = $extensionsPath;    
         $this->primaryTemplate = $primaryTemplate;
 
-        $this->files = [
-            'js'   => [],
-            'html' => [],          
-            'css'  => []
-        ];
+        $this->clearContent();
         $this->parseName($name);
         $this->resolvePath();
         $this->resolvePropertiesFileName();
