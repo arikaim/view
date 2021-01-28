@@ -435,7 +435,7 @@ class View implements ViewInterface
                 $this->extensionsPath,
                 $this->templatesPath,
                 $this->componentsPath
-            ];
+            ];           
         }
      
         return new FilesystemLoader($paths);

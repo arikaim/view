@@ -102,7 +102,7 @@ class ResourceLocator
                 return $name;              
             case Self::TEMPLATE_COMPONENT:
                 $templateUrl = Url::getTemplateUrl($data['component_name']);                 
-                return  $templateUrl . $data['path'];                          
+                return $templateUrl . $data['path'];                          
         }
 
         return $default;

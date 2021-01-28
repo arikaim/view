@@ -195,8 +195,9 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         $this->primaryTemplate = $primaryTemplate;
 
         $this->files = [
-            'js'  => [],
-            'css' => []
+            'js'   => [],
+            'html' => [],          
+            'css'  => []
         ];
         $this->parseName($name);
         $this->resolvePath();
@@ -617,7 +618,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function addComponentFile(string $fileExt)
     {
-        $fileName = $this->getComponentFile($fileExt);
+        $fileName = $this->getComponentFile($fileExt);      
         if ($fileName === false) {
             return false;
         }
@@ -690,7 +691,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
             // resolve component location (template or extension)
             $templateName = (empty($this->primaryTemplate) == true) ? $this->templateName : $this->primaryTemplate;  
             $componentPath = $this->getComponentFullPath(Self::TEMPLATE_COMPONENT,$templateName);
-            if (\file_exists($componentPath) == true) {
+            if (\file_exists($componentPath) == true) {               
                 // primary template component
                 $type = Self::TEMPLATE_COMPONENT;
                 $this->templateName = $templateName; 

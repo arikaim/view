@@ -253,7 +253,7 @@ class Page extends Component implements HtmlPageInterface
                 break;
         }
     
-        return $templateName . DIRECTORY_SEPARATOR . $component->getBasePath() . DIRECTORY_SEPARATOR . 'index.html';            
+        return DIRECTORY_SEPARATOR . $templateName . DIRECTORY_SEPARATOR . $component->getBasePath() . DIRECTORY_SEPARATOR . 'index.html';            
     }
 
     /**
