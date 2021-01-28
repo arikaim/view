@@ -233,6 +233,16 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     }
 
     /**
+     * Get primary template
+     *
+     * @return string|null
+     */
+    public function getPrimaryTemplate(): ?string
+    {
+        return $this->primaryTemplate;
+    }
+
+    /**
      * Return true if component has child 
      *
      * @return boolean

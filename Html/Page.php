@@ -172,6 +172,7 @@ class Page extends Component implements HtmlPageInterface
         $params = \array_merge($params,[
             'component_url'       => $component->getUrl(),            
             'body'                => $body,
+            'primary_template'    => $component->getPrimaryTemplate(),
             'library_files'       => $includes['library_files'],
             'template_files'      => $includes['template_files'],
             'page_files'          => $includes['page_files'], 
