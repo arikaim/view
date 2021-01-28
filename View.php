@@ -23,11 +23,6 @@ use Arikaim\Core\Interfaces\CacheInterface;
 class View implements ViewInterface
 {
     /**
-     *  Default template name
-     */
-    const DEFAULT_TEMPLATE_NAME = 'blog';
-
-    /**
      * Cache save time
      *
      * @var integer
@@ -145,7 +140,7 @@ class View implements ViewInterface
         $this->componentsPath = $componentsPath;       
         $this->settings = $settings;      
         $this->cache = $cache;      
-        $this->primaryTemplate = $primaryTemplate ?? Self::DEFAULT_TEMPLATE_NAME;
+        $this->primaryTemplate = $primaryTemplate ?? 'system';
 
         Self::$cacheSaveTime = \defined('CACHE_SAVE_TIME') ? \constant('CACHE_SAVE_TIME') : Self::$cacheSaveTime;
     }
