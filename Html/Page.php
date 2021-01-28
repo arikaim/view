@@ -587,8 +587,8 @@ class Page extends Component implements HtmlPageInterface
 
         $libraryParams = $this->libraryOptions[$properties['name']] ?? [];
         $vars = \array_merge($vars,$libraryParams);
-     
-        return Text::renderMultiple($params,$vars);    
+            
+        return Text::renderMultiple($params,$vars);       
     }
 
     /**
