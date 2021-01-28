@@ -157,6 +157,8 @@ class Page extends Component implements HtmlPageInterface
         $component = $this->view->getCache()->fetch('html.page.component.' . $name . '.' . $language);
         $component = (empty($component) == true) ? $this->createComponentDescriptor($name,$language) : $component;
            
+        echo "por: " . $component->getPrimaryTemplate();
+        
         // set current page template name      
         $this->setCurrentTemplate($component->getTemplateName());
         // add global variables 

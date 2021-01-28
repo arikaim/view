@@ -157,7 +157,7 @@ class Component
     {
         $language = $language ?? $this->language;
         $primaryTemplate = $this->view->getPrimaryTemplate();
- 
+        
         $descriptor = new ComponentDescriptor(
             $name,
             $this->basePath,
