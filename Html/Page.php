@@ -720,17 +720,17 @@ class Page extends Component implements HtmlPageInterface
     /**
      * Render system error(s)
      *
-     * @param array $data
+     * @param array $error
      * @param string|null $language   
      * @param string|null $templateName       
      * @return ComponentDescriptorInterface
      */
-    public function renderSystemError(array $data = [], ?string $language = null, ?string $templateName = null)
+    public function renderSystemError(array $error = [], ?string $language = null, ?string $templateName = null)
     {    
         $templateName = $templateName ?? $this->getCurrentTemplate();
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';        
         $language = $language ?? Self::$defaultLanguage;
 
-        return $this->render($templateName . Self::SYSTEM_ERROR_PAGE,['error' => $data],$language);      
+        return $this->render($templateName . Self::SYSTEM_ERROR_PAGE,$error,$language);      
     }
 }
