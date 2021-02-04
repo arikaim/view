@@ -200,15 +200,15 @@ class Page extends Component implements HtmlPageInterface
     {
         $includes = $this->view->getCache()->fetch('html.page.includes.' . $component->getName() . '.' . $language);
         if (empty($includes) == false) {           
-            return $includes;
+           // return $includes;
         }
 
         $result = [];
         // page include files
         $pageFiles = $this->getPageIncludeFiles($component);
-        // template include files
+        // template include files        
         $templatefiles = $this->getTemplateIncludeFiles($component->getTemplateName());     
-       
+      
         // set page component includ files
         $result['page_files'] = $component->getFiles();
         // merge template and page include files
@@ -460,41 +460,14 @@ class Page extends Component implements HtmlPageInterface
 
         // from page options
         $options = $component->getOption('include',null);
-
-        $options['template'] = $options['template'] ?? '';
-        $options['js'] = $options['js'] ?? [];
-        $options['css'] = $options['css'] ?? [];
-
-        if (empty($options) == false) {  
-            // get include options from page.json file  
+        if (empty($options) == false) {
             $url = Url::getExtensionViewUrl($component->getTemplateName());
-           
-            $options['js'] = \array_map(function($value) use($url) {              
-                return $url . '/js/' . $value; 
-            },$options['js']);
-          
-            $options['css'] = \array_map(function($value) use($url) {
-                return $url . '/css/' . $value;
-            },$options['css']);
-       
-            // include components
-            if (empty($options['components']) == false) { 
-                foreach ($options['components'] as $item) {     
-                    $files = $this->getComponentFiles($item);  
-                
-                    if (empty($files['js'][0]['url']) == false) {
-                        $options['js'][] = $files['js'][0]['url'];
-                    }
-                    if (empty($files['css'][0]['url']) == false) {
-                        $options['css'][] = $files['css'][0]['url']; 
-                    }                      
-                }    
-            }
- 
-            $this->view->getCache()->save('cache.page.include.files.' . $component->getName(),$options,Self::$cacheSaveTime);           
+            $options = $this->resolveIncludeFiles($options,$url);
+    
+            $this->view->getCache()->save('cache.page.include.files.' . $component->getName(),$options,Self::$cacheSaveTime);   
         }
-
-        return $options;
+               
+        return $options ?? [];
     }
 
     /**
@@ -513,13 +486,22 @@ class Page extends Component implements HtmlPageInterface
         $templateOptions = PackageManager::loadPackageProperties($templateName,Path::TEMPLATES_PATH);
        
         $options = $templateOptions->getByPath('include',[]);
+        $url = Url::getTemplateUrl($templateName);    
+
+        $options = $this->resolveIncludeFiles($options,$url);
     
+        $this->view->getCache()->save('template.include.files.' . $templateName,$options,Self::$cacheSaveTime);
+      
+        return $options;
+    }
+
+    protected function resolveIncludeFiles(array $options, string $url): array
+    {
         $options['js'] = $options['js'] ?? [];
         $options['css'] = $options['css'] ?? [];
         $options['components'] = $options['components'] ?? [];
+        $options['template'] = $options['template'] ?? '';
 
-        $url = Url::getTemplateUrl($templateName);    
-      
         if (\count($options['js']) > 0) {
             $options['js'] = \array_map(function($value) use($url) {
                 return $url . '/js/' . $value; 
@@ -533,10 +515,10 @@ class Page extends Component implements HtmlPageInterface
         }
       
         // include components
-        if (empty($options['components']) == false) { 
+        if (\count($options['components']) > 0) { 
             foreach ($options['components'] as $item) {     
                 $files = $this->getComponentFiles($item);  
-                              
+                               
                 if (empty($files['js'][0]['url']) == false) {
                     $options['js'][] = $files['js'][0]['url'];
                 }
@@ -545,9 +527,7 @@ class Page extends Component implements HtmlPageInterface
                 }                   
             }    
         }
-        
-        $this->view->getCache()->save('template.include.files.' . $templateName,$options,Self::$cacheSaveTime);
-      
+
         return $options;
     }
 
