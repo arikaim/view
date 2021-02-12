@@ -205,9 +205,11 @@ class Component
     public function checkAuthOption(ComponentDescriptorInterface $component)
     {
         $auth = $component->getOption('access/auth',null);   
-        if (\strtolower($auth) == 'none') {
+        if ((\strtolower($auth) == 'none') || (empty($auth) == true)) {
             return true;
         }
+        // add auth prvider
+        $this->view->getCurrentExtension()->getAccess()->requireProvider($auth);
 
         return (empty($auth) == false) ? $this->view->getCurrentExtension()->getAccess()->isLogged() : null;       
     }
