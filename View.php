@@ -107,6 +107,13 @@ class View implements ViewInterface
     protected $componentFiles = [];
 
     /**
+     * Included compoents
+     *
+     * @var array
+     */
+    protected $includedComponents = [];
+
+    /**
      * Primary template
      *
      * @var string
@@ -150,17 +157,30 @@ class View implements ViewInterface
      *
      * @param array $file
      * @param string $key
+     * @param string $componentName
      * @return void
      */
-    public function addIncludeFile(array $file, string $key): void
+    public function addIncludeFile(array $file, string $key, string $componentName): void
     {
         $this->componentFiles[$key] = $this->componentFiles[$key] ?? [];
 
         $found = \in_array($file['url'],\array_column($this->componentFiles[$key],'url'));
         if ($found === false) {
+            $file['component_name'] = (empty($file['source_component']) == true) ? $componentName : $file['source_component'];
+            $this->includedComponents[] = $file['component_name'];
             $this->componentFiles[$key][] = $file;
         }      
     }
+
+    /**
+     * Get included components
+     *
+     * @return array
+     */
+    public function getIncludedComponents(): array
+    {
+        return $this->includedComponents;
+    } 
 
     /**
      * Get components include files
@@ -169,6 +189,9 @@ class View implements ViewInterface
      */
     public function getComponentFiles(): array
     {
+        $this->componentFiles['js'] = $this->componentFiles['js'] ?? [];
+        $this->componentFiles['css'] = $this->componentFiles['css'] ?? [];
+        
         return $this->componentFiles;
     }
 

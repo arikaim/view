@@ -158,9 +158,10 @@ interface ComponentDescriptorInterface
      *
      * @param array $files
      * @param string $fileType
+     * @param string|null $sourceComponentName
      * @return bool
      */
-    public function addFiles(array $files, string $fileType): bool;
+    public function addFiles(array $files, string $fileType, ?string $sourceComponentName): bool;
 
     /**
      * Get option

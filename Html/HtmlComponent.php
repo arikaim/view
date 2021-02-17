@@ -143,9 +143,10 @@ class HtmlComponent extends Component implements HtmlComponentInterface
         
         $component->setHtmlCode('');  
         if ($component->getOption('render') !== false) {      
+            $componentName = $component->getFullName();
             $component = $this->fetch($component,$params);
             // include files
-            $this->includeComponentFiles($component->getFiles('js'));          
+            $this->includeComponentFiles($component->getFiles('js'),$componentName);          
         }  
         // add global vars      
         $this->view->getEnvironment()->addGlobal('current_component_name',$component->getName());        

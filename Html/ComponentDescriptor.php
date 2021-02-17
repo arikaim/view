@@ -167,6 +167,13 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     protected $dataFile = null;
 
     /**
+     * Remove include options
+     *
+     * @var boolean
+     */
+    private $removeIncludeOptions = false;
+
+    /**
      * Constructor
      *
      * @param string $name
@@ -601,18 +608,22 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @param array $files
      * @param string $fileType
+     * @param string|null $sourceComponentName
      * @return bool
      */
-    public function addFiles(array $files, string $fileType): bool
+    public function addFiles(array $files, string $fileType, ?string $sourceComponentName): bool
     {
         $this->files[$fileType] = $this->files[$fileType] ?? [];
-       
+    
         foreach ($files as $file) {
+            if (empty($sourceComponentName) == false) {
+                $item['source_component'] = $sourceComponentName;
+            }
             if (empty($file) == false) {
-                \array_push($this->files[$fileType],$file);     
-            }                  
+                \array_unshift($this->files[$fileType],$file); 
+            }              
         }
-
+        
         return true;            
     }
 
@@ -823,6 +834,21 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     }
 
     /**
+     * Get root componetn path
+     *
+     * @param bool $relative
+     * @return string
+     */
+    public function getRootPath(bool $relative = false): string
+    {
+        $tokens = \explode(DIRECTORY_SEPARATOR,$this->path);
+
+        $path = (\count($tokens) <= 1) ? $this->path : $tokens[0];  
+        
+        return ($relative == true) ? $path : $this->getRootComponentPath() . $this->basePath . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR;
+    }
+
+    /**
      * Get template path
      *
      * @param string $template
@@ -907,9 +933,14 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function loadOptions(): array
     {         
-        $data = File::readJsonFile($this->getOptionsFileName()); 
+        $optionsFile = $this->getOptionsFileName();
+        $data = (empty($optionsFile) == false) ? File::readJsonFile($optionsFile) : [];
+                 
+        if (($this->removeIncludeOptions == true) && (isset($data['include']) == true)) {
+            unset($data['include']);
+        }
 
-        return ($data === false) ? [] : $data;         
+        return $data;    
     }
 
     /**
@@ -991,23 +1022,26 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Resolve options file name
      *
-     * @param string|null $path
-     * @param integer $iterations
-     * @return mixed
+     * @param string|null $path  
+     * @return void
      */
-    private function resolveOptionsFileName(?string $path = null, int $iterations = 0)
+    private function resolveOptionsFileName(?string $path = null): void
     {   
         $path = $path ?? $this->getFullPath();
-    
         $fileName = $path . $this->optionsFile;
-        if (\file_exists($fileName) == false) {
-            $parentPath = Utils::getParentPath($path) . DIRECTORY_SEPARATOR;  
-            if (empty($parentPath) == false && $iterations == 0) {
-                return $this->resolveOptionsFileName($parentPath,1);
-            }      
+
+        if (\file_exists($fileName) == true) {
+            $this->setOptionsFileName($fileName);
+            return;
         }
-    
-        return $this->setOptionsFileName($fileName);
+
+        // Check for root component options file             
+        $fileName = $this->getRootPath() . $this->optionsFile;
+        if (\file_exists($fileName) == true) {
+            // disable includes from parent component     
+            $this->removeIncludeOptions = true;
+            $this->setOptionsFileName($fileName);
+        }        
     }
 
     /**

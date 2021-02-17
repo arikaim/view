@@ -200,34 +200,38 @@ class Component
      * Check auth and permissions access
      *
      * @param ComponentDescriptorInterface $component       
-     * @return boolean|null
+     * @return boolean
      */
-    public function checkAuthOption(ComponentDescriptorInterface $component)
+    public function checkAuthOption(ComponentDescriptorInterface $component): bool
     {
         $auth = $component->getOption('access/auth',null);   
         if ((\strtolower($auth) == 'none') || (empty($auth) == true)) {
             return true;
         }
-        // add auth prvider
-        $this->view->getCurrentExtension()->getAccess()->requireProvider($auth);
 
-        return (empty($auth) == false) ? $this->view->getCurrentExtension()->getAccess()->isLogged() : null;       
+        // add auth provider
+        $provider = $this->view->getCurrentExtension()->getAccess()->requireProvider($auth);
+        if (\is_object($provider) == false) {
+            return false;
+        }
+
+        return $this->view->getCurrentExtension()->getAccess()->isLogged();       
     }
 
     /**
      * Check auth and permissions access
      *
      * @param ComponentDescriptorInterface $component   
-     * @return boolean|null
+     * @return boolean
      */
-    public function checkPermissionOption(ComponentDescriptorInterface $component)
+    public function checkPermissionOption(ComponentDescriptorInterface $component): bool
     {
         $permission = $component->getOption('access/permission',null);
-        if (\strtolower($permission) == 'none') {
+        if ((\strtolower($permission) == 'none') || (empty($permission) == true)) {
             return true;
         }
         
-        return (empty($permission) == false) ? $this->view->getCurrentExtension()->hasAccess($permission) : null;      
+        return $this->view->getCurrentExtension()->getAccess()->hasAccess($permission);      
     }
 
     /**
@@ -239,26 +243,12 @@ class Component
     public function processOptions(ComponentDescriptorInterface $component)
     {         
         // check auth access 
-        $authAccess = $this->checkAuthOption($component);
-
-        if ($authAccess === null) {
-            // check root component
-            $rootComponent = $component->createComponent($component->getRootName());           
-            $authAccess = (\is_object($rootComponent) == true) ? $this->checkAuthOption($rootComponent) : true;               
-        }
-        if ($authAccess === false) {
+        if ($this->checkAuthOption($component) === false) {
             $component->setError('ACCESS_DENIED',['name' => $component->getFullName()]);             
             return $component;
         }
-
-        // check permissions
-        $permissionsAccess = $this->checkPermissionOption($component);
-        if ($permissionsAccess == null) {
-            // check root component
-            $rootComponent = $component->createComponent($component->getRootName());
-            $permissionsAccess = (\is_object($rootComponent) == true) ? $this->checkPermissionOption($rootComponent) : true;
-        }
-        if ($permissionsAccess === false) {
+        // check permissions 
+        if ($this->checkPermissionOption($component) === false) {
             $component->setError('ACCESS_DENIED',['name' => $component->getFullName()]);  
             return $component;
         }
@@ -276,24 +266,28 @@ class Component
      */
     protected function applyIncludeOption(ComponentDescriptorInterface $component, string $key, string $fileType)
     { 
-        $option = $component->getOption($key);   
+      //  print_r($component->getOptions());
        
+
+        $option = $component->getOption($key);   
+    
         if (empty($option) == false) {
             $option = (\is_array($option) == false) ? [$option] : $option;            
             // include component files
             foreach ($option as $item) {                                       
                 $files = $this->resolveIncludeFile($item,$fileType);
-                $component->addFiles($files,$fileType);
+              
+                $component->addFiles($files,$fileType,$item);
             }           
         }
-        
+       
         return $component;
     }
 
     /**
      * Resolve include file
      *
-     * @param string $includeFile
+     * @param string $includeFile  Component or Url 
      * @param string|null $fileType
      * @return array
      */
@@ -304,8 +298,15 @@ class Component
             $url = $tokens[0];
             $tokens[0] = 'external';
             $params = (isset($tokens[1]) == true) ? $tokens : [];                           
-            $files = [['url' => $url,'params' => $params]];       
+            $files = [
+                [
+                    'url'               => $url,
+                    'params'            => $params,
+                    'source_component'  => 'url'
+                ]
+            ];       
         } else {          
+            // get from component
             $files = $this->getComponentFiles($includeFile,$fileType);         
         }
 
@@ -322,7 +323,7 @@ class Component
     public function getComponentFiles(string $name, ?string $fileType = null): array
     {        
         $files = $this->view->getCache()->fetch('component.files.' . $name);
-        if (\is_array($files) == true) {
+        if (empty($files) == false) {
             return $files;
         }
         $language = (empty($language) == true) ? $this->language : null;
@@ -382,13 +383,14 @@ class Component
      * Inlcude componnent files
      *
      * @param array $files
+     * @param string $componentName
      * @return void
      */
-    public function includeComponentFiles(array $files): void
+    public function includeComponentFiles(array $files, string $componentName): void
     {
         foreach ($files as $item) {          
             if (empty($item['url']) == false) {                   
-                $this->view->addIncludeFile($item,'js');
+                $this->view->addIncludeFile($item,'js',$componentName);
             }                              
         }   
     }
