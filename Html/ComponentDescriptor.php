@@ -611,15 +611,13 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string|null $sourceComponentName
      * @return bool
      */
-    public function addFiles(array $files, string $fileType, ?string $sourceComponentName): bool
+    public function addFiles(array $files, string $fileType, ?string $sourceComponentName = null): bool
     {
         $this->files[$fileType] = $this->files[$fileType] ?? [];
     
-        foreach ($files as $file) {
-            if (empty($sourceComponentName) == false) {
-                $item['source_component'] = $sourceComponentName;
-            }
+        foreach ($files as $file) {                  
             if (empty($file) == false) {
+                $file['source_component'] = $sourceComponentName;  
                 \array_unshift($this->files[$fileType],$file); 
             }              
         }

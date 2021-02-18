@@ -242,17 +242,12 @@ class Component
      */
     public function processOptions(ComponentDescriptorInterface $component)
     {         
-        // check auth access 
-        if ($this->checkAuthOption($component) === false) {
+        // check access 
+        if ($this->checkAuthOption($component) === false || $this->checkPermissionOption($component) === false) {
             $component->setError('ACCESS_DENIED',['name' => $component->getFullName()]);             
             return $component;
         }
-        // check permissions 
-        if ($this->checkPermissionOption($component) === false) {
-            $component->setError('ACCESS_DENIED',['name' => $component->getFullName()]);  
-            return $component;
-        }
-        
+       
         return $this->applyIncludeOption($component,'include/js','js');      
     }
 
@@ -266,21 +261,18 @@ class Component
      */
     protected function applyIncludeOption(ComponentDescriptorInterface $component, string $key, string $fileType)
     { 
-      //  print_r($component->getOptions());
-       
-
         $option = $component->getOption($key);   
-    
-        if (empty($option) == false) {
-            $option = (\is_array($option) == false) ? [$option] : $option;            
-            // include component files
-            foreach ($option as $item) {                                       
-                $files = $this->resolveIncludeFile($item,$fileType);
-              
-                $component->addFiles($files,$fileType,$item);
-            }           
+        if (empty($option) == true) {
+            return $component;
         }
-       
+
+        $option = (\is_array($option) == false) ? [$option] : $option;            
+        // include component files
+        foreach ($option as $item) {                                       
+            $files = $this->resolveIncludeFile($item,$fileType);
+            $component->addFiles($files,$fileType,$item);
+        }           
+
         return $component;
     }
 

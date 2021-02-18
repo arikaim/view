@@ -179,7 +179,7 @@ class View implements ViewInterface
      */
     public function getIncludedComponents(): array
     {
-        return $this->includedComponents;
+        return \array_unique($this->includedComponents);
     } 
 
     /**
