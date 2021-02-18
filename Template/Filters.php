@@ -42,7 +42,7 @@ class Filters
      * Dump var
      *
      * @param mixed $value
-     * @return void
+     * @return mixed
      */
     public static function dump($value)
     {
@@ -56,7 +56,7 @@ class Filters
      * @param string $label
      * @return mxied
      */
-    public static function emptyLabel($value, $label)
+    public static function emptyLabel($value, string $label = '')
     {
         return (empty($value) == true) ? $label : $value;
     }
@@ -69,19 +69,21 @@ class Filters
      * @param string $label
      * @return string
      */
-    public static function sliceLabel($text, $size = 30, $label = '...')
+    public static function sliceLabel(?string $text, int $size = 30, ?string $label = '...'): string
     {
-        return (\strlen($text) > $size) ? \substr($text,0,$size) . $label : $text;          
+        $text = $text ?? '';
+
+        return (\strlen($text) > $size) ? \mb_substr($text,0,$size) . $label : $text;          
     }
 
     /**
      * Convert value to string
      *
      * @param mixed $value
-     * @param string $separator
+     * @param string|null $separator
      * @return string
      */
-    public static function convertToString($value, $separator = ' ')
+    public static function convertToString($value, ?string $separator = ' '): string
     {
         if (\is_bool($value) === true) {
             return ($value === true) ? 'true' : 'false';
@@ -99,10 +101,13 @@ class Filters
      * @param mixed|array $value
      * @param string|null $name
      * @param mixed $default
-     * @return void
+     * @return string
      */
-    public static function attr($value, $name = null, $default = null)
+    public static function attr($value, ?string $name = null, $default = '')
     {      
+        $name = $name  ?? '';
+        $default = $default ?? '';
+
         return (\is_array($value) == true) ? Html::getAttributes($value) : Html::attr($value,$name,$default);
     }
 }
