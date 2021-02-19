@@ -53,11 +53,13 @@ class Filters
      * Return label if value is empty
      *
      * @param mixed $value
-     * @param string $label
+     * @param string|null $label
      * @return mxied
      */
-    public static function emptyLabel($value, string $label = '')
+    public static function emptyLabel($value, ?string $label = '')
     {
+        $label = $label ?? '';
+
         return (empty($value) == true) ? $label : $value;
     }
 
@@ -66,7 +68,7 @@ class Filters
      *
      * @param string $text
      * @param integer $size
-     * @param string $label
+     * @param string|null $label
      * @return string
      */
     public static function sliceLabel(?string $text, int $size = 30, ?string $label = '...'): string
@@ -105,7 +107,7 @@ class Filters
      */
     public static function attr($value, ?string $name = null, $default = '')
     {      
-        $name = $name  ?? '';
+        $name = $name ?? '';
         $default = $default ?? '';
 
         return (\is_array($value) == true) ? Html::getAttributes($value) : Html::attr($value,$name,$default);
