@@ -10,7 +10,6 @@
 namespace Arikaim\Core\View\Html;
 
 use Arikaim\Core\Collection\Arrays;
-use Arikaim\Core\Utils\Utils;
 use Arikaim\Core\Utils\File;
 use Arikaim\Core\Http\Url;
 use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
@@ -25,13 +24,14 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     const EXTENSION_COMPONENT = 2;
     const GLOBAL_COMPONENT    = 3; 
     const PRIMARY_TEMLATE     = 4;
-    
+    const COMPONENTS_LIBRARY  = 5; 
+
     /**
      * Component name
      *
      * @var string
      */
-    protected $name;
+    protected $name = '';
 
     /**
      * Component full name
@@ -52,7 +52,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @var string
      */
-    protected $path;
+    protected $path = '';
 
     /**
      * Type
@@ -211,7 +211,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         $this->properties = $this->loadProperties();
         $this->options = $this->loadOptions(); 
 
-        $this->resolveDataFile();
+        $this->resolveDataFile(); 
     }
 
     /**
@@ -675,58 +675,56 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         if (\stripos($name,'::') !== false) {
             // extension component
             $tokens = \explode('::',$name);     
-            $type = Self::EXTENSION_COMPONENT;
+            $this->type = Self::EXTENSION_COMPONENT;
             $this->selectorType = '::';
         } elseif (\stripos($name,'>') !== false) {
-            // resolve location
+            // Primary template
             $tokens = \explode('>',$name);
-            $type = Self::PRIMARY_TEMLATE;
+            $this->type = Self::PRIMARY_TEMLATE;
             $this->selectorType = '>';
-        } else {
-            // template component
-            $this->selectorType = ':';
+        } elseif (\stripos($name,':') !== false) {
+            // template component          
             $tokens = \explode(':',$name);  
-            $type = ($tokens[0] == 'components') ? Self::GLOBAL_COMPONENT : Self::TEMPLATE_COMPONENT;    
-        }
-
-        if (isset($tokens[1]) == false) {    
-            // component location not set                     
-            $this->path = \str_replace('.','/',$tokens[0]);            
-            $this->templateName = null;
-            $type = Self::UNKNOWN_COMPONENT;        
+            $this->type = ($tokens[0] == 'components') ? Self::GLOBAL_COMPONENT : Self::TEMPLATE_COMPONENT;  
+            $this->selectorType = ':';  
+        } elseif (\stripos($name,'~') !== false) {
+            // template component          
+            $tokens = \explode('~',$name);  
+            $this->type = Self::COMPONENTS_LIBRARY;
+            $this->selectorType = '~';  
         } else {
-            $this->path = \str_replace('.','/',$tokens[1]);
-            $this->templateName = $tokens[0];          
+            // component location not set                         
+            $this->templateName = null;
+            $this->type = Self::UNKNOWN_COMPONENT;     
+            return;  
         }
 
-        if ($type == Self::PRIMARY_TEMLATE) {
-            $this->path = \str_replace('.','/',$tokens[1]);
-            $this->templateName = $tokens[0]; 
-
+        $this->path = \str_replace('.','/',$tokens[1]);
+        $this->templateName = $tokens[0];          
+        
+        if ($this->type == Self::PRIMARY_TEMLATE) {
             // resolve component location (template or extension)
             $templateName = (empty($this->primaryTemplate) == true) ? $this->templateName : $this->primaryTemplate;  
             $componentPath = $this->getComponentFullPath(Self::TEMPLATE_COMPONENT,$templateName);
             if (\file_exists($componentPath) == true) {               
                 // primary template component
-                $type = Self::TEMPLATE_COMPONENT;
-                $this->templateName = $templateName; 
+                $this->type = Self::TEMPLATE_COMPONENT;
+                $this->templateName = $templateName;                
             } else {
                 // set extension component
-                $type = Self::EXTENSION_COMPONENT;
-                $this->templateName = $tokens[0];
+                $this->type = Self::EXTENSION_COMPONENT;               
             }                 
         }
 
-        $this->type = $type;
-        $parts = \explode('/',$this->path);
-        $this->name = \end($parts);
+        $path = \explode('/',$this->path);
+        $this->name = \end($path);
     }   
 
     /**
      * Get properties file name
      *
      * @return string|null
-     */
+    */
     public function getPropertiesFileName(): ?string 
     {
         return $this->files['properties']['file_name'] ?? null;       
@@ -806,6 +804,10 @@ class ComponentDescriptor implements ComponentDescriptorInterface
                
             case Self::GLOBAL_COMPONENT:
                 return Url::VIEW_URL;
+
+            case Self::COMPONENTS_LIBRARY:
+                return Url::getComponentsLibraryUrl($this->templateName);
+
             default: 
                 return null;            
         }       
@@ -866,6 +868,9 @@ class ComponentDescriptor implements ComponentDescriptorInterface
 
             case Self::GLOBAL_COMPONENT:
                 return $viewPath;
+
+            case Self::COMPONENTS_LIBRARY:
+                return $viewPath . 'components' . DIRECTORY_SEPARATOR . $template . DIRECTORY_SEPARATOR;
         }           
         
         return null;
@@ -991,6 +996,10 @@ class ComponentDescriptor implements ComponentDescriptorInterface
                 $templatePath = '';               
                 $path = $this->path . DIRECTORY_SEPARATOR; 
                 break;
+            case Self::COMPONENTS_LIBRARY:
+                    $templatePath = '';               
+                    $path = $this->path . DIRECTORY_SEPARATOR; 
+                    break;
             default:
                 $templatePath = '';      
         }
