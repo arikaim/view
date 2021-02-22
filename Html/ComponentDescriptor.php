@@ -22,7 +22,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     const UNKNOWN_COMPONENT   = 0;
     const TEMPLATE_COMPONENT  = 1; 
     const EXTENSION_COMPONENT = 2;
-    const GLOBAL_COMPONENT    = 3; 
+    const GLOBAL_COMPONENT    = 3; // deprecated
     const PRIMARY_TEMLATE     = 4;
     const COMPONENTS_LIBRARY  = 5; 
 
@@ -101,7 +101,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @var string
      */
-    protected $basePath;
+    protected $basePath = '';
 
     /**
      * Component files
@@ -211,7 +211,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         $this->properties = $this->loadProperties();
         $this->options = $this->loadOptions(); 
 
-        $this->resolveDataFile(); 
+        $this->resolveDataFile();      
     }
 
     /**
@@ -340,15 +340,13 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function getTemplateFile(): ?string
     {
+        $path = '';
         switch($this->type) {
             case Self::EXTENSION_COMPONENT: 
                 $path = $this->templateName . DIRECTORY_SEPARATOR . 'view';
                 break;
-            case Self::TEMPLATE_COMPONENT: 
-                $path = '';
-                break;
-            case Self::GLOBAL_COMPONENT: 
-                $path = '';
+            case Self::COMPONENTS_LIBRARY: 
+                $path = $this->templateName . DIRECTORY_SEPARATOR;
                 break;
             case Self::UNKNOWN_COMPONENT: 
                 return null;
@@ -685,13 +683,20 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         } elseif (\stripos($name,':') !== false) {
             // template component          
             $tokens = \explode(':',$name);  
-            $this->type = ($tokens[0] == 'components') ? Self::GLOBAL_COMPONENT : Self::TEMPLATE_COMPONENT;  
+            $this->type = Self::TEMPLATE_COMPONENT;
+            if ($tokens[0] == 'components') {
+                $tokens[0] = 'semantic';
+                $this->type = Self::COMPONENTS_LIBRARY;
+                $this->basePath = '';
+            } 
+
             $this->selectorType = ':';  
         } elseif (\stripos($name,'~') !== false) {
             // template component          
             $tokens = \explode('~',$name);  
             $this->type = Self::COMPONENTS_LIBRARY;
-            $this->selectorType = '~';  
+            $this->selectorType = '~';    
+            $this->basePath = '';         
         } else {
             // component location not set                         
             $this->templateName = null;
@@ -803,7 +808,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
                 return Url::getExtensionViewUrl($this->templateName);
                
             case Self::GLOBAL_COMPONENT:
-                return Url::VIEW_URL;
+                return Url::getComponentsLibraryUrl($this->templateName);
 
             case Self::COMPONENTS_LIBRARY:
                 return Url::getComponentsLibraryUrl($this->templateName);
@@ -820,7 +825,10 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function getUrl(): string
     {
-        return $this->getTemplateUrl() . '/' . $this->basePath . '/' . $this->path . '/';
+        $basePath = (empty($this->basePath) == false) ? $this->basePath . '/' : '';
+        $path = (empty($this->path) == false) ? $this->path . '/' : '';
+     
+        return $this->getTemplateUrl() . '/' . $basePath . $path;
     }
 
     /**
@@ -867,7 +875,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
                 return $viewPath . 'templates' . DIRECTORY_SEPARATOR . $template . DIRECTORY_SEPARATOR;
 
             case Self::GLOBAL_COMPONENT:
-                return $viewPath;
+                return $viewPath . 'components' . DIRECTORY_SEPARATOR . $template . DIRECTORY_SEPARATOR;
 
             case Self::COMPONENTS_LIBRARY:
                 return $viewPath . 'components' . DIRECTORY_SEPARATOR . $template . DIRECTORY_SEPARATOR;
@@ -956,9 +964,9 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     {
         $templateName = $templateName ?? $this->templateName;
         $templateFullPath = Self::getTemplatePath($templateName,$type,$this->viewPath,$this->extensionsPath); 
-        
-        $basePath = $this->basePath ?? '';
-        $path = $basePath . DIRECTORY_SEPARATOR . $this->path . DIRECTORY_SEPARATOR;   
+        $basePath = ($type == Self::COMPONENTS_LIBRARY) ? '' : $this->basePath;
+     
+        $path = (empty($basePath) == false) ? $basePath . DIRECTORY_SEPARATOR . $this->path . DIRECTORY_SEPARATOR : $this->path . DIRECTORY_SEPARATOR;   
         
         return $templateFullPath . $path;     
     }
