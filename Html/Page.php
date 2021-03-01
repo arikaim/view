@@ -100,14 +100,21 @@ class Page extends Component implements HtmlPageInterface
      * @param array|null $params
      * @param string|null $language
      * @param boolean $withOptions
+     * @param string $type
      * @return HtmlComponent
      */
-    public function createHtmlComponent(string $name, ?array $params = [], ?string $language = null, bool $withOptions = true)
+    public function createHtmlComponent(
+        string $name, 
+        ?array $params = [], 
+        ?string $language = null, 
+        bool $withOptions = true,
+        string $type = ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE
+    )
     {       
         $templateName = $this->getCurrentTemplate();
         $language = $language ?? $this->language;
         
-        $component = new HtmlComponent($this->view,$name,$params,$language,'components','component.json',$withOptions);      
+        $component = new HtmlComponent($this->view,$name,$params,$language,'components','component.json',$withOptions,$type);      
         $component->setCurrentTemplate($templateName);
 
         return $component;
@@ -236,7 +243,7 @@ class Page extends Component implements HtmlPageInterface
      */
     public static function getIndexFile(ComponentDescriptorInterface $component, string $currentTemlate): string
     {        
-        switch ($component->getType()) {
+        switch ($component->getLocation()) {
             case ComponentDescriptor::TEMPLATE_COMPONENT:
                 $templateName = $component->getTemplateName();
                 break;
@@ -271,7 +278,8 @@ class Page extends Component implements HtmlPageInterface
         
         if (\is_array($head) == true) {
             $templateUrl = $params['template_url'] ?? '';
-            $this->head->param('template_url',$templateUrl);           
+            $this->head->param('template_url',$templateUrl); 
+         
             $head = Text::renderMultiple($properties['head'],$this->head->getParams());  
 
             $this->head->applyDefaultMetaTags($head); 

@@ -158,16 +158,21 @@ class View implements ViewInterface
      * @param array $file
      * @param string $key
      * @param string $componentName
+     * @param string $type
      * @return void
      */
-    public function addIncludeFile(array $file, string $key, string $componentName): void
+    public function addIncludeFile(array $file, string $key, string $componentName, string $type = ''): void
     {
         $this->componentFiles[$key] = $this->componentFiles[$key] ?? [];
 
         $found = \in_array($file['url'],\array_column($this->componentFiles[$key],'url'));
         if ($found === false) {
             $file['component_name'] = (empty($file['source_component']) == true) ? $componentName : $file['source_component'];
-            $this->includedComponents[] = $file['component_name'];
+            $file['component_type'] = (empty($type) == true) ? 'arikaim' : $type;
+            $this->includedComponents[] = [
+                'name' => $file['component_name'],
+                'type' => $type
+            ];
             $this->componentFiles[$key][] = $file;
         }      
     }
@@ -179,7 +184,7 @@ class View implements ViewInterface
      */
     public function getIncludedComponents(): array
     {
-        return \array_unique($this->includedComponents);
+        return $this->includedComponents;
     } 
 
     /**

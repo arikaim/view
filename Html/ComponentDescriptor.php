@@ -19,6 +19,7 @@ use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
  */
 class ComponentDescriptor implements ComponentDescriptorInterface
 {
+    // component locations
     const UNKNOWN_COMPONENT   = 0;
     const TEMPLATE_COMPONENT  = 1; 
     const EXTENSION_COMPONENT = 2;
@@ -55,11 +56,11 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     protected $path = '';
 
     /**
-     * Type
+     * Component Location
      *
      * @var integer
      */
-    protected $type;  
+    protected $location;  
 
     /**
      * Component full path
@@ -174,6 +175,13 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     private $removeIncludeOptions = false;
 
     /**
+     * Component type
+     *
+     * @var string
+     */
+    protected $componentType;
+
+    /**
      * Constructor
      *
      * @param string $name
@@ -183,6 +191,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string|null $viewPath
      * @param string|null $extensionsPath
      * @param string|null $primaryTemplate
+     * @param string $componentType
      */
     public function __construct(
         string $name,
@@ -191,7 +200,9 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         ?string $optionsFile = null,
         ?string $viewPath = null,
         ?string $extensionsPath = null,
-        ?string $primaryTemplate = null) 
+        ?string $primaryTemplate = null,
+        string $componentType = ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE
+    ) 
     {
         $this->fullName = $name;
         $this->language = $language;
@@ -200,7 +211,8 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         $this->viewPath = $viewPath; 
         $this->extensionsPath = $extensionsPath;    
         $this->primaryTemplate = $primaryTemplate;
-
+        $this->componentType = $componentType;
+        
         $this->clearContent();
         $this->parseName($name);
         $this->resolvePath();
@@ -341,7 +353,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     public function getTemplateFile(): ?string
     {
         $path = '';
-        switch($this->type) {
+        switch($this->location) {
             case Self::EXTENSION_COMPONENT: 
                 $path = $this->templateName . DIRECTORY_SEPARATOR . 'view';
                 break;
@@ -468,13 +480,34 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     }
 
     /**
-     * Get type
+     * Get component type
+     *
+     * @return string
+     */
+    public function getComponentType(): string
+    {
+        return $this->componentType;
+    }
+
+    /**
+     * Set component type
+     *
+     * @param $type
+     * @return void
+     */
+    public function setComponentType(string $type): void
+    {
+        $this->componentType = $type;
+    }
+
+    /**
+     * Get location
      *
      * @return integer
      */
-    public function getType(): int
+    public function getLocation(): int
     {
-        return $this->type;
+        return $this->location;
     }
 
     /**
@@ -673,20 +706,20 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         if (\stripos($name,'::') !== false) {
             // extension component
             $tokens = \explode('::',$name);     
-            $this->type = Self::EXTENSION_COMPONENT;
+            $this->location = Self::EXTENSION_COMPONENT;
             $this->selectorType = '::';
         } elseif (\stripos($name,'>') !== false) {
             // Primary template
             $tokens = \explode('>',$name);
-            $this->type = Self::PRIMARY_TEMLATE;
+            $this->location = Self::PRIMARY_TEMLATE;
             $this->selectorType = '>';
         } elseif (\stripos($name,':') !== false) {
             // template component          
             $tokens = \explode(':',$name);  
-            $this->type = Self::TEMPLATE_COMPONENT;
+            $this->location = Self::TEMPLATE_COMPONENT;
             if ($tokens[0] == 'components') {
                 $tokens[0] = 'semantic';
-                $this->type = Self::COMPONENTS_LIBRARY;
+                $this->location = Self::COMPONENTS_LIBRARY;
                 $this->basePath = '';
             } 
 
@@ -694,30 +727,30 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         } elseif (\stripos($name,'~') !== false) {
             // template component          
             $tokens = \explode('~',$name);  
-            $this->type = Self::COMPONENTS_LIBRARY;
+            $this->location = Self::COMPONENTS_LIBRARY;
             $this->selectorType = '~';    
             $this->basePath = '';         
         } else {
             // component location not set                         
             $this->templateName = null;
-            $this->type = Self::UNKNOWN_COMPONENT;     
+            $this->location = Self::UNKNOWN_COMPONENT;     
             return;  
         }
 
         $this->path = \str_replace('.','/',$tokens[1]);
         $this->templateName = $tokens[0];          
         
-        if ($this->type == Self::PRIMARY_TEMLATE) {
+        if ($this->location == Self::PRIMARY_TEMLATE) {
             // resolve component location (template or extension)
             $templateName = (empty($this->primaryTemplate) == true) ? $this->templateName : $this->primaryTemplate;  
             $componentPath = $this->getComponentFullPath(Self::TEMPLATE_COMPONENT,$templateName);
             if (\file_exists($componentPath) == true) {               
                 // primary template component
-                $this->type = Self::TEMPLATE_COMPONENT;
+                $this->location = Self::TEMPLATE_COMPONENT;
                 $this->templateName = $templateName;                
             } else {
                 // set extension component
-                $this->type = Self::EXTENSION_COMPONENT;               
+                $this->location = Self::EXTENSION_COMPONENT;               
             }                 
         }
 
@@ -800,7 +833,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function getTemplateUrl(): ?string
     {
-        switch ($this->type) {
+        switch ($this->location) {
             case Self::TEMPLATE_COMPONENT:
                 return Url::getTemplateUrl($this->templateName);
                 
@@ -838,7 +871,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function getRootComponentPath(): string
     {
-        return Self::getTemplatePath($this->templateName,$this->type,$this->viewPath,$this->extensionsPath);
+        return Self::getTemplatePath($this->templateName,$this->location,$this->viewPath,$this->extensionsPath);
     }
 
     /**
@@ -860,14 +893,14 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * Get template path
      *
      * @param string $template
-     * @param int $type
+     * @param int $location
      * @param string $viewPath
      * @param string $extensionsPath
      * @return string|null
      */
-    public static function getTemplatePath(string $template, int $type, $viewPath, $extensionsPath): ?string 
+    public static function getTemplatePath(string $template, int $location, $viewPath, $extensionsPath): ?string 
     {   
-        switch($type) {
+        switch($location) {
             case Self::EXTENSION_COMPONENT:
                 return $extensionsPath . $template . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR;
 
@@ -891,7 +924,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function getComponentPath(): ?string
     {
-        return Self::getTemplatePath($this->templateName,$this->type,$this->viewPath,$this->extensionsPath);
+        return Self::getTemplatePath($this->templateName,$this->location,$this->viewPath,$this->extensionsPath);
     }
 
     /**
@@ -957,14 +990,14 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Get component full path
      *
-     * @param integer $type
+     * @param integer $location
      * @return string
      */
-    public function getComponentFullPath(int $type, ?string $templateName = null): string
+    public function getComponentFullPath(int $location, ?string $templateName = null): string
     {
         $templateName = $templateName ?? $this->templateName;
-        $templateFullPath = Self::getTemplatePath($templateName,$type,$this->viewPath,$this->extensionsPath); 
-        $basePath = ($type == Self::COMPONENTS_LIBRARY) ? '' : $this->basePath;
+        $templateFullPath = Self::getTemplatePath($templateName,$location,$this->viewPath,$this->extensionsPath); 
+        $basePath = ($location == Self::COMPONENTS_LIBRARY) ? '' : $this->basePath;
      
         $path = (empty($basePath) == false) ? $basePath . DIRECTORY_SEPARATOR . $this->path . DIRECTORY_SEPARATOR : $this->path . DIRECTORY_SEPARATOR;   
         
@@ -993,7 +1026,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         $basePath = (empty($this->basePath) == false) ? DIRECTORY_SEPARATOR . $this->basePath : '';
         $path = $basePath . DIRECTORY_SEPARATOR . $this->path . DIRECTORY_SEPARATOR;   
       
-        switch($this->type) {
+        switch($this->location) {
             case Self::EXTENSION_COMPONENT:
                 $templatePath = '';
                 break;
@@ -1011,7 +1044,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
             default:
                 $templatePath = '';      
         }
-        $this->fullPath = $this->getComponentFullPath($this->type);
+        $this->fullPath = $this->getComponentFullPath($this->location);
         $this->filePath = \rtrim($templatePath,DIRECTORY_SEPARATOR) . $path;
     }
 

@@ -90,6 +90,13 @@ class Component
     protected $name;
 
     /**
+     * Component type
+     *
+     * @var string
+     */
+    protected $componentType;
+
+    /**
      * Constructor
      *
      * @param ViewInterface $view
@@ -99,6 +106,7 @@ class Component
      * @param string $basePath
      * @param string|null $optionsFile
      * @param boolean $withOptions
+     * @param string $type
      */
     public function __construct(
         ViewInterface $view,
@@ -107,7 +115,9 @@ class Component
         ?string $language = null,
         string $basePath = 'components',
         ?string $optionsFile = null,
-        bool $withOptions = true)
+        bool $withOptions = true,
+        string $type = ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE
+    )
     {
         $this->view = $view;
         $this->basePath = $basePath;
@@ -116,11 +126,12 @@ class Component
         $this->language = $language ?? 'en';
         $this->params = $params ?? [];
         $this->name = $name;
+        $this->componentType = $type;
 
         Self::$cacheSaveTime = \defined('CACHE_SAVE_TIME') ? \constant('CACHE_SAVE_TIME') : Self::$cacheSaveTime;
 
         if (empty($name) == false) {
-            $this->componentDescriptor = $this->createComponentDescriptor($name,$language,$withOptions); 
+            $this->componentDescriptor = $this->createComponentDescriptor($name,$language,$withOptions,$type); 
         }
     }
 
@@ -151,9 +162,15 @@ class Component
      * @param string $name
      * @param string|null $language
      * @param boolean $withOptions
+     * @param string $type
      * @return ComponentDescriptorInterface
      */
-    protected function createComponentDescriptor(string $name, ?string $language = null, bool $withOptions = true)
+    protected function createComponentDescriptor(
+        string $name, 
+        ?string $language = null, 
+        bool $withOptions = true, 
+        string $type = ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE
+    )
     {
         $language = $language ?? $this->language;
         $primaryTemplate = $this->view->getPrimaryTemplate();
@@ -165,7 +182,8 @@ class Component
             $this->optionsFile,
             $this->view->getViewPath(),
             $this->view->getExtensionsPath(),
-            $primaryTemplate
+            $primaryTemplate,
+            $type
         );
         if ($descriptor->isValid() == false) {           
             $descriptor->setError('TEMPLATE_COMPONENT_NOT_FOUND',['full_component_name' => $name]);             
@@ -247,7 +265,12 @@ class Component
             $component->setError('ACCESS_DENIED',['name' => $component->getFullName()]);             
             return $component;
         }
-       
+        // component type option
+        $componentType = $component->getOption('component-type',null);
+        if (empty($componentType) == false) {
+            $component->setComponentType($componentType);
+        }
+
         return $this->applyIncludeOption($component,'include/js','js');      
     }
 
@@ -376,13 +399,14 @@ class Component
      *
      * @param array $files
      * @param string $componentName
+     * @param string $type
      * @return void
      */
-    public function includeComponentFiles(array $files, string $componentName): void
+    public function includeComponentFiles(array $files, string $componentName, string $type): void
     {
         foreach ($files as $item) {          
             if (empty($item['url']) == false) {                   
-                $this->view->addIncludeFile($item,'js',$componentName);
+                $this->view->addIncludeFile($item,'js',$componentName,$type);
             }                              
         }   
     }

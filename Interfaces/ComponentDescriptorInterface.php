@@ -14,6 +14,10 @@ namespace Arikaim\Core\View\Interfaces;
  */
 interface ComponentDescriptorInterface 
 {  
+    // component types
+    const ARIKAIM_COMPONENT_TYPE = 'arikaim';
+    const VUE_COMPONENT_TYPE     = 'vue';
+
     /**
      * Get component data file.
      * 
@@ -111,11 +115,26 @@ interface ComponentDescriptorInterface
     public function getName(): string;
 
     /**
-     * Get component type
+     * Get component location
      *
      * @return integer
      */
-    public function getType(): int;
+    public function getLocation(): int;
+
+    /**
+     * Set component type
+     *
+     * @param string $type
+     * @return void
+     */
+    public function setComponentType(string $type): void;
+
+    /**
+     * Get component type
+     *
+     * @return string
+     */
+    public function getComponentType(): string;
 
     /**
      * Check if component is valid 

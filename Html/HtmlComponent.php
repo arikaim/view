@@ -80,7 +80,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      */
     public function load(): string
     {          
-        $component = $this->render($this->name,$this->params,$this->language,true);
+        $component = $this->render($this->name,$this->params,$this->language,true,$this->componentType);
        
         if ($component->hasError() == true) {
             $error = $component->getError();
@@ -140,13 +140,18 @@ class HtmlComponent extends Component implements HtmlComponentInterface
         }
 
         $params = Arrays::merge($component->getProperties(),$params);
-        
+          
+        // resolve component type
+        if (isset($params['component-type']) == true) {
+            $component->setComponentType($params['component-type']);
+        }
+
         $component->setHtmlCode('');  
         if ($component->getOption('render') !== false) {      
             $componentName = $component->getFullName();
             $component = $this->fetch($component,$params);
             // include files
-            $this->includeComponentFiles($component->getFiles('js'),$componentName);          
+            $this->includeComponentFiles($component->getFiles('js'),$componentName,$component->getComponentType());          
         }  
         // add global vars      
         $this->view->getEnvironment()->addGlobal('current_component_name',$component->getName());        
@@ -165,13 +170,20 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * @param string $name
      * @param array $params
      * @param string $language
-     * @param boolean $withOptions    
+     * @param boolean $withOptions
+     * @param string $type     
      * @return ComponentDescriptorInterface
      */
-    public function render(string $name, array $params = [], string $language, bool $withOptions = true) 
+    public function render(
+        string $name,
+        array $params = [],
+        string $language,
+        bool $withOptions = true,
+        string $type = ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE
+    ) 
     {                 
         $component = $this->view->getCache()->fetch('html.component.' . $this->currentTenplate . '.' . $name . '.' . $language);
-        $component = (empty($component) == true) ? $this->createComponentDescriptor($name,$language,$withOptions) : $component;
+        $component = (empty($component) == true) ? $this->createComponentDescriptor($name,$language,$withOptions,$type) : $component;
       
         return $this->renderComponentDescriptor($component,$params);
     }
