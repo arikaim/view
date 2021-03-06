@@ -431,11 +431,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function getFiles(?string $fileType = null): array
     {
-        if ($fileType == null) {
-            return $this->files;
-        }
-
-        return (array)$this->files[$fileType] ?? [];          
+        return ($fileType == null) ? $this->files : $this->files[$fileType] ?? [];        
     }
 
     /**

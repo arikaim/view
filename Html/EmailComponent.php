@@ -51,7 +51,6 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
             'component_url' => $component->getUrl(),
             'template_url'  => $component->getTemplateUrl()
         ]; 
-        $params = $params ?? [];
         $params = \array_merge($params,$defaultParams);
         $params = Arrays::merge($component->getProperties(),$params);
         $library = $component->getOption('library',null);

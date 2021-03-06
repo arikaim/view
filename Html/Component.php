@@ -80,7 +80,7 @@ class Component
     /**
      * Component data
      *
-     * @var ComponentDescriptorInterface
+     * @var \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface
      */
     protected $componentDescriptor;
 
@@ -165,7 +165,7 @@ class Component
     /**
      * Get view ref
      *
-     * @return ViewInterface
+     * @return \Arikaim\Core\Interfaces\View\ViewInterface
      */
     public function getVeiw()
     {
@@ -214,7 +214,7 @@ class Component
      *   
      * @param ComponentDescriptorInterface $component
      * @param array $params
-     * @return ComponentDescriptorInterface
+     * @return \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface
      */
     public function fetch(ComponentDescriptorInterface $component, array $params = [])
     {      
@@ -232,7 +232,7 @@ class Component
     /**
      * Check auth and permissions access
      *
-     * @param ComponentDescriptorInterface $component       
+     * @param \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface $component       
      * @return boolean
      */
     public function checkAuthOption(ComponentDescriptorInterface $component): bool
@@ -369,7 +369,7 @@ class Component
             $primaryTemplate
         );
 
-        $files = (\is_object($descriptor) == true) ? $descriptor->getFiles($fileType) : ['js' => [],'css' => []];
+        $files = $descriptor->getFiles($fileType);
         $files['js'] = $files['js'] ?? [];
         $files['css'] = $files['css'] ?? [];
 

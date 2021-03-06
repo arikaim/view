@@ -23,7 +23,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
     /**
      * Get component data
      *
-     * @return ComponentDescriptorInterface
+     * @return \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface
      */
     public function getComponentData()
     {
@@ -78,7 +78,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * Render component
      *
      * @param bool $withOptions
-     * @return ComponentDescriptorInterface
+     * @return \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface
      */
     public function renderComponent(bool $withOptions = true) 
     { 
@@ -90,7 +90,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      *
      * @param ComponentDescriptorInterface $component
      * @param array $params   
-     * @return ComponentDescriptorInterface
+     * @return \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface
      */
     public function renderComponentDescriptor(ComponentDescriptorInterface $component, array $params = [])
     {       
@@ -156,7 +156,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * @param string $language
      * @param boolean $withOptions
      * @param string|null $type     
-     * @return ComponentDescriptorInterface
+     * @return \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface
      */
     public function render(
         string $name,

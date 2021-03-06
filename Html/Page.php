@@ -300,7 +300,7 @@ class Page extends Component implements HtmlPageInterface
             $this->head->applyDefaultItems($head);
         }
 
-        $params = \array_merge_recursive($params,(array)$properties);
+        $params = \array_merge_recursive($params,$properties);
 
         $code = $this->view->fetch($component->getTemplateFile(),$params);
       
@@ -349,7 +349,7 @@ class Page extends Component implements HtmlPageInterface
      */
     public function getCurrentTemplate(): string
     { 
-        return $this->currentTenplate ?? $this->view->getPrimaryTemplate();
+        return (empty($this->currentTenplate) == true) ? $this->view->getPrimaryTemplate() : $this->currentTenplate;
     }
 
     /**

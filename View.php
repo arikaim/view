@@ -400,7 +400,7 @@ class View implements ViewInterface
     /**
      * Get Twig environment
      *
-     * @return Environment
+     * @return \Twig\Environment
      */
     public function getEnvironment()
     {
