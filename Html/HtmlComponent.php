@@ -20,22 +20,6 @@ use Arikaim\Core\Interfaces\View\ComponentDataInterface;
  */
 class HtmlComponent extends Component implements HtmlComponentInterface
 {
-    const NOT_VALID_COMPONENT_ERROR = 'Not valid component';
-    const ACESS_DENIED_ERROR        = 'Access denied for component';
-    const NOT_FOUND_ERROR           = 'Component not found';
-    const COMPONENT_ERROR_NAME      = 'components:message.error';
- 
-    /**
-     * Errors messages
-     *
-     * @var array
-     */
-    private static $errors = [
-        'NOT_VALID_COMPONENT'          => Self::NOT_VALID_COMPONENT_ERROR,
-        'TEMPLATE_COMPONENT_NOT_FOUND' => Self::NOT_FOUND_ERROR,
-        'ACCESS_DENIED'                => Self::ACESS_DENIED_ERROR
-    ];
-
     /**
      * Get component data
      *
@@ -98,7 +82,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      */
     public function renderComponent(bool $withOptions = true) 
     { 
-        return $this->render($this->name,$this->params,$this->language,$withOptions);
+        return $this->render($this->name,$this->params,$this->language,$withOptions,$this->componentType);
     }
 
     /**
@@ -171,7 +155,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * @param array $params
      * @param string $language
      * @param boolean $withOptions
-     * @param string $type     
+     * @param string|null $type     
      * @return ComponentDescriptorInterface
      */
     public function render(
@@ -179,7 +163,7 @@ class HtmlComponent extends Component implements HtmlComponentInterface
         array $params = [],
         string $language,
         bool $withOptions = true,
-        string $type = ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE
+        ?string $type = null
     ) 
     {                 
         $component = $this->view->getCache()->fetch('html.component.' . $this->currentTenplate . '.' . $name . '.' . $language);

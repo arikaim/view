@@ -19,6 +19,22 @@ use Arikaim\Core\Interfaces\View\ViewInterface;
  */
 class Component   
 {
+    const NOT_VALID_COMPONENT_ERROR = 'Not valid component';
+    const ACESS_DENIED_ERROR        = 'Access denied for component';
+    const NOT_FOUND_ERROR           = 'Component not found';
+    const COMPONENT_ERROR_NAME      = 'components:message.error';
+
+    /**
+     * Errors messages
+     *
+     * @var array
+     */
+    protected static $errors = [
+        'NOT_VALID_COMPONENT'          => Self::NOT_VALID_COMPONENT_ERROR,
+        'TEMPLATE_COMPONENT_NOT_FOUND' => Self::NOT_FOUND_ERROR,
+        'ACCESS_DENIED'                => Self::ACESS_DENIED_ERROR
+    ];
+
     /**
      * Cache save time
      *
@@ -207,7 +223,6 @@ class Component
         }
         $templateFle = $component->getTemplateFile();
 
-        $this->view->getEnvironment()->loadTemplate($templateFle);
         $code = $this->view->getEnvironment()->render($templateFle,$params);
         $component->setHtmlCode($code);    
 

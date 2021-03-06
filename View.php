@@ -352,7 +352,7 @@ class View implements ViewInterface
      */
     public function fetchBlock(string $template, string $block, array $params = []): ?string
     {
-        return $this->getEnvironment()->loadTemplate($template)->renderBlock($block,$params);
+        return $this->getEnvironment()->load($template)->renderBlock($block,$params);
     }
 
     /**

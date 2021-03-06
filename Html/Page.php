@@ -156,9 +156,10 @@ class Page extends Component implements HtmlPageInterface
      * @param array $params
      * @param string $language    
      * @param bool $withOptions
+     * @param string|null $type
      * @return ComponentDescriptorInterface
     */
-    public function render(string $name, array $params = [], string $language, bool $withOptions = true)
+    public function render(string $name, array $params = [], string $language, bool $withOptions = true, ?string $type = null)
     {    
         // fetch from cache
         $component = $this->view->getCache()->fetch('html.page.component.' . $name . '.' . $language);
@@ -503,6 +504,13 @@ class Page extends Component implements HtmlPageInterface
         return $options;
     }
 
+    /**
+     * Resolve include files
+     *
+     * @param array $options
+     * @param string $url
+     * @return array
+     */
     protected function resolveIncludeFiles(array $options, string $url): array
     {
         $options['js'] = $options['js'] ?? [];
@@ -685,7 +693,7 @@ class Page extends Component implements HtmlPageInterface
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';
         $language = $language ?? Self::$defaultLanguage;
 
-        return $this->render($templateName . Self::PAGE_NOT_FOUND,['error' => $data],$language);
+        return $this->render($templateName . Self::PAGE_NOT_FOUND,['error' => $data],$language,true,$this->componentType);
     }
 
     /**
@@ -702,7 +710,7 @@ class Page extends Component implements HtmlPageInterface
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';
         $language = $language ?? Self::$defaultLanguage;
 
-        return $this->render($templateName . Self::APPLICATION_ERROR_PAGE,['error' => $data],$language);
+        return $this->render($templateName . Self::APPLICATION_ERROR_PAGE,['error' => $data],$language,true,$this->componentType);
     }
 
     /**
@@ -719,6 +727,6 @@ class Page extends Component implements HtmlPageInterface
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';        
         $language = $language ?? Self::$defaultLanguage;
 
-        return $this->render($templateName . Self::SYSTEM_ERROR_PAGE,$error,$language);      
+        return $this->render($templateName . Self::SYSTEM_ERROR_PAGE,$error,$language,true,$this->componentType);      
     }
 }

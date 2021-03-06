@@ -49,7 +49,7 @@ class ComponentTagParser extends AbstractTokenParser
         // tag params
         $componentName = $stream->expect(Token::STRING_TYPE)->getValue();  
         $stream->expect(Token::BLOCK_END_TYPE); 
-        $body = $this->parser->subparse([$this, 'decideTagEnd'], true);
+        $body = $this->parser->subparse([$this,'decideTagEnd'],true);
         $stream->expect(Token::BLOCK_END_TYPE);
           
         return new ComponentNode(
