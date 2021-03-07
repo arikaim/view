@@ -39,7 +39,7 @@ class View implements ViewInterface
     /**
      * Twig env
      *
-     * @var Twig\Environment|null
+     * @var \Twig\Environment|null
      */
     private $environment = null;
 
