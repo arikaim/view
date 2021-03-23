@@ -13,7 +13,6 @@ use Twig\Environment;
 use Twig\Extension\ExtensionInterface;
 use Twig\Loader\FilesystemLoader;
 
-use Arikaim\Core\Collection\Collection;
 use Arikaim\Core\Interfaces\View\ViewInterface;
 use Arikaim\Core\Interfaces\CacheInterface;
 
@@ -22,13 +21,6 @@ use Arikaim\Core\Interfaces\CacheInterface;
  */
 class View implements ViewInterface
 {
-    /**
-     * Cache save time
-     *
-     * @var integer
-     */
-    public static $cacheSaveTime = 4;
-
     /**
      * Template loader
      *
@@ -79,13 +71,6 @@ class View implements ViewInterface
     private $componentsPath;
 
     /**
-     * Page properties collection
-     *
-     * @var Collection
-     */
-    private $pageProperties;
-    
-    /**
      * Current extension class
      *
      * @var string|null
@@ -98,20 +83,6 @@ class View implements ViewInterface
      * @var array
      */
     private $settings = [];
-
-    /**
-     * Component include files (js)
-     *
-     * @var array
-    */
-    protected $componentFiles = [];
-
-    /**
-     * Included compoents
-     *
-     * @var array
-     */
-    protected $includedComponents = [];
 
     /**
      * Primary template
@@ -140,64 +111,13 @@ class View implements ViewInterface
         array $settings = [],
         ?string $primaryTemplate = null)
     {
-        $this->pageProperties = new Collection();
         $this->viewPath = $viewPath;      
         $this->extensionsPath = $extensionsPath;
         $this->templatesPath = $templatesPath;
         $this->componentsPath = $componentsPath;       
         $this->settings = $settings;      
         $this->cache = $cache;      
-        $this->primaryTemplate = $primaryTemplate ?? 'system';
-
-        Self::$cacheSaveTime = \defined('CACHE_SAVE_TIME') ? \constant('CACHE_SAVE_TIME') : Self::$cacheSaveTime;
-    }
-
-    /**
-     * Add include file if not exists
-     *
-     * @param array $file
-     * @param string $key
-     * @param string $componentName
-     * @param string $type
-     * @return void
-     */
-    public function addIncludeFile(array $file, string $key, string $componentName, string $type = ''): void
-    {
-        $this->componentFiles[$key] = $this->componentFiles[$key] ?? [];
-
-        $found = \in_array($file['url'],\array_column($this->componentFiles[$key],'url'));
-        if ($found === false) {
-            $file['component_name'] = (empty($file['source_component']) == true) ? $componentName : $file['source_component'];
-            $file['component_type'] = (empty($type) == true) ? 'arikaim' : $type;
-            $this->includedComponents[] = [
-                'name' => $file['component_name'],
-                'type' => $type
-            ];
-            $this->componentFiles[$key][] = $file;
-        }      
-    }
-
-    /**
-     * Get included components
-     *
-     * @return array
-     */
-    public function getIncludedComponents(): array
-    {
-        return $this->includedComponents;
-    } 
-
-    /**
-     * Get components include files
-     *
-     * @return array
-     */
-    public function getComponentFiles(): array
-    {
-        $this->componentFiles['js'] = $this->componentFiles['js'] ?? [];
-        $this->componentFiles['css'] = $this->componentFiles['css'] ?? [];
-        
-        return $this->componentFiles;
+        $this->primaryTemplate = $primaryTemplate ?? 'system';       
     }
 
     /**
@@ -213,18 +133,6 @@ class View implements ViewInterface
         return $functions[$name] ?? null;
     }
     
-
-    /**
-     * Get UI library path
-     *
-     * @param string $libraryName
-     * @return string
-     */
-    public function getLibraryPath(string $libraryName): string
-    {
-        return $this->viewPath . 'library' . DIRECTORY_SEPARATOR . $libraryName . DIRECTORY_SEPARATOR;
-    }
-
     /**
      * Get primary template
      *
@@ -279,16 +187,6 @@ class View implements ViewInterface
     }
 
     /**
-     * Get page properties
-     *
-     * @return Collection
-     */
-    public function properties()
-    {
-        return $this->pageProperties;
-    }
-
-    /**
      * Gte extensions path
      *
      * @return string
@@ -335,11 +233,11 @@ class View implements ViewInterface
      *
      * @param string $template
      * @param array $params
-     * @return string|null
+     * @return string
      */
-    public function fetch(string $template, array $params = []): ?string
+    public function fetch(string $template, array $params = []): string
     {       
-        return $this->getEnvironment()->render($template,$params);
+        return $this->getEnvironment()->load($template)->render($params);
     }
 
     /**
@@ -414,18 +312,16 @@ class View implements ViewInterface
     /**
      * Create twig environment
      *
-     * @param string|array|null $paths
+     * @param array|null $paths
      * @param array|null $settings
      * @return Environment
      */
-    public function createEnvironment($paths = null, ?array $settings = null)
+    public function createEnvironment(?array $paths = null, ?array $settings = null)
     {
         $loader = $this->createLoader($paths);
         $settings = $settings ?? $this->settings;
-
-        $environment = new Environment($loader,$settings);
         
-        return $environment;
+        return new Environment($loader,$settings);          
     }
 
     /**
@@ -447,19 +343,16 @@ class View implements ViewInterface
     /**
      * Create template loader
      *   
-     * @param string|array|null $paths
+     * @param array|null $paths
      * @return FilesystemLoader
      */
-    private function createLoader($paths = null)
-    {      
-        $paths = (\is_string($paths) == true) ? [$paths] : $paths;
-        if (empty($paths) == true) {
-            $paths = [
-                $this->extensionsPath,
-                $this->templatesPath,
-                $this->componentsPath
-            ];           
-        }
+    private function createLoader(?array $paths = null)
+    {             
+        $paths = $paths ?? [
+            $this->extensionsPath,
+            $this->templatesPath,
+            $this->componentsPath
+        ];           
      
         return new FilesystemLoader($paths);
     }

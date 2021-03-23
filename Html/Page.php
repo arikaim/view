@@ -10,7 +10,7 @@
 namespace Arikaim\Core\View\Html;
 
 use Arikaim\Core\View\Html\ComponentDescriptor;
-use Arikaim\Core\View\Html\Component;
+use Arikaim\Core\View\Html\AbstractComponent;
 use Arikaim\Core\View\Html\HtmlComponent;
 
 use Arikaim\Core\Collection\Collection;
@@ -25,11 +25,18 @@ use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
 use Arikaim\Core\Interfaces\View\HtmlPageInterface;
 use Arikaim\Core\Interfaces\View\ViewInterface;
 
+use Arikaim\Core\View\Html\Traits\Access;
+use Arikaim\Core\View\Html\Traits\IncludeTrait;
+
 /**
  * Html page
  */
-class Page extends Component implements HtmlPageInterface
+class Page extends AbstractComponent implements HtmlPageInterface
 {    
+    use 
+        Access,
+        IncludeTrait;
+
     /**
      *  Control panel template name
      */
@@ -71,26 +78,91 @@ class Page extends Component implements HtmlPageInterface
     protected $libraryOptions;
 
     /**
+     * Current template name
+     *
+     * @var string
+     */
+    protected $currentTenplate;
+
+    /**
+     * Gtml comp ref
+     *
+     * @var object
+     */
+    protected $htmlComponent;
+
+    /**
+     * Component include files (js)
+     *
+     * @var array
+    */
+    protected $componentsFiles = [];
+
+    /**
+     * Included compoents
+     *
+     * @var array
+     */
+    protected $includedComponents = [];
+
+    /**
      * Constructor
      * 
      * @param ViewInterface $view
      */
-    public function __construct(
-        ViewInterface $view,
-        string $defaultLanguage,
-        array $libraryOptions = [],
-        array $params = [],
-        ?string $language = null,
-        string $basePath = 'pages',
-        bool $withOptions = true
-    ) 
+    public function __construct(ViewInterface $view, string $defaultLanguage, array $libraryOptions = []) 
     {  
-        parent::__construct($view,null,$params,$language,$basePath,'page.json',$withOptions);
+        parent::__construct($view,'pages','page.json');
+
+        $this->componentsFiles = [
+            'js'  => [],
+            'css' => []
+        ];
 
         $this->libraryOptions = $libraryOptions;       
         $this->head = new PageHead();
-
         Self::$defaultLanguage = $defaultLanguage;
+
+        $this->htmlComponent = new HtmlComponent($this->view,'components','component.json');
+    }
+
+    /**
+     * Get included components
+     *
+     * @return array
+     */
+    public function getIncludedComponents(): array
+    {
+        return $this->includedComponents;
+    } 
+
+    /**
+     * Add include file if not exists
+     *
+     * @param array $file
+     * @param string $key
+     * @param string $componentName
+     * @param string $type
+     * @return void
+     */
+    public function addIncludeFile(array $file, string $key, string $componentName, string $type = ''): void
+    {
+        $found = \in_array($file['url'],\array_column($this->componentsFiles[$key],'url'));
+        if ($found === false) {
+            $file['component_name'] = (empty($file['source_component']) == true) ? $componentName : $file['source_component'];
+            $file['component_type'] = (empty($type) == true) ? 'arikaim' : $type;           
+            $this->componentsFiles[$key][] = $file;
+        }      
+    }
+
+    /**
+     * Init component
+     *
+     * @return void
+     */
+    public function init(): void 
+    {
+        $this->setAccessService($this->view->getCurrentExtension()->getAccess());
     }
 
     /**
@@ -99,25 +171,56 @@ class Page extends Component implements HtmlPageInterface
      * @param string $name
      * @param array|null $params
      * @param string|null $language
-     * @param boolean $withOptions
-     * @param string $type
+     * @param string|null $type
      * @return HtmlComponent
      */
-    public function createHtmlComponent(
-        string $name, 
-        ?array $params = [], 
-        ?string $language = null, 
-        bool $withOptions = true,
-        string $type = ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE
-    )
-    {       
-        $templateName = $this->getCurrentTemplate();
-        $language = $language ?? $this->language;
-        
-        $component = new HtmlComponent($this->view,$name,$params,$language,'components','component.json',$withOptions,$type);      
-        $component->setCurrentTemplate($templateName);
+    public function renderHtmlComponent(string $name, ?array $params = [], ?string $language = null, ?string $type = null)
+    {
+        $type = $type ?? ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE;
+        $cacheItemName = 'html.component.' . $name . '.' . $language;        
+        $component = $this->view->getCache()->fetch($cacheItemName);
+        if ($component === false) {
+            $component = $this->htmlComponent->render($name,$params,$language,$type);
+            $this->view->getCache()->save($cacheItemName,$component);
+        } else {
+            $component = $this->htmlComponent->renderComponentDescriptor($component,$params);          
+        }
 
-        return $component;
+        $this->includedComponents[] = [
+            'name' => $name,
+            'type' => $type
+        ];
+
+        // include files
+        foreach ($component->getFiles('js') as $item) {                                  
+            $this->addIncludeFile($item,'js',$name,$type);                                      
+        }   
+
+        return $component;   
+    }
+
+    /**
+     * Set current template name
+     *
+     * @param string $name
+     * @return void
+     */
+    public function setCurrentTemplate(string $name): void
+    {
+        $this->currentTenplate = $name;
+    }
+
+    /**
+     * Process component options
+     *
+     * @param ComponentDescriptorInterface $component
+     * @return ComponentDescriptorInterface
+     */
+    protected function processOptions(ComponentDescriptorInterface $component)
+    {        
+        $component = parent::processOptions($component);
+        
+        return $this->processAccessOption($component);            
     }
 
     /**
@@ -130,12 +233,10 @@ class Page extends Component implements HtmlPageInterface
      */
     public function createEmailComponent(string $name, ?array $params = [], ?string $language = null)
     {       
-        $templateName = $this->getCurrentTemplate();
         $language = $language ?? $this->getLanguage();
        
-        $component = new \Arikaim\Core\View\Html\EmailComponent($this->view,$name,$params,$language,'emails','component.json',true);      
-        $component->setCurrentTemplate($templateName);
-
+        $component = new \Arikaim\Core\View\Html\EmailComponent($this->view,$language,'emails','component.json',true);      
+       
         return $component;
     }
 
@@ -155,32 +256,44 @@ class Page extends Component implements HtmlPageInterface
      * @param string $name
      * @param array $params
      * @param string $language    
-     * @param bool $withOptions
      * @param string|null $type
      * @return ComponentDescriptorInterface
     */
-    public function render(string $name, array $params = [], string $language, bool $withOptions = true, ?string $type = null)
+    public function render(string $name, array $params = [], string $language, ?string $type = null)
     {    
         // fetch from cache
-        $component = $this->view->getCache()->fetch('html.page.component.' . $name . '.' . $language);
-        $component = (empty($component) == true) ? $this->createComponentDescriptor($name,$language) : $component;
-           
+        $currentPath = $params['current_path'] ?? $name;
+        $cacheId = 'html.page.component' . $currentPath . '.' . $language;
+
+        $component = $this->view->getCache()->fetch($cacheId);        
+        if ($component !== false) {        
+          //  return $component;         
+        }
+        
+        $component = $this->createComponentDescriptor($name,$language);
+        $component->resolve();  
+        $component = $this->processOptions($component);
+
         // set current page template name      
         $this->setCurrentTemplate($component->getTemplateName());
         // add global variables 
-        $this->view->getEnvironment()->addGlobal('current_language',$language);
-        $this->view->getEnvironment()->addGlobal('page_name',$name);
+        $this->view->addGlobal('current_language',$language);
+        $this->view->addGlobal('page_name',$name);
         // curent route path        
-        $this->view->getEnvironment()->addGlobal('current_url_path',$params['current_path'] ?? '');
+        $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
 
-        $includes = $this->getPageIncludes($component,$name,$language);        
-        $params['template_url'] = $component->getTemplateUrl();
+        $includes = $this->getPageIncludes($component,$name,$language);   
+        
+        print_r($includes);
+        exit();
+      
         $body = $this->getCode($component,$params);
 
         $params = \array_merge($params,[
-            'component_url'       => $component->getUrl(),            
+            'component_url'       => $component->getUrl(),   
+            'template_url'        => $component->getTemplateUrl(),        
             'body'                => $body,
-            'primary_template'    => $component->getPrimaryTemplate(),
+            'primary_template'    => $this->view->getPrimaryTemplate(),
             'library_files'       => $includes['library_files'],
             'template_files'      => $includes['template_files'],
             'page_files'          => $includes['page_files'], 
@@ -192,7 +305,7 @@ class Page extends Component implements HtmlPageInterface
         $htmlCode = $this->view->fetch($includes['index'],$params);
         $component->setHtmlCode($htmlCode);
         // save to cache         
-        $this->view->getCache()->save('html.page.component.' . $name . '.' . $language,$component,Self::$cacheSaveTime);
+        $this->view->getCache()->save($cacheId,$component);
       
         return $component;
     }
@@ -200,40 +313,35 @@ class Page extends Component implements HtmlPageInterface
     /**
      * Get page includes
      *
-     * @param ComponentDescriptorInterface $component    
+     * @param ComponentDescriptorInterface $component  
+     * @param string $name  
      * @param string $language
      * @return array
      */
-    protected function getPageIncludes(ComponentDescriptorInterface $component, string $language): array
+    protected function getPageIncludes(ComponentDescriptorInterface $component, string $name, string $language): array
     {
-        $includes = $this->view->getCache()->fetch('html.page.includes.' . $component->getName() . '.' . $language);
-        if (empty($includes) == false) {           
-           // return $includes;
+        $includes = $this->view->getCache()->fetch('html.page.includes.' . $name . '.' . $language);
+        if ($includes !== false) {           
+            return $includes;
         }
-
-        $result = [];
+      
         // page include files
         $pageFiles = $this->getPageIncludeFiles($component);
         // template include files        
         $templatefiles = $this->getTemplateIncludeFiles($component->getTemplateName());     
       
         // set page component includ files
-        $result['page_files'] = $component->getFiles();
+        $includes['page_files'] = $component->getFiles();
         // merge template and page include files
-        $result['template_files'] = $this->getIncludeFiles($component->getName(),$pageFiles,$templatefiles);
-           
-        // UI Libraries                    
-        $result['library_files'] = $this->getLibraryIncludeFiles(
-            $result['template_files']['library'],
-            $component->getTemplateName()
-        );         
+        $includes['template_files'] = \array_replace_recursive($templatefiles,$pageFiles);
+                
         // get index file
-        $result['index'] = Self::getIndexFile($component,$this->getCurrentTemplate());   
+        $includes['index'] = Self::getIndexFile($component,$this->getCurrentTemplate());   
 
         // save to cache
-        $this->view->getCache()->save('html.page.includes.' . $component->getName() . '.' . $language,$result,Self::$cacheSaveTime * 2);
+        $this->view->getCache()->save('html.page.includes.' . $name . '.' . $language,$includes);
 
-        return $result;      
+        return $includes;      
     }
 
     /**
@@ -301,26 +409,10 @@ class Page extends Component implements HtmlPageInterface
         }
 
         $params = \array_merge_recursive($params,$properties);
-
-        $code = $this->view->fetch($component->getTemplateFile(),$params);
-      
-        return $code;
+     
+        return $this->view->fetch($component->getTemplateFile(),$params);       
     }
     
-    /**
-     * Return true if page exists
-     *
-     * @param string $pageName
-     * @param string|null $language
-     * @return boolean
-     */
-    public function has(string $pageName, ?string $language = null): bool 
-    {      
-        $page = $this->createComponentDescriptor($pageName,$language);
-
-        return $page->isValid();        
-    }
-
     /**
      * Set page head properties
      *
@@ -333,13 +425,13 @@ class Page extends Component implements HtmlPageInterface
     }
 
     /**
-     * Get component files
+     * Get components include files
      *
      * @return array
      */
     public function getComponentsFiles(): array
-    {    
-        return $this->view->getComponentFiles();       
+    {
+        return $this->componentsFiles;
     }
 
     /**
@@ -381,31 +473,27 @@ class Page extends Component implements HtmlPageInterface
      * Include files
      *
      * @param string $component
-     * @param mixed $pageFiles
-     * @param mixed $templateFiles
+     * @param array $pageFiles
+     * @param array $templateFiles
      * @return array
      */
-    public function getIncludeFiles(string $componentName, $pageFiles, $templateFiles): array 
+    public function getIncludeFiles(string $componentName, array $pageFiles, array $templateFiles): array 
     {       
         $files = $this->view->getCache()->fetch('page.include.files.' . $componentName);
-        if (empty($files) == false) {        
+        if ($files !== false) {        
             return $files;
         }
 
-        // from component template 
-        if (\is_array($pageFiles) == true) {          
-            foreach($pageFiles as $key => $value) {
-                if (isset($templateFiles[$key]) == false) {
-                    $templateFiles[$key] = (\is_array($value) == true) ? [] : $value;
-                } 
-                $templateFiles[$key] = (\is_array($value) == true) ? \array_unique(\array_merge($templateFiles[$key],$value)) : $value;                 
-            }                    
-        }
-         
-        $templateFiles['library'] = $templateFiles['library'] ?? [];       
-                         
+        // from component template   
+        foreach($pageFiles as $key => $value) {
+            if (isset($templateFiles[$key]) == false) {
+                $templateFiles[$key] = (\is_array($value) == true) ? [] : $value;
+            } 
+            $templateFiles[$key] = (\is_array($value) == true) ? \array_unique(\array_merge($templateFiles[$key],$value)) : $value;                 
+        }                    
+                                   
         // Save to cache
-        $this->view->getCache()->save('page.include.files.' . $componentName,$templateFiles,Self::$cacheSaveTime);
+        $this->view->getCache()->save('page.include.files.' . $componentName,$templateFiles);
 
         return $templateFiles;
     }
@@ -462,21 +550,19 @@ class Page extends Component implements HtmlPageInterface
     public function getPageIncludeFiles(ComponentDescriptorInterface $component): array
     {
         // from cache 
-        $options = $this->view->getCache()->fetch('cache.page.include.files.' . $component->getName());
-        if (empty($options) == false) {        
-            return $options;
+        $include = $this->view->getCache()->fetch('cache.page.include.files.' . $component->getName());
+        if ($include !== false) {        
+            return $include;
         }
 
         // from page options
-        $options = $component->getOption('include',null);
-        if (empty($options) == false) {
-            $url = Url::getExtensionViewUrl($component->getTemplateName());
-            $options = $this->resolveIncludeFiles($options,$url);
-    
-            $this->view->getCache()->save('cache.page.include.files.' . $component->getName(),$options,Self::$cacheSaveTime);   
+        $include = $component->getOption('include');
+        if (empty($options) == false) {            
+            $include = $this->resolveIncludeFiles($include,$component->getUrl(),$component->getTemplateName());
+            $this->view->getCache()->save('cache.page.include.files.' . $component->getName(),$include);   
         }
                
-        return $options ?? [];
+        return $include ?? [];
     }
 
     /**
@@ -487,64 +573,60 @@ class Page extends Component implements HtmlPageInterface
      */
     public function getTemplateIncludeFiles(string $templateName): array
     {               
-        $options = $this->view->getCache()->fetch('template.include.files.' . $templateName);
-        if (empty($options) == false) {        
-            return $options;
+        $include = $this->view->getCache()->fetch('template.include.files.' . $templateName);
+        if ($include !== false) {        
+            return $include;
         }
        
         $templateOptions = PackageManager::loadPackageProperties($templateName,Path::TEMPLATES_PATH);
-       
-        $options = $templateOptions->getByPath('include',[]);
-        $url = Url::getTemplateUrl($templateName);    
-
-        $options = $this->resolveIncludeFiles($options,$url);
+        $include = $templateOptions->get('include',[]);
+     
+        $include = $this->resolveIncludeFiles($include,Url::getTemplateUrl($templateName),$templateName);
     
-        $this->view->getCache()->save('template.include.files.' . $templateName,$options,Self::$cacheSaveTime);
+        $this->view->getCache()->save('template.include.files.' . $templateName,$include);
       
-        return $options;
+        return $include;
     }
 
     /**
      * Resolve include files
      *
-     * @param array $options
+     * @param array $include
      * @param string $url
      * @return array
      */
-    protected function resolveIncludeFiles(array $options, string $url): array
+    protected function resolveIncludeFiles(array $include, string $url, string $templateName): array
     {
-        $options['js'] = $options['js'] ?? [];
-        $options['css'] = $options['css'] ?? [];
-        $options['components'] = $options['components'] ?? [];
-        $options['template'] = $options['template'] ?? '';
+        $include['js'] = $include['js'] ?? [];
+        $include['css'] = $include['css'] ?? [];
+        $include['components'] = $include['components'] ?? [];
+        $include['library'] = $include['library'] ?? [];
 
-        if (\count($options['js']) > 0) {
-            $options['js'] = \array_map(function($value) use($url) {
-                return $url . '/js/' . $value; 
-            },$options['js']);
-        }
-       
-        if (\count($options['css']) > 0) {
-            $options['css'] = \array_map(function($value) use($url) {
-                return $url . '/css/' . $value;         
-            },$options['css']);
-        }
+        $include['js'] = \array_map(function($value) use($url) {
+            return $url . '/js/' . $value; 
+        },$include['js']);
       
+        $include['css'] = \array_map(function($value) use($url) {
+            return $url . '/css/' . $value;         
+        },$include['css']);
+       
         // include components
-        if (\count($options['components']) > 0) { 
-            foreach ($options['components'] as $item) {     
-                $files = $this->getComponentFiles($item);  
-                               
-                if (empty($files['js'][0]['url']) == false) {
-                    $options['js'][] = $files['js'][0]['url'];
-                }
-                if (empty($files['css'][0]['url']) == false) {
-                    $options['css'][] = $files['css'][0]['url'];    
-                }                   
-            }    
-        }
+        foreach ($include['components'] as $item) {               
+            $descriptor = $this->createComponentDescriptor($item,'en');
+            $files = $descriptor->getIncludeFiles();
 
-        return $options;
+            if (empty($files['js']) == false) {
+                $include['js'][] = $files['js'];
+            }
+            if (empty($files['css']) == false) {
+                $include['css'][] = $files['css'];    
+            }                   
+        }    
+       
+        // UI Libraries                    
+        $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],$templateName);    
+
+        return $include;
     }
 
     /**
@@ -578,8 +660,8 @@ class Page extends Component implements HtmlPageInterface
     {      
         $params = $properties->get('params',[]);
         $vars = [
-            'domian'    => DOMAIN,
-            'base_url'  => BASE_PATH
+            'domian'   => DOMAIN,
+            'base_url' => BASE_PATH
         ];
 
         $libraryParams = $this->libraryOptions[$properties['name']] ?? [];
@@ -598,7 +680,7 @@ class Page extends Component implements HtmlPageInterface
     public function getLibraryIncludeFiles(array $libraryList, string $templateName): array
     {          
         $files = $this->view->getCache()->fetch('ui.library.files.' . $templateName);        
-        if (empty($files) == false) {            
+        if ($files !== false) {            
             return $files;
         }
         $files = [];
@@ -615,7 +697,7 @@ class Page extends Component implements HtmlPageInterface
             $urlParams = ($properties->get('params-type') == 'url') ? '?' . \http_build_query($params) : '';
 
             foreach($properties->get('files') as $file) {
-                $libraryFile = $this->view->getLibraryPath($libraryName) . $file;
+                $libraryFile = Path::getLibraryFilePath($libraryName,$file);
                 $type = \pathinfo($libraryFile,PATHINFO_EXTENSION);
                 $item = [
                     'file'        => (Utils::isValidUrl($file) == true) ? $file . $urlParams : Url::getLibraryFileUrl($libraryName,$file) . $urlParams,
@@ -629,7 +711,7 @@ class Page extends Component implements HtmlPageInterface
             }           
         }
         // Save to cache
-        $this->view->getCache()->save('ui.library.files.' . $templateName,$files,Self::$cacheSaveTime); 
+        $this->view->getCache()->save('ui.library.files.' . $templateName,$files); 
                                
         return $files;
     }
@@ -664,7 +746,7 @@ class Page extends Component implements HtmlPageInterface
         $files = [];
 
         foreach($properties->get('files') as $file) {   
-            $libraryFile = $this->view->getLibraryPath($libraryName) . $file; 
+            $libraryFile = Path::getLibraryFilePath($libraryName,$file); 
             $fileType = \pathinfo($libraryFile,PATHINFO_EXTENSION);       
             $files[$fileType][] = [
                 'url' => (Utils::isValidUrl($file) == true) ? $file : Url::getLibraryFileUrl($name,$file) 
@@ -693,7 +775,7 @@ class Page extends Component implements HtmlPageInterface
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';
         $language = $language ?? Self::$defaultLanguage;
 
-        return $this->render($templateName . Self::PAGE_NOT_FOUND,['error' => $data],$language,true,$this->componentType);
+        return $this->render($templateName . Self::PAGE_NOT_FOUND,['error' => $data],$language);
     }
 
     /**
@@ -710,7 +792,7 @@ class Page extends Component implements HtmlPageInterface
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';
         $language = $language ?? Self::$defaultLanguage;
 
-        return $this->render($templateName . Self::APPLICATION_ERROR_PAGE,['error' => $data],$language,true,$this->componentType);
+        return $this->render($templateName . Self::APPLICATION_ERROR_PAGE,['error' => $data],$language);
     }
 
     /**
@@ -727,6 +809,6 @@ class Page extends Component implements HtmlPageInterface
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';        
         $language = $language ?? Self::$defaultLanguage;
 
-        return $this->render($templateName . Self::SYSTEM_ERROR_PAGE,$error,$language,true,$this->componentType);      
+        return $this->render($templateName . Self::SYSTEM_ERROR_PAGE,$error,$language);      
     }
 }

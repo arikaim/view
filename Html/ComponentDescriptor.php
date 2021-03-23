@@ -172,7 +172,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @var boolean
      */
-    private $removeIncludeOptions = false;
+    protected $removeIncludeOptions = false;
 
     /**
      * Component type
@@ -212,19 +212,56 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         $this->extensionsPath = $extensionsPath;    
         $this->primaryTemplate = $primaryTemplate;
         $this->componentType = $componentType;
-        
-        $this->clearContent();
-        $this->parseName($name);
+        $this->files = [
+            'js'   => [],
+            'css'  => []           
+        ];
+
+    }
+
+    /**
+     * Resolev component and return files
+     *
+     * @return array
+     */
+    public function getIncludeFiles(): array
+    {
+        $this->parseName($this->fullName);
+        $this->resolvePath();
+        $this->resolveOptionsFileName();
+     
+        $jsFile = $this->getComponentFile('js');   
+        $cssFile = $this->getComponentFile('css');   
+
+        return [
+            'js'  => ($jsFile !== false)  ? $this->getFileUrl($jsFile) : null,
+            'css' => ($cssFile !== false) ? $this->getFileUrl($cssFile) : null
+        ];
+    }
+
+    /**
+     * Resolve component data
+     *
+     * @return void
+     */
+    public function resolve(): void
+    {
+        $this->parseName($this->fullName);
         $this->resolvePath();
         $this->resolvePropertiesFileName();
         $this->resolveOptionsFileName();
-        $this->resolveComponentFiles();
-
+        $this->addComponentFile('js');    
+        $this->addComponentFile('css');           
+      
         $this->properties = $this->loadProperties();
         $this->options = $this->loadOptions(); 
 
-        $this->resolveDataFile();      
-    }
+        $this->resolveDataFile();   
+        
+        if ($this->isValid() == false) {           
+            $this->setError('TEMPLATE_COMPONENT_NOT_FOUND',['full_component_name' => $this->fullName]);             
+        }
+    } 
 
     /**
      * Get component data file.
@@ -348,11 +385,14 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Get template file
      * 
+     * @param string|null $fileName
      * @return string|null
      */
-    public function getTemplateFile(): ?string
+    public function getTemplateFile(?string $fileName = null): ?string
     {
         $path = '';
+        $fileName = $fileName ?? $this->getName() . '.html';
+
         switch($this->location) {
             case Self::EXTENSION_COMPONENT: 
                 $path = $this->templateName . DIRECTORY_SEPARATOR . 'view';
@@ -363,11 +403,8 @@ class ComponentDescriptor implements ComponentDescriptorInterface
             case Self::UNKNOWN_COMPONENT: 
                 return null;
         }  
-        if (isset($this->files['html'][0]['file_name']) == true) {
-            return $path . $this->filePath . $this->files['html'][0]['file_name'];
-        }
-
-        return null;
+      
+        return $path . $this->filePath . $fileName;
     }
 
     /**
@@ -383,11 +420,14 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     /**
      * Return true if component have html content
      *
+     * @param string|null $fileName
      * @return boolean
      */
-    public function hasContent(): bool
+    public function hasContent(?string $fileName = null): bool
     {
-        return (empty($this->getTemplateFile()) == false);     
+        $fileName = $fileName ?? $this->getName() . '.html';
+        
+        return \file_exists($this->fullPath . $fileName);
     }
 
     /**
@@ -431,18 +471,17 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function getFiles(?string $fileType = null): array
     {
-        return ($fileType == null) ? $this->files : $this->files[$fileType] ?? [];        
+        return (empty($fileType) == true) ? $this->files : $this->files[$fileType] ?? [];        
     }
 
     /**
      * Get properties
-     * 
-     * @param array $default
+     *     
      * @return array
      */
-    public function getProperties(array $default = []): array
+    public function getProperties(): array
     {
-        return (\is_array($this->properties) == true) ? $this->properties : $default;
+        return $this->properties;
     }
 
     /**
@@ -555,9 +594,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function getOption(string $path, $default = null)
     {
-        $option = Arrays::getValue($this->options,$path);
-
-        return (empty($option) == true) ? $default : $option;          
+        return $this->options[$path] ?? $default;       
     }
 
     /**
@@ -625,8 +662,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     {
         $this->files = [
             'js'   => [],
-            'css'  => [],
-            'html' => []
+            'css'  => []         
         ];
     }
 
@@ -660,14 +696,15 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function addComponentFile(string $fileExt)
     {
-        $fileName = $this->getComponentFile($fileExt);      
-        if ($fileName === false) {
+        $fileName = $this->getName() . '.' . $fileExt; 
+        if (\file_exists($this->fullPath . $fileName) == false) {
             return false;
         }
+        
         $file = [
             'file_name' => $fileName,
             'path'      => $this->filePath,
-            'full_path' => $this->getFullPath(),
+            'full_path' => $this->fullPath,
             'url'       => $this->getFileUrl($fileName) 
         ];
 
@@ -681,7 +718,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @param string $fileType
      * @return void
      */
-    public function addFile(array $file, string $fileType)
+    public function addFile(array $file, string $fileType): void
     {
         $this->files[$fileType] = $this->files[$fileType] ?? [];
 
@@ -931,16 +968,10 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @return string|false
      */
     public function getComponentFile(string $fileExt = 'html', string $language = '') 
-    {         
-        if ($fileExt == 'json') {
-            $fileName = $this->getName() . $language . '.' . $fileExt;
-            $fullFileName = $this->getFullPath() . $fileName;
-        } else {
-            $fileName = $this->getName() . '.' . $fileExt;
-            $fullFileName = $this->getFullPath() . $fileName;              
-        }
-       
-        return \file_exists($fullFileName) ? $fileName : false;
+    {                 
+        $fileName = $this->getName() . '.' . $fileExt;     
+
+        return \file_exists($this->fullPath . $fileName) ? $fileName : false;
     }
 
     /**
@@ -1051,16 +1082,18 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     private function resolvePropertiesFileName(): void
     {
-        $language = ($this->language != 'en') ? '-' . $this->language : '';
-        $fileName = $this->getComponentFile('json',$language);
-
-        if ($fileName === false) {
-            $fileName = $this->getComponentFile('json');
-            if ($fileName === false) {
+        if ($this->language != 'en') {
+            $fileName = $this->getName() . '-' . $this->language . '.json';
+            if (\file_exists($this->fullPath . $fileName) == true) {
+                $this->setPropertiesFileName($this->fullPath . $fileName);   
                 return;
-            }
-        } 
-        $this->setPropertiesFileName($this->getFullPath() . $fileName);   
+            }          
+        }
+
+        $fileName = $this->getName() . '.json';
+        if (\file_exists($this->fullPath . $fileName) == true) {
+            $this->setPropertiesFileName($this->fullPath . $fileName);   
+        }      
     }
 
     /**
@@ -1086,20 +1119,5 @@ class ComponentDescriptor implements ComponentDescriptorInterface
             $this->removeIncludeOptions = true;
             $this->setOptionsFileName($fileName);
         }        
-    }
-
-    /**
-     * Resolve component files
-     *
-     * @return void
-     */
-    private function resolveComponentFiles(): void
-    {
-        // js files
-        $this->addComponentFile('js');
-        // css file
-        $this->addComponentFile('css');
-        // html file
-        $this->addComponentFile('html');        
-    }
+    }    
 }

@@ -17,6 +17,30 @@ interface ComponentDescriptorInterface
     // component types
     const ARIKAIM_COMPONENT_TYPE = 'arikaim';
     const VUE_COMPONENT_TYPE     = 'vue';
+    const REACT_COMPONENT_TYPE   = 'react';
+
+    /**
+     * Resolev component and return files
+     *
+     * @return array
+     */
+    public function getIncludeFiles(): array;
+
+    /**
+     * Add file
+     *
+     * @param array $file
+     * @param string $fileType
+     * @return void
+     */
+    public function addFile(array $file, string $fileType): void;
+
+    /**
+     * Resolve component data
+     *
+     * @return void
+     */
+    public function resolve(): void;
 
     /**
      * Get component data file.
@@ -94,11 +118,10 @@ interface ComponentDescriptorInterface
 
     /**
      * Get properties
-     *
-     * @param array $default
+     *   
      * @return array
      */
-    public function getProperties(array $default = []): array;
+    public function getProperties(): array;
 
     /**
      * Get options

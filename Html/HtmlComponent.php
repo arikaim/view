@@ -9,96 +9,66 @@
 */
 namespace Arikaim\Core\View\Html;
 
-use Arikaim\Core\Collection\Arrays;
-use Arikaim\Core\View\Html\Component;
+use Arikaim\Core\View\Html\AbstractComponent;
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
 use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
 use Arikaim\Core\Interfaces\View\ComponentDataInterface;
 
+use Arikaim\Core\View\Html\Traits\Access;
+use Arikaim\Core\View\Html\Traits\IncludeTrait;
+
 /**
  * Render html component
  */
-class HtmlComponent extends Component implements HtmlComponentInterface
+class HtmlComponent extends AbstractComponent implements HtmlComponentInterface
 {
+    use 
+        Access,
+        IncludeTrait;
+
     /**
-     * Get component data
+     * Init component
      *
-     * @return \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface
+     * @return void
      */
-    public function getComponentData()
+    public function init(): void 
     {
-        return $this->componentDescriptor;
+        $this->setAccessService($this->view->getCurrentExtension()->getAccess());
     }
 
     /**
-     * Rnder component error mesage
+     * Process component options
      *
-     * @param string $message
-     * @return string
+     * @param ComponentDescriptorInterface $component
+     * @return ComponentDescriptorInterface
      */
-    public function getErrorMessage(string $message): string
+    protected function processOptions(ComponentDescriptorInterface $component)
     {        
-        $componentDescriptor = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true);
+        $component = parent::processOptions($component);
+        $component = $this->processAccessOption($component);
 
-        return $this->renderComponentDescriptor($componentDescriptor,['message' => $message])->getHtmlCode();
-    }
-
-    /**
-     * Get error message
-     *
-     * @param string $code
-     * @param string $name
-     * @return string
-     */
-    public function getErrorText(string $code, string $name = ''): string
-    {
-        $error = Self::$errors[$code] ?? $code;
-
-        return $error . ' ' . $name;
-    } 
-
-    /**
-     * Load component from template
-     *    
-     * @return string
-     */
-    public function load(): string
-    {          
-        $component = $this->render($this->name,$this->params,$this->language,true,$this->componentType);
-       
-        if ($component->hasError() == true) {
-            $error = $component->getError();
-            return $this->getErrorMessage($this->getErrorText($error['code'],$this->name));
-        }
-
-        return $component->getHtmlCode();
-    }
-
-    /**
-     * Render component
-     *
-     * @param bool $withOptions
-     * @return \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface
-     */
-    public function renderComponent(bool $withOptions = true) 
-    { 
-        return $this->render($this->name,$this->params,$this->language,$withOptions,$this->componentType);
+        return $this->processIncludeOption($component);      
     }
 
     /**
      * Render component data
      *
-     * @param ComponentDescriptorInterface $component
+     * @param ComponentDescriptorInterface|null $component
      * @param array $params   
      * @return \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface
      */
     public function renderComponentDescriptor(ComponentDescriptorInterface $component, array $params = [])
-    {       
+    {        
+        $component = $this->processOptions($component);
+
         if ($component->hasError() == true) {         
             $error = $component->getError();
-            $redirect = $component->getOption('access/redirect');
+            $access = $component->getOption('access');
+            $language = $component->getLanguage();
+            $redirect = (empty($access) == false) ? $access['redirect'] ?? '' : '';
             $params['message'] = $this->getErrorText($error['code'],$component->getFullName());
-            $component = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true);             
+            $component = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$language,true);    
+            $component->resolve();           
             $component->setOption('access/redirect',$redirect);    
             $component->setError($error['code']);                
         }   
@@ -107,7 +77,8 @@ class HtmlComponent extends Component implements HtmlComponentInterface
         $defaultParams = [
             'component_url'    => $component->getUrl(),
             'template_url'     => $component->getTemplateUrl(),
-            'current_language' => $component->getLanguage()
+            'current_language' => $component->getLanguage(),
+            'current_url_path' => $params['current_path'] ?? ''
         ];       
         $params = \array_merge($params,$defaultParams);
 
@@ -116,35 +87,24 @@ class HtmlComponent extends Component implements HtmlComponentInterface
         if (empty($dataFile) == false) {
             // include data file
             $componentData = require $dataFile;                       
-            if ($componentData instanceof ComponentDataInterface) {   
-                $container = $this->view->getCurrentExtension()->getContainer();            
-                $data = $componentData->getData($params,$container);
+            if ($componentData instanceof ComponentDataInterface) {                   
+                $data = $componentData->getData($params);
                 $params = \array_merge($params,$data);
             }          
         }
 
-        $params = Arrays::merge($component->getProperties(),$params);
+        $params = \array_merge($component->getProperties(),$params);
           
         // resolve component type
         if (isset($params['component-type']) == true) {
             $component->setComponentType($params['component-type']);
         }
-
-        $component->setHtmlCode('');  
-        if ($component->getOption('render') !== false) {      
-            $componentName = $component->getFullName();
-            $component = $this->fetch($component,$params);
-            // include files
-            $this->includeComponentFiles($component->getFiles('js'),$componentName,$component->getComponentType());          
-        }  
-        // add global vars      
-        $this->view->getEnvironment()->addGlobal('current_component_name',$component->getName());        
-        $this->view->getEnvironment()->addGlobal('current_language',$component->getLanguage());
-        // curent route path        
-        $this->view->getEnvironment()->addGlobal('current_url_path',$params['current_path'] ?? '');
-
-        $this->view->getCache()->save('html.component.' . $this->currentTenplate . '.' . $component->getFullName() . '.' . $this->language,$component,Self::$cacheSaveTime);
-       
+                
+        if ($component->hasContent() == true) {          
+            $code = $this->view->fetch($component->getTemplateFile(),$params);
+            $component->setHtmlCode($code);                     
+        }
+         
         return $component;
     }
 
@@ -154,41 +114,14 @@ class HtmlComponent extends Component implements HtmlComponentInterface
      * @param string $name
      * @param array $params
      * @param string $language
-     * @param boolean $withOptions
      * @param string|null $type     
      * @return \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface
      */
-    public function render(
-        string $name,
-        array $params = [],
-        string $language,
-        bool $withOptions = true,
-        ?string $type = null
-    ) 
-    {                 
-        $component = $this->view->getCache()->fetch('html.component.' . $this->currentTenplate . '.' . $name . '.' . $language);
-        $component = (empty($component) == true) ? $this->createComponentDescriptor($name,$language,$withOptions,$type) : $component;
-      
+    public function render(string $name, array $params = [], string $language, ?string $type = null) 
+    {          
+        $component = $this->createComponentDescriptor($name,$language,$type);
+        $component->resolve();  
+
         return $this->renderComponentDescriptor($component,$params);
-    }
-
-    /**
-     * Get properties
-     *    
-     * @return array
-     */
-    public function getProperties(): array
-    {             
-        return $this->componentDescriptor->getProperties();
-    }
-
-    /**
-     * get component options
-     *
-     * @return array
-     */
-    public function getOptions(): array
-    {             
-        return $this->componentDescriptor->getOptions();
     }
 }

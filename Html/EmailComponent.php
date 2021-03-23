@@ -13,6 +13,7 @@ use Arikaim\Core\Collection\Arrays;
 use Arikaim\Core\View\Html\HtmlComponent;
 use Arikaim\Core\View\Html\Page;
 use Arikaim\Core\Utils\File;
+use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Utils\Utils;
 
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
@@ -32,6 +33,16 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
     protected $emailCompilers = [];
 
     /**
+     * Init component
+     *
+     * @return void
+     */
+    public function init(): void 
+    {
+        $this->setAccessService($this->view->getCurrentExtension()->getAccess());
+    }
+
+    /**
      * Render email component data
      *
      * @param ComponentDescriptorInterface $component
@@ -40,10 +51,13 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
      */
     public function renderComponentDescriptor(ComponentDescriptorInterface $component, array $params = [])
     {       
+        $component = $this->processOptions($component);
+        
         if ($component->hasError() == true) {         
             $error = $component->getError();
             $params['message'] = $this->getErrorText($error['code'],$component->getFullName());
-            $component = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true);  
+            $component = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true);
+            $component->resolve();  
             $component->setError($error['code'],$error['params'],$params['message']);           
         }   
         // default params      
@@ -53,7 +67,7 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
         ]; 
         $params = \array_merge($params,$defaultParams);
         $params = Arrays::merge($component->getProperties(),$params);
-        $library = $component->getOption('library',null);
+        $library = $component->getOption('library');
         $templateFile = $component->getTemplateFile();
         $templateCode = $this->view->fetch($templateFile,$params);
 
@@ -115,7 +129,7 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
         $content = [];
 
         foreach($properties->get('files') as $file) {
-            $libraryFile = $this->view->getLibraryPath($libraryName) . $file;
+            $libraryFile = Path::getLibraryFilePath($libraryName,$file);
             $content[] = File::read($libraryFile);
         }
 
