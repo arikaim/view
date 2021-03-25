@@ -7,18 +7,32 @@
  * @license     http://www.arikaim.com/license
  * 
 */
-namespace Arikaim\Core\View\Html;
+namespace Arikaim\Core\View\Html\Component;
 
-use Arikaim\Core\Collection\Arrays;
-use Arikaim\Core\Utils\File;
 use Arikaim\Core\Http\Url;
 use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
 
 /**
- * Html component descriptor
+ * Base component
  */
-class ComponentDescriptor implements ComponentDescriptorInterface
+class BaseComponent 
 {
+    const NOT_VALID_COMPONENT_ERROR = 'Not valid component';
+    const ACESS_DENIED_ERROR        = 'Access denied for component';
+    const NOT_FOUND_ERROR           = 'Component not found';
+    const COMPONENT_ERROR_NAME      = 'components:message.error';
+
+    /**
+     * Errors messages
+     *
+     * @var array
+     */
+    protected static $errors = [
+        'NOT_VALID_COMPONENT'          => Self::NOT_VALID_COMPONENT_ERROR,
+        'TEMPLATE_COMPONENT_NOT_FOUND' => Self::NOT_FOUND_ERROR,
+        'ACCESS_DENIED'                => Self::ACESS_DENIED_ERROR
+    ];
+
     // component locations
     const UNKNOWN_COMPONENT   = 0;
     const TEMPLATE_COMPONENT  = 1; 
@@ -118,27 +132,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     protected $files = [];
 
     /**
-     * Options
-     *
-     * @var array
-     */
-    protected $options = [];
-
-    /**
-     * Optins file
-     *
-     * @var string
-     */
-    protected $optionsFile;
-
-    /**
-     * Properies
-     *
-     * @var array
-     */
-    protected $properties;
-
-    /**
      * View path
      *
      * @var string
@@ -158,20 +151,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      * @var string
      */
     protected $primaryTemplate = '';
-
-    /**
-     * Component data file
-     *
-     * @var string|null
-     */
-    protected $dataFile = null;
-
-    /**
-     * Remove include options
-     *
-     * @var boolean
-     */
-    protected $removeIncludeOptions = false;
 
     /**
      * Component type
@@ -204,27 +183,24 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      *
      * @param string $name
      * @param string $basePath
-     * @param string $language
-     * @param string|null $optionsFile
-     * @param string|null $viewPath
-     * @param string|null $extensionsPath
+     * @param string $language  
+     * @param string $viewPath
+     * @param string $extensionsPath
      * @param string $primaryTemplate
      * @param string $componentType
      */
     public function __construct(
         string $name,
         string $basePath, 
-        string $language = 'en',
-        ?string $optionsFile = null,
-        ?string $viewPath = null,
-        ?string $extensionsPath = null,
+        string $language,        
+        string $viewPath,
+        string $extensionsPath,
         string $primaryTemplate,
         string $componentType
     ) 
     {
         $this->fullName = $name;
-        $this->language = $language;
-        $this->optionsFile = $optionsFile;
+        $this->language = $language;      
         $this->basePath = $basePath;
         $this->viewPath = $viewPath; 
         $this->extensionsPath = $extensionsPath;    
@@ -238,7 +214,79 @@ class ComponentDescriptor implements ComponentDescriptorInterface
 
         $this->parseName($this->fullName);
         $this->resolvePath();        
+
+        $this->init();
     }
+
+    /**
+     * Init component
+     *
+     * @return void
+     */
+    public function init(): void 
+    {
+    }
+    
+    /**
+     * Resolve component
+     *
+     * @param array $params
+     * @return bool
+     */
+    public function resolve(array $params = []): bool
+    {
+        return false;
+    } 
+
+    /**
+     * Create component
+     *
+     * @param string $name
+     * @param string $language
+     * @return mixed
+     */
+    public function create(string $name, string $language)
+    {
+        return new Self(
+            $name,
+            $this->basePath,
+            $language,
+            $this->viewPath,
+            $this->extensionsPath,
+            $this->primaryTemplate,
+            $this->componentType);
+    }
+
+    /**
+     * Get default prams
+     *
+     * @param ComponentDescriptorInterface $component
+     * @param array $params
+     * @return array
+     */
+    protected function getDefultParams(): array
+    {
+        // default params           
+        return [
+            'component_url'    => $this->getUrl(),
+            'template_url'     => $this->getTemplateUrl(),
+            'current_language' => $this->getLanguage()
+        ];
+    }
+
+    /**
+     * Get error message
+     *
+     * @param string $code
+     * @param string $name
+     * @return string
+     */
+    public function getErrorText(string $code, string $name = ''): string
+    {
+        $error = Self::$errors[$code] ?? $code;
+
+        return $error . ' ' . $name;
+    } 
 
     /**
      * Get context
@@ -262,6 +310,17 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     }
 
     /**
+     * Merge context
+     *
+     * @param array $data
+     * @return void
+     */
+    public function mergeContext(array $data)
+    {
+        $this->context = \array_merge_recursive($this->context,$data);  
+    }
+
+    /**
      * Get include file url
      *
      * @param string $fileType
@@ -272,41 +331,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         $file = $this->getComponentFile($fileType);   
 
         return ($file !== false) ? $this->getFileUrl($file) : null;      
-    }
-
-    /**
-     * Resolve component data
-     *
-     * @return void
-     */
-    public function resolve(): void
-    {
-        $this->resolvePropertiesFileName();
-        $this->properties = $this->loadProperties();
-
-        $this->resolveOptionsFileName();
-        $this->options = $this->loadOptions(); 
-
-        $this->addComponentFile('js');    
-        $this->addComponentFile('css');           
-        $this->resolveHtmlContent();
-        
-        $this->resolveDataFile();   
-        
-        if ($this->isValid() == false) {           
-            $this->setError('TEMPLATE_COMPONENT_NOT_FOUND',['full_component_name' => $this->fullName]);             
-        }
-    } 
-
-    
-    /**
-     * Get component data file.
-     * 
-     * @return string|null
-     */
-    public function getDataFile(): ?string
-    {
-        return $this->dataFile;
     }
 
     /**
@@ -417,20 +441,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     }
 
     /**
-     * Return true if component have properties
-     *
-     * @return boolean
-     */
-    public function hasProperties(): bool
-    {
-        if (isset($this->files['properties']) == true) {
-            return (\count($this->files['properties']) > 0);
-        }
-
-        return false;
-    }
-
-    /**
      * Return true if component have files
      *
      * @param string $fileType
@@ -458,26 +468,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     public function getFiles(?string $fileType = null): array
     {
         return (empty($fileType) == true) ? $this->files : $this->files[$fileType] ?? [];        
-    }
-
-    /**
-     * Get properties
-     *     
-     * @return array
-     */
-    public function getProperties(): array
-    {
-        return $this->properties;
-    }
-
-    /**
-     * Get options
-     *
-     * @return array
-     */
-    public function getOptions(): array
-    {
-        return $this->options;
     }
 
     /**
@@ -572,30 +562,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     }
 
     /**
-     * Get option
-     *
-     * @param string $path
-     * @param mixed $default
-     * @return mixed
-     */
-    public function getOption(string $path, $default = null)
-    {
-        return $this->options[$path] ?? $default;       
-    }
-
-    /**
-     * Set option value
-     *
-     * @param string $path
-     * @param mixed $value
-     * @return void
-     */
-    public function setOption(string $path, $value): void
-    {
-        $this->options = Arrays::setValue($this->options,$path,$value);       
-    }
-
-    /**
      * Set html code
      *
      * @param string $code
@@ -634,8 +600,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         $content += ($this->hasContent() == true)    ?  1 : 0;
         $content += ($this->hasFiles('js') == true)  ?  1 : 0;
         $content += ($this->hasFiles('css') == true) ?  1 : 0;
-        $content += ($this->hasProperties() == true) ?  1 : 0;
-
+      
         return ($content > 0);
     }
 
@@ -646,6 +611,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
      */
     public function clearContent(): void
     {
+        $this->htmlCode = '';
         $this->files = [
             'js'   => [],
             'css'  => []         
@@ -750,48 +716,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     }   
 
     /**
-     * Get properties file name
-     *
-     * @return string|null
-    */
-    public function getPropertiesFileName(): ?string 
-    {
-        return $this->files['properties']['file_name'] ?? null;       
-    }
-
-    /**
-     * Set properties file name
-     *
-     * @param string $fileName
-     * @return void
-     */
-    public function setPropertiesFileName(string $fileName): void 
-    { 
-        $this->files['properties']['file_name'] = $fileName;          
-    }
-
-    /**
-     * Get options file name
-     *
-     * @return string|null
-     */
-    public function getOptionsFileName(): ?string
-    {
-        return $this->files['options']['file_name'] ?? null;         
-    }
-
-    /**
-     * Set options file name
-     *
-     * @param string $fileName
-     * @return void
-     */
-    public function setOptionsFileName(string $fileName): void
-    {
-        $this->files['options']['file_name'] = $fileName;
-    }
-
-    /**
      * Convert to array
      *
      * @return array
@@ -810,7 +734,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     {
         $path = (empty($this->path) == false) ? $this->path . '/' : '';
      
-        return $this->templateUrl . '/' . $this->basePath . '/' . $path;
+        return ($this->location == Self::COMPONENTS_LIBRARY) ? $this->templateUrl . '/' . $path : $this->templateUrl . '/' . $this->basePath . '/' . $path;
     }
 
     /**
@@ -875,35 +799,6 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     }
 
     /**
-     * Load properties json file
-     *
-     * @return array
-     */
-    public function loadProperties(): array
-    {       
-        $fileName = $this->getPropertiesFileName();
-
-        return (empty($fileName) == true) ? [] : File::readJsonFile($fileName);                   
-    }
-
-    /**
-     * Load options json file
-     *
-     * @return array
-     */
-    public function loadOptions(): array
-    {         
-        $optionsFile = $this->getOptionsFileName();
-        $data = (empty($optionsFile) == false) ? File::readJsonFile($optionsFile) : [];
-                 
-        if (($this->removeIncludeOptions == true) && (isset($data['include']) == true)) {
-            unset($data['include']);
-        }
-
-        return $data;    
-    }
-
-    /**
      * Get component full path
      *
      * @param integer $location
@@ -917,17 +812,7 @@ class ComponentDescriptor implements ComponentDescriptorInterface
         return $this->getTemplatePath($templateName,$location) . $this->basePath . DIRECTORY_SEPARATOR . $this->path . DIRECTORY_SEPARATOR;     
     }
 
-    /**
-     * Resolve component data file
-     *
-     * @return void
-     */
-    protected function resolveDataFile(): void
-    {
-        $fileName = $this->fullPath . $this->name . '.php';
-       
-        $this->dataFile = (\file_exists($fileName) == true) ? $fileName : null;       
-    }
+   
 
     /**
      * Resolve component path
@@ -965,51 +850,5 @@ class ComponentDescriptor implements ComponentDescriptorInterface
     public function getTemplateUrl(): string
     {
         return $this->templateUrl; 
-    }
-
-    /**
-     * Resolve properties file name
-     *
-     * @return void
-     */
-    private function resolvePropertiesFileName(): void
-    {
-        if ($this->language != 'en') {
-            $fileName = $this->name . '-' . $this->language . '.json';
-            if (\file_exists($this->fullPath . $fileName) == true) {
-                $this->setPropertiesFileName($this->fullPath . $fileName);   
-                return;
-            }          
-        }
-
-        $fileName = $this->name . '.json';
-        if (\file_exists($this->fullPath . $fileName) == true) {
-            $this->setPropertiesFileName($this->fullPath . $fileName);   
-        }      
-    }
-
-    /**
-     * Resolve options file name
-     *
-     * @param string|null $path  
-     * @return void
-     */
-    private function resolveOptionsFileName(?string $path = null): void
-    {   
-        $path = $path ?? $this->getFullPath();
-        $fileName = $path . $this->optionsFile;
-
-        if (\file_exists($fileName) == true) {
-            $this->setOptionsFileName($fileName);
-            return;
-        }
-
-        // Check for root component options file             
-        $fileName = $this->getRootPath() . $this->optionsFile;
-        if (\file_exists($fileName) == true) {
-            // disable includes from parent component     
-            $this->removeIncludeOptions = true;
-            $this->setOptionsFileName($fileName);
-        }        
-    }    
+    }   
 }

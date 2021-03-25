@@ -15,12 +15,27 @@ use Twig\Loader\FilesystemLoader;
 
 use Arikaim\Core\Interfaces\View\ViewInterface;
 use Arikaim\Core\Interfaces\CacheInterface;
+use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
+use Arikaim\Core\Interfaces\View\RequireAccessInterface;
+use Arikaim\Core\View\Traits\Access;
+use Exception;
 
 /**
  * View class
  */
 class View implements ViewInterface
 {
+    use Access;
+
+    /**
+     *  Component render classes
+     */
+    const COMPONENT_RENDER_CLASSES = [
+        ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE => '\\Arikaim\\Core\\View\\Html\\Component\\HtmlComponent',
+        ComponentDescriptorInterface::EMAIL_COMPONENT_TYPE   => '\\Arikaim\\Core\\View\\Html\\Component\\EmailComponent',
+        ComponentDescriptorInterface::STATIC_COMPONENT_TYPE  => '\\Arikaim\\Core\\View\\Html\\Component\\StaticHtmlComponent'
+    ];
+
     /**
      * Template loader
      *
@@ -92,9 +107,24 @@ class View implements ViewInterface
     protected $primaryTemplate;
 
     /**
+     * Component reders ref
+     *
+     * @var array
+     */
+    protected $componentRenders = [];
+
+    /**
+     * Services
+     *
+     * @var array
+     */
+    protected $services = [];
+
+    /**
      * Constructor
      *
      * @param CacheInterface $cache
+     * @param array $services
      * @param string $viewPath
      * @param string $extensionsPath
      * @param string $templatesPath
@@ -103,7 +133,8 @@ class View implements ViewInterface
      * @param string|null $primaryTemplate
      */
     public function __construct(
-        CacheInterface $cache,       
+        CacheInterface $cache,   
+        array $services = [],    
         string $viewPath,
         string $extensionsPath,
         string $templatesPath,
@@ -117,7 +148,98 @@ class View implements ViewInterface
         $this->componentsPath = $componentsPath;       
         $this->settings = $settings;      
         $this->cache = $cache;      
+        $this->services  = $services;
         $this->primaryTemplate = $primaryTemplate ?? 'system';       
+    }
+
+    /**
+     * Get service
+     *
+     * @param string $name
+     * @return mixed|null
+     */
+    public function getService(string $name)
+    {
+        if (isset($this->services[$name]) == false) {
+            throw new Exception('Service not exists ' . $name, 1);
+            return null;            
+        }
+
+        return $this->services[$name];
+    }
+
+    /**
+     * Create component
+     *
+     * @param string $name
+     * @param string $language
+     * @param string $type
+     * @return mixed
+     */
+    public function createComponent(string $name, string $language, string $type)
+    {             
+        $type = $type ?? ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE;
+        switch($type) {
+            case ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE: 
+                return new \Arikaim\Core\View\Html\Component\HtmlComponent(
+                    $name,
+                    $language,
+                    $this->viewPath,
+                    $this->extensionsPath,
+                    $this->primaryTemplate);
+            case ComponentDescriptorInterface::STATIC_COMPONENT_TYPE: 
+                return new \Arikaim\Core\View\Html\Component\StaticHtmlComponent(
+                    $name,
+                    $language,
+                    $this->viewPath,
+                    $this->extensionsPath,
+                    $this->primaryTemplate);
+            case ComponentDescriptorInterface::EMAIL_COMPONENT_TYPE: 
+                return new \Arikaim\Core\View\Html\Component\EmailComponent(
+                    $name,
+                    $language,
+                    $this->viewPath,
+                    $this->extensionsPath,
+                    $this->primaryTemplate);
+        }
+    }
+
+    /**
+     * Render html component
+     *
+     * @param string $name
+     * @param array|null $params
+     * @param string $language
+     * @param string|null $type
+     * @return \Arikaim\Core\Interfaces\View\ComponentDescriptorInterface
+    */
+    public function renderComponent(string $name, ?array $params = [], string $language, ?string $type = null)
+    {
+        $type = $type ?? ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE;
+        $cacheItemName = 'html.component.' . $name . '.' . $language;        
+        $cached = $this->cache->fetch($cacheItemName);
+
+        $component = ($cached === false) ? $this->createComponent($name,$language,$type) : $cached;
+
+        if ($component instanceof RequireAccessInterface) {
+            if ($this->checkAccessOption($component) == false) {
+                $component->setError('ACCESS_DENIED',['name' => $component->getFullName()]);   
+                return $component;
+            }               
+        }
+
+        $component->resolve($params);
+
+        if ($component->hasContent() == true) {
+            $html = $this->fetch($component->getTemplateFile(),$component->getContext());
+            $component->setHtmlCode($html);  
+        }
+
+        if ($cached === false) {
+          //  $this->cache->save($cacheItemName,$component);
+        }
+            
+        return $component;
     }
 
     /**

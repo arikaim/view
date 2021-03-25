@@ -18,13 +18,33 @@ interface ComponentDescriptorInterface
     const ARIKAIM_COMPONENT_TYPE = 'arikaim';
     const VUE_COMPONENT_TYPE     = 'vue';
     const REACT_COMPONENT_TYPE   = 'react';
+    const STATIC_COMPONENT_TYPE  = 'static';
+    const EMAIL_COMPONENT_TYPE   = 'email';
+    const SVG_COMPONENT_TYPE     = 'svg';
+    const JSON_COMPONENT_TYPE    = 'json';
 
     /**
-     * Resolev component and return files
+     * Set context
+     *
+     * @param array $context
+     * @return void
+     */
+    public function setContext(array $context): void;
+
+    /**
+     * Get context
      *
      * @return array
      */
-    public function getIncludeFiles(): array;
+    public function getContext(): array;
+
+    /**
+     * Get include file url
+     *
+     * @param string $fileType
+     * @return string|null
+     */
+    public function getIncludeFile(string $fileType): ?string;
 
     /**
      * Add file
@@ -52,11 +72,10 @@ interface ComponentDescriptorInterface
     /**
      * Get component file
      *
-     * @param string $fileExt
-     * @param string $language
+     * @param string $fileExt  
      * @return string|false
      */
-    public function getComponentFile(string $fileExt = 'html', string $language = '');
+    public function getComponentFile(string $fileExt);
     
     /**
      * Get full path
@@ -188,24 +207,6 @@ interface ComponentDescriptorInterface
     public function hasParent(): bool;
 
     /**
-     * Create component
-     *
-     * @param string|null $name If name is null parent component name is used
-     * @return ComponentDescriptorInterface|null
-    */
-    public function createComponent(?string $name = null);
-
-    /**
-     * Add files
-     *
-     * @param array $files
-     * @param string $fileType
-     * @param string|null $sourceComponentName
-     * @return bool
-     */
-    public function addFiles(array $files, string $fileType, ?string $sourceComponentName): bool;
-
-    /**
      * Get option
      *
      * @param string $name
@@ -239,13 +240,6 @@ interface ComponentDescriptorInterface
     public function setHtmlCode(string $code): void;
 
     /**
-     * Get root component name
-     *
-     * @return string
-     */
-    public function getRootName(): string;
-
-    /**
      * Set error
      *
      * @param string $code
@@ -265,9 +259,9 @@ interface ComponentDescriptorInterface
     /**
      * Get template url
      *
-     * @return string|null
+     * @return string
      */
-    public function getTemplateUrl(): ?string;
+    public function getTemplateUrl(): string;
 
     /**
      * Get component full name
@@ -289,13 +283,6 @@ interface ComponentDescriptorInterface
      * @return string|null
      */
     public function getTemplateName(): ?string ;
-
-    /**
-     * Return root component name
-     *
-     * @return string
-     */
-    public function getRootComponentPath(): string;
 
     /**
      * Return base path

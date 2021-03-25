@@ -7,10 +7,9 @@
  * @license     http://www.arikaim.com/license
  * 
 */
-namespace Arikaim\Core\View\Html;
+namespace Arikaim\Core\View\Html\Component;
 
-use Arikaim\Core\Collection\Arrays;
-use Arikaim\Core\View\Html\HtmlComponent;
+use Arikaim\Core\View\Html\AbstractComponent;
 use Arikaim\Core\View\Html\Page;
 use Arikaim\Core\Utils\File;
 use Arikaim\Core\Utils\Path;
@@ -23,7 +22,7 @@ use Arikaim\Core\Interfaces\EmailCompilerInterface;
 /**
  * Render email component
  */
-class EmailComponent extends HtmlComponent implements HtmlComponentInterface
+class EmailComponent extends AbstractComponent implements HtmlComponentInterface
 {
     /**
      * Emeil compilers list
@@ -38,8 +37,7 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
      * @return void
      */
     public function init(): void 
-    {
-        $this->setAccessService($this->view->getCurrentExtension()->getAccess());
+    {         
     }
 
     /**
@@ -54,22 +52,15 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
         $component = $this->processOptions($component);
         
         if ($component->hasError() == true) {         
-            $error = $component->getError();
-            $params['message'] = $this->getErrorText($error['code'],$component->getFullName());
-            $component = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$this->language,true);
-            $component->resolve();  
-            $component->setError($error['code'],$error['params'],$params['message']);           
+            return $this->renderComponentError($component,$params);           
         }   
-        // default params      
-        $defaultParams = [
-            'component_url' => $component->getUrl(),
-            'template_url'  => $component->getTemplateUrl()
-        ]; 
-        $params = \array_merge($params,$defaultParams);
-        $params = Arrays::merge($component->getProperties(),$params);
+        // default params           
+        $params = $this->resolevDefultParams($component,$params);
+        $params = \array_merge_recursive($component->getProperties(),$params);    
+ 
         $library = $component->getOption('library');
         $templateFile = $component->getTemplateFile();
-        $templateCode = $this->view->fetch($templateFile,$params);
+        $templateCode = $this->service->fetch($templateFile,$params);
 
         if (empty($library) == false) {
             $templateCode = $this->compileCssFrameworkCode($templateCode,$library);
@@ -82,8 +73,8 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
             $params['library_code'] = (empty($library) == false) ? $this->readLibraryCode($library) : [];
             $params['body'] = $templateCode;
 
-            $indexFile = Page::getIndexFile($component,$this->view->getPrimaryTemplate());
-            $templateCode = $this->view->fetch($indexFile,$params);                    
+            $indexFile = Page::getIndexFile($component,$this->primaryTemplate);
+            $templateCode = $this->service->fetch($indexFile,$params);                    
         }
 
         $component->setHtmlCode($templateCode);   
@@ -101,7 +92,6 @@ class EmailComponent extends HtmlComponent implements HtmlComponentInterface
     public function compileCssFrameworkCode(string $code, ?string $library): string
     {
         $compilerClass = $this->emailCompilers[$library] ?? null;
-
         if (empty($compilerClass) == true) {
             return $code;
         }

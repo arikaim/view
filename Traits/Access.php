@@ -7,9 +7,7 @@
  * @license     http://www.arikaim.com/license
  * 
  */
-namespace Arikaim\Core\View\Html\Traits;
-
-use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
+namespace Arikaim\Core\View\Traits;
 
 /**
  * Access options for view components
@@ -26,7 +24,7 @@ trait Access
     { 
         $access = $component->getOption('access');  
         if (empty($access) == true) {
-            return $component;
+            return true;
         }
 
         // check access 

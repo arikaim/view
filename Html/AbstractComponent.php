@@ -11,7 +11,6 @@ namespace Arikaim\Core\View\Html;
 
 use Arikaim\Core\View\Html\ComponentDescriptor;
 use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
-use Arikaim\Core\Interfaces\View\ViewInterface;
 
 /**
  *  Base html component
@@ -35,19 +34,12 @@ abstract class AbstractComponent
     ];
 
     /**
-     * Twig view
+     * Service ref
      *
-     * @var ViewInterface
+     * @var mixed
      */
-    public $view;
+    protected $service;
 
-    /**
-     * Language
-     *
-     * @var string
-     */
-    protected $language;
-    
     /**
      * Base path
      *
@@ -63,19 +55,52 @@ abstract class AbstractComponent
     protected $optionsFile;
 
     /**
+     * View path
+     *
+     * @var string
+     */
+    protected $viewPath;
+
+    /**
+     * Extensions path
+     *
+     * @var string
+     */
+    protected $extensionsPath;
+
+    /**
+     * Primary template
+     *
+     * @var string
+     */
+    protected $primaryTemplate;
+
+    /**
      * Constructor
      *
-     * @param ViewInterface $view
+     * @param mixed $service Service eobj used in comp init
      * @param string|null $language
      * @param string $basePath
      * @param string|null $optionsFile
      */
-    public function __construct(ViewInterface $view, string $basePath = 'components', ?string $optionsFile = null)
+    public function __construct(
+        $service, 
+        string $viewPath,
+        string $extensionsPath,
+        string $primaryTemplate,
+        string $type, 
+        string $basePath = 'components', 
+        ?string $optionsFile = null
+    )
     {
-        $this->view = $view;
+        $this->service = $service;
+        $this->viewPath = $viewPath;
+        $this->extensionsPath = $extensionsPath;
+        $this->primaryTemplate = $primaryTemplate;
         $this->basePath = $basePath;
         $this->optionsFile = $optionsFile ?? 'component.json';  
-        
+        $this->type = $type;
+
         $this->init();
     }
 
@@ -85,6 +110,18 @@ abstract class AbstractComponent
      * @return void
      */
     public abstract function init(): void; 
+
+    /**
+     * Render component data
+     *
+     * @param ComponentDescriptorInterface|null $component
+     * @param array $params   
+     * @return \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface
+     */
+    public function renderComponentDescriptor(ComponentDescriptorInterface $component, array $params = [])
+    { 
+        return $component;
+    }
    
     /**
      * Get error message
@@ -105,20 +142,19 @@ abstract class AbstractComponent
      *
      * @param string $name
      * @param string $language   
-     * @param string $type
      * @return ComponentDescriptorInterface
      */
-    protected function createComponentDescriptor(string $name, string $language, ?string $type = null)
+    public function createComponentDescriptor(string $name, string $language)
     {  
         return new ComponentDescriptor(
             $name,
             $this->basePath,
             $language,
             $this->optionsFile,
-            $this->view->getViewPath(),
-            $this->view->getExtensionsPath(),
-            $this->view->getPrimaryTemplate(),          
-            $type ?? ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE
+            $this->viewPath,
+            $this->extensionsPath,
+            $this->primaryTemplate,          
+            $this->type
         );  
     }
 
@@ -137,5 +173,63 @@ abstract class AbstractComponent
         }
     
         return $component;
+    }
+
+    /**
+     * Render component error
+     *
+     * @param ComponentDescriptorInterface $component
+     * @param array $params
+     * @return void
+     */
+    protected function renderComponentError(ComponentDescriptorInterface $component, array $params = [])
+    {
+        $error = $component->getError();
+        $access = $component->getOption('access');
+        $language = $component->getLanguage();
+        $redirect = (empty($access) == false) ? $access['redirect'] ?? '' : '';
+        $params['message'] = $this->getErrorText($error['code'],$component->getFullName());
+        $component = $this->createComponentDescriptor(Self::COMPONENT_ERROR_NAME,$language,'arikaim');    
+        $component->resolve();           
+        $component->setOption('access/redirect',$redirect);    
+        $component->setError($error['code']);  
+        
+        // default params           
+        $component->setContext($this->resolevDefultParams($component,$params));
+
+        return $component;
+    } 
+
+    /**
+     * Resolve default prams
+     *
+     * @param ComponentDescriptorInterface $component
+     * @param array $params
+     * @return array
+     */
+    protected function resolevDefultParams(ComponentDescriptorInterface $component, array $params): array
+    {
+        // default params           
+        return \array_merge($params,[
+            'component_url'    => $component->getUrl(),
+            'template_url'     => $component->getTemplateUrl(),
+            'current_language' => $component->getLanguage()
+        ]);
+    }
+
+    /**
+     * Render component html code from template
+     *
+     * @param string $name
+     * @param array $params
+     * @param string $language    
+     * @return \Arikaim\Core\View\Interfaces\ComponentDescriptorInterface
+     */
+    public function render(string $name, array $params = [], string $language) 
+    {          
+        $component = $this->createComponentDescriptor($name,$language);
+        $component->resolve();  
+
+        return $this->renderComponentDescriptor($component,$params);
     }
 }

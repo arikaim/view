@@ -17,12 +17,33 @@ use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
 trait Access
 {
     /**
-     * Check component access option
+     * Gte cache service
      *
-     * @param $component    
-     * @return bool
+     * @return object|null
      */
-    protected function checkAccessOption($component): bool
+    public function getAccessService()
+    {
+        return $this->accessService;
+    }
+
+    /**
+     * Set cache service
+     *
+     * @param object $access
+     * @return void
+     */
+    public function setAccessService($access)
+    {
+        $this->accessService = $access;
+    }
+
+    /**
+     * Process component access option
+     *
+     * @param ComponentDescriptorInterface $component    
+     * @return ComponentDescriptorInterface
+     */
+    protected function processAccessOption(ComponentDescriptorInterface $component)
     { 
         $access = $component->getOption('access');  
         if (empty($access) == true) {
@@ -31,14 +52,16 @@ trait Access
 
         // check access 
         if ($this->checkAuthOption($access) == false) {
-           return false;
+            $component->setError('ACCESS_DENIED',['name' => $component->getFullName()]);    
+            return $component;
         } 
         // check permissions
         if ($this->checkPermissionOption($access) == false) {
-            return false;                   
+            $component->setError('ACCESS_DENIED',['name' => $component->getFullName()]);  
+            return $component;                       
         }
 
-        return true;
+        return $component;
     }
 
     /**
@@ -55,12 +78,12 @@ trait Access
         }
 
         // add auth provider
-        $provider = $this->getService('access')->requireProvider($auth);
+        $provider = $this->getAccessService()->requireProvider($auth);
         if (\is_object($provider) == false) {
             return false;
         }
 
-        return $this->getService('access')->isLogged();  
+        return $this->getAccessService()->isLogged();  
     }
 
     /**
@@ -77,6 +100,6 @@ trait Access
             return true;
         }
         
-        return $this->getService('access')->hasAccess($permission);      
+        return $this->getAccessService()->hasAccess($permission);      
     }
 }

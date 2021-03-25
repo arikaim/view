@@ -7,9 +7,8 @@
  * @license     http://www.arikaim.com/license
  * 
  */
-namespace Arikaim\Core\View\Html\Traits;
+namespace Arikaim\Core\View\Html\Component\Traits;
 
-use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
 use Arikaim\Core\Utils\Utils;
 
 /**
@@ -19,17 +18,15 @@ trait IncludeTrait
 {
     /**
      * Process component include js files option
-     *
-     * @param ComponentDescriptorInterface $component
-     * @param string $fileType
-     * @return ComponentDescriptorInterface
+     *      
+     * @return void
      */
-    protected function processIncludeOption(ComponentDescriptorInterface $component)
+    protected function processIncludeOption()
     { 
-        $include = $component->getOption('include');   
+        $include = $this->getOption('include');   
         $include = $include['js'] ?? null;
         if (empty($include) == true) {
-            return $component;
+            return;
         }
 
         $include = (\is_array($include) == false) ? [$include] : $include;   
@@ -38,10 +35,8 @@ trait IncludeTrait
             $file = $this->resolveIncludeFile($item);
             if (\is_null($file) == true) continue;
 
-            $component->addFile($file,'js');
-        }           
-
-        return $component;
+            $this->addFile($file,'js');
+        }                 
     }
 
     /**
@@ -65,8 +60,8 @@ trait IncludeTrait
             ];
         } 
         
-        $descriptor = $this->createComponentDescriptor($includeFile,'en');
-        $files = $descriptor->getIncludeFile('js');
+        $component = $this->create($includeFile,'en');
+        $files = $component->getIncludeFile('js');
         if (empty($files) == true) {
             return null;
         }
