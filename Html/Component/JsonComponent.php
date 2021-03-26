@@ -12,19 +12,14 @@ namespace Arikaim\Core\View\Html\Component;
 use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
 
-use Arikaim\Core\View\Html\Component\Traits\IncludeTrait;
-use Arikaim\Core\View\Html\Component\Traits\Options;
 use Arikaim\Core\View\Html\Component\Traits\Properties;
 
 /**
- * Static html component
+ * Joson component for render messages
  */
-class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterface
+class JsonComponent extends BaseComponent implements HtmlComponentInterface
 {
-    use 
-        Properties,
-        Options,
-        IncludeTrait;
+    use Properties;
 
     /**
      * Constructor
@@ -37,7 +32,7 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
      */
     public function __construct(string $name,string $language,string $viewPath,string $extensionsPath,string $primaryTemplate) 
     {
-        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'static');
+        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'json');
     }
 
     /**
@@ -47,7 +42,7 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
      */
     public function isValid(): bool
     {
-        return ($this->hasContent() == true || $this->hasFiles('js'));
+        return $this->hasProperties();
     }
 
     /**
@@ -57,14 +52,9 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
      */
     public function init(): void 
     {
-        parent::init();
+        parent::init();  
 
         $this->loadProperties();
-        $this->loadOptions(); 
-        $this->addComponentFile('js');       
-        $this->resolveHtmlContent(); 
-        // options
-        $this->processIncludeOption();      
     }
 
     /**
@@ -78,10 +68,9 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
         if ($this->isValid() == false) {                      
             return false;                
         }
-      
+        
         $this->mergeContext($this->getProperties());
         $this->mergeContext($params);
-
         return true;
     }
 }

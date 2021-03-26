@@ -10,36 +10,13 @@
 namespace Arikaim\Core\View\Html\Component;
 
 use Arikaim\Core\Http\Url;
-use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
+use Arikaim\Core\Interfaces\View\ComponentInterface;
 
 /**
  * Base component
  */
-class BaseComponent 
+class BaseComponent implements ComponentInterface
 {
-    const NOT_VALID_COMPONENT_ERROR = 'Not valid component';
-    const ACESS_DENIED_ERROR        = 'Access denied for component';
-    const NOT_FOUND_ERROR           = 'Component not found';
-    const COMPONENT_ERROR_NAME      = 'components:message.error';
-
-    /**
-     * Errors messages
-     *
-     * @var array
-     */
-    protected static $errors = [
-        'NOT_VALID_COMPONENT'          => Self::NOT_VALID_COMPONENT_ERROR,
-        'TEMPLATE_COMPONENT_NOT_FOUND' => Self::NOT_FOUND_ERROR,
-        'ACCESS_DENIED'                => Self::ACESS_DENIED_ERROR
-    ];
-
-    // component locations
-    const UNKNOWN_COMPONENT   = 0;
-    const TEMPLATE_COMPONENT  = 1; 
-    const EXTENSION_COMPONENT = 2;
-    const PRIMARY_TEMLATE     = 3;
-    const COMPONENTS_LIBRARY  = 4; 
-
     /**
      * Component name
      *
@@ -80,7 +57,7 @@ class BaseComponent
      *
      * @var integer
      */
-    protected $location = Self::UNKNOWN_COMPONENT;  
+    protected $location = ComponentInterface::UNKNOWN_COMPONENT;  
 
     /**
      * Component full path
@@ -111,9 +88,9 @@ class BaseComponent
     protected $htmlCode = '';
 
     /**
-     * Component render error
+     * Component error code
      *
-     * @var array|null
+     * @var string|null
      */
     protected $error = null;
 
@@ -179,6 +156,13 @@ class BaseComponent
     protected $htmlFileName = null;
 
     /**
+     * Component url
+     *
+     * @var string
+     */
+    protected $url = '';
+
+    /**
      * Constructor
      *
      * @param string $name
@@ -209,13 +193,7 @@ class BaseComponent
         $this->files = [
             'js'   => [],
             'css'  => []           
-        ];
-        $this->context = [];
-
-        $this->parseName($this->fullName);
-        $this->resolvePath();        
-
-        $this->init();
+        ];     
     }
 
     /**
@@ -225,6 +203,15 @@ class BaseComponent
      */
     public function init(): void 
     {
+        $this->parseName($this->fullName);
+        $this->resolvePath();   
+
+        // init context
+        $this->context = [
+            'component_url'    => $this->url,
+            'template_url'     => $this->templateUrl,
+            'current_language' => $this->language
+        ];
     }
     
     /**
@@ -258,37 +245,6 @@ class BaseComponent
     }
 
     /**
-     * Get default prams
-     *
-     * @param ComponentDescriptorInterface $component
-     * @param array $params
-     * @return array
-     */
-    protected function getDefultParams(): array
-    {
-        // default params           
-        return [
-            'component_url'    => $this->getUrl(),
-            'template_url'     => $this->getTemplateUrl(),
-            'current_language' => $this->getLanguage()
-        ];
-    }
-
-    /**
-     * Get error message
-     *
-     * @param string $code
-     * @param string $name
-     * @return string
-     */
-    public function getErrorText(string $code, string $name = ''): string
-    {
-        $error = Self::$errors[$code] ?? $code;
-
-        return $error . ' ' . $name;
-    } 
-
-    /**
      * Get context
      *
      * @return array
@@ -317,7 +273,18 @@ class BaseComponent
      */
     public function mergeContext(array $data)
     {
-        $this->context = \array_merge_recursive($this->context,$data);  
+        $this->context = \array_merge($this->context,$data);  
+    }
+
+    /**
+     * Merge recursive context
+     *
+     * @param array $data
+     * @return void
+     */
+    public function mergeRecursiveContext(array $data)
+    {
+        $this->context = \array_merge_recursive($this->context,$data);
     }
 
     /**
@@ -544,9 +511,9 @@ class BaseComponent
     /**
      * Get error
      *
-     * @return array|null
+     * @return string|null
      */
-    public function getError(): ?array
+    public function getError(): ?string
     {
         return $this->error;
     }
@@ -575,18 +542,12 @@ class BaseComponent
     /**
      * Set error
      *
-     * @param string $code
-     * @param array $params
-     * @param string|null $msssage
+     * @param string $code  
      * @return void
      */
-    public function setError(string $code, array $params = [], ?string $msssage = null): void 
+    public function setError(string $code): void 
     {
-        $this->error = [
-            'code'    => $code,
-            'params'  => $params,
-            'message' => $msssage
-        ];
+        $this->error = $code;
     }
 
     /**
@@ -596,12 +557,7 @@ class BaseComponent
      */
     public function isValid(): bool
     {
-        $content = 0;
-        $content += ($this->hasContent() == true)    ?  1 : 0;
-        $content += ($this->hasFiles('js') == true)  ?  1 : 0;
-        $content += ($this->hasFiles('css') == true) ?  1 : 0;
-      
-        return ($content > 0);
+        return true;
     }
 
     /**
@@ -671,26 +627,26 @@ class BaseComponent
         if (\stripos($name,'::') !== false) {
             // extension component
             $tokens = \explode('::',$name);     
-            $this->location = Self::EXTENSION_COMPONENT;
+            $this->location = ComponentInterface::EXTENSION_COMPONENT;
         } elseif (\stripos($name,'>') !== false) {
             // Primary template
             $tokens = \explode('>',$name);
-            $this->location = Self::PRIMARY_TEMLATE;
+            $this->location = ComponentInterface::PRIMARY_TEMLATE;
         } elseif (\stripos($name,':') !== false) {
             // template component          
             $tokens = \explode(':',$name);  
-            $this->location = Self::TEMPLATE_COMPONENT;
+            $this->location = ComponentInterface::TEMPLATE_COMPONENT;
             if ($tokens[0] == 'components') {
                 $tokens[0] = 'semantic';
-                $this->location = Self::COMPONENTS_LIBRARY;
+                $this->location = ComponentInterface::COMPONENTS_LIBRARY;
             } 
         } elseif (\stripos($name,'~') !== false) {
             // template component          
             $tokens = \explode('~',$name);  
-            $this->location = Self::COMPONENTS_LIBRARY;      
+            $this->location = ComponentInterface::COMPONENTS_LIBRARY;      
         } else {
             // component location not set                         
-            $this->location = Self::UNKNOWN_COMPONENT;     
+            $this->location = ComponentInterface::UNKNOWN_COMPONENT;     
             return;  
         }
   
@@ -701,16 +657,16 @@ class BaseComponent
         $this->name = \end($path);
         $this->htmlFileName = (empty($nameSplit[1]) == false) ? $nameSplit[1] . '.html' : $this->name . '.html';
 
-        if ($this->location == Self::PRIMARY_TEMLATE) {
+        if ($this->location == ComponentInterface::PRIMARY_TEMLATE) {
             // resolve component location (template or extension)
-            $componentPath = $this->getComponentFullPath(Self::TEMPLATE_COMPONENT,$this->primaryTemplate);
+            $componentPath = $this->getComponentFullPath(ComponentInterface::TEMPLATE_COMPONENT,$this->primaryTemplate);
             if (\file_exists($componentPath) == true) {               
                 // primary template component
-                $this->location = Self::TEMPLATE_COMPONENT;
+                $this->location = ComponentInterface::TEMPLATE_COMPONENT;
                 $this->templateName = $this->primaryTemplate;                
             } else {
                 // set extension component
-                $this->location = Self::EXTENSION_COMPONENT;               
+                $this->location = ComponentInterface::EXTENSION_COMPONENT;               
             }                 
         }
     }   
@@ -730,11 +686,9 @@ class BaseComponent
      *
      * @return string
      */
-    public function getUrl(): string
+    public function url(): string
     {
-        $path = (empty($this->path) == false) ? $this->path . '/' : '';
-     
-        return ($this->location == Self::COMPONENTS_LIBRARY) ? $this->templateUrl . '/' . $path : $this->templateUrl . '/' . $this->basePath . '/' . $path;
+        return $this->url;       
     }
 
     /**
@@ -763,11 +717,11 @@ class BaseComponent
     public function getTemplatePath(string $template, int $location): string 
     {   
         switch($location) {
-            case Self::EXTENSION_COMPONENT:
+            case ComponentInterface::EXTENSION_COMPONENT:
                 return $this->extensionsPath . $template . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR;
-            case Self::TEMPLATE_COMPONENT:
+            case ComponentInterface::TEMPLATE_COMPONENT:
                 return $this->viewPath . 'templates' . DIRECTORY_SEPARATOR . $template . DIRECTORY_SEPARATOR;
-            case Self::COMPONENTS_LIBRARY:
+            case ComponentInterface::COMPONENTS_LIBRARY:
                 return $this->viewPath . 'components' . DIRECTORY_SEPARATOR . $template . DIRECTORY_SEPARATOR;
         }           
         
@@ -795,7 +749,7 @@ class BaseComponent
      */
     public function getFileUrl(string $fileName): string
     {
-        return $this->getUrl() . $fileName;
+        return $this->url . $fileName;
     }
 
     /**
@@ -806,13 +760,11 @@ class BaseComponent
      */
     public function getComponentFullPath(int $location, string $templateName): string
     {
-        if ($location == Self::COMPONENTS_LIBRARY)  {
+        if ($location == ComponentInterface::COMPONENTS_LIBRARY)  {
             return $this->getTemplatePath($templateName,$location) . $this->path . DIRECTORY_SEPARATOR; 
         } 
         return $this->getTemplatePath($templateName,$location) . $this->basePath . DIRECTORY_SEPARATOR . $this->path . DIRECTORY_SEPARATOR;     
     }
-
-   
 
     /**
      * Resolve component path
@@ -825,21 +777,29 @@ class BaseComponent
 
         $path = $this->basePath . DIRECTORY_SEPARATOR . $this->path . DIRECTORY_SEPARATOR;   
         $templatePath = DIRECTORY_SEPARATOR . $this->templateName . DIRECTORY_SEPARATOR;
+        $urlPath = (empty($this->path) == false) ? $this->path . '/' : '';
 
         switch($this->location) {          
-            case Self::TEMPLATE_COMPONENT:
+            case ComponentInterface::TEMPLATE_COMPONENT:
                 $this->filePath = $templatePath . $path;
                 $this->templateUrl = Url::getTemplateUrl($this->templateName);
+                $url = $this->templateUrl . '/' . $this->basePath . '/' . $urlPath;   
                 break;
-            case Self::COMPONENTS_LIBRARY:         
+            case ComponentInterface::COMPONENTS_LIBRARY:         
                 $this->filePath = $templatePath . $this->path . DIRECTORY_SEPARATOR;    
-                $this->templateUrl = Url::getComponentsLibraryUrl($this->templateName);            
+                $this->templateUrl = Url::getComponentsLibraryUrl($this->templateName);   
+                $url = $this->templateUrl . '/' . $urlPath;         
                 break;
-            case Self::EXTENSION_COMPONENT:
+            case ComponentInterface::EXTENSION_COMPONENT:
                 $this->filePath = $templatePath . 'view' . DIRECTORY_SEPARATOR . $path;    
-                $this->templateUrl = Url::getExtensionViewUrl($this->templateName);        
-            break;
+                $this->templateUrl = Url::getExtensionViewUrl($this->templateName); 
+                $url = $this->templateUrl . '/' . $this->basePath . '/' . $urlPath;       
+                break;   
+            default: 
+                $url = $this->templateUrl . '/' . $this->basePath . '/' . $urlPath;    
         }
+
+        $this->url = $url;
     }
 
     /**

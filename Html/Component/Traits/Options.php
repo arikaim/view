@@ -10,7 +10,6 @@
 namespace Arikaim\Core\View\Html\Component\Traits;
 
 use Arikaim\Core\Collection\Arrays;
-use Arikaim\Core\Utils\File;
 
 /**
  * Component options
@@ -39,26 +38,17 @@ trait Options
     protected $options = [];
 
     /**
-     * Process component options
-     *  
-     * @return void
-     */
-    protected function processOptions(): void
-    {               
-    }
-
-    /**
      * Component type option
      *
      * @return void
      */
     protected function componentTypeOption(): void
     { 
-         // component type option
-         $componentType = $this->getOption('component-type');
-         if (empty($componentType) == false) {
-             $this->setComponentType($componentType);
-         } 
+        // component type option
+        $componentType = $this->getOption('component-type');
+        if (empty($componentType) == false) {
+            $this->setComponentType($componentType);
+        } 
     }
 
     /**
@@ -85,13 +75,13 @@ trait Options
     /**
      * Get option
      *
-     * @param string $path
+     * @param string $key
      * @param mixed $default
      * @return mixed
      */
-    public function getOption(string $path, $default = null)
+    public function getOption(string $key, $default = null)
     {
-        return $this->options[$path] ?? $default;       
+        return $this->options[$key] ?? $default;       
     }
 
     /**
@@ -113,17 +103,21 @@ trait Options
      */
     public function loadOptions(): void
     {         
+        $this->resolveOptionsFileName();
         $optionsFile = $this->getOptionsFileName();
+
         if (empty($optionsFile) == true) {
             return;
         }
 
-        $options = File::readJsonFile($optionsFile);                 
-        if (($this->removeIncludeOptions == true) && (isset($data['include']) == true)) {
-            unset($data['include']);
+        $json = \file_get_contents($optionsFile);
+        $options = \json_decode($json,true);
+               
+        if (($this->removeIncludeOptions == true) && (isset($options['include']) == true)) {
+            unset($options['include']);
         }
 
-        $this->options = $options;          
+        $this->options = $options;    
     }
 
     /**
@@ -131,7 +125,7 @@ trait Options
      *
      * @return string|null
      */
-    public function getOptionsFileName(): ?string
+    protected function getOptionsFileName(): ?string
     {
         return $this->files['options']['file_name'] ?? null;         
     }
@@ -142,7 +136,7 @@ trait Options
      * @param string $fileName
      * @return void
      */
-    public function setOptionsFileName(string $fileName): void
+    protected function setOptionsFileName(string $fileName): void
     {
         $this->files['options']['file_name'] = $fileName;
     }
@@ -153,9 +147,9 @@ trait Options
      * @param string|null $path  
      * @return void
      */
-    private function resolveOptionsFileName(?string $path = null): void
+    protected function resolveOptionsFileName(?string $path = null): void
     {   
-        $path = $path ?? $this->getFullPath();
+        $path = $path ?? $this->fullPath;
         $fileName = $path . $this->optionsFile;
 
         if (\file_exists($fileName) == true) {

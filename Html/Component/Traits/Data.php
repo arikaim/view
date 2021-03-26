@@ -46,11 +46,11 @@ trait Data
     }
 
     /**
-     * Process daat file if exist
+     * Process daat file
      *
-     * @return void
+     * @return array|null
      */
-    protected function processDataFile(): void
+    protected function processDataFile(): ?array
     {
         $this->resolveDataFile();
 
@@ -58,9 +58,10 @@ trait Data
             // include data file
             $componentData = require $dataFile;                       
             if ($componentData instanceof ComponentDataInterface) {                   
-                $data = $componentData->getData($params);
-                $this->mergeContext($data);
+                return $componentData->getData($params);              
             }          
         }
+
+        return null;
     }
 }

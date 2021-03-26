@@ -15,7 +15,7 @@ use Twig\Loader\FilesystemLoader;
 
 use Arikaim\Core\Interfaces\View\ViewInterface;
 use Arikaim\Core\Interfaces\CacheInterface;
-use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
+use Arikaim\Core\Interfaces\View\ComponentInterface;
 use Arikaim\Core\Interfaces\View\RequireAccessInterface;
 use Arikaim\Core\View\Traits\Access;
 use Exception;
@@ -27,13 +27,18 @@ class View implements ViewInterface
 {
     use Access;
 
+    const COMPONENT_ERROR_NAME           = 'components:message.error';
+    const ACCESS_DENIED_ERROR_CODE       = 'ACCESS_DENIED';
+    const NOT_VALID_COMPONENT_ERROR_CODE = 'NOT_VALID_COMPONENT';
+   
     /**
      *  Component render classes
      */
     const COMPONENT_RENDER_CLASSES = [
-        ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE => '\\Arikaim\\Core\\View\\Html\\Component\\HtmlComponent',
-        ComponentDescriptorInterface::EMAIL_COMPONENT_TYPE   => '\\Arikaim\\Core\\View\\Html\\Component\\EmailComponent',
-        ComponentDescriptorInterface::STATIC_COMPONENT_TYPE  => '\\Arikaim\\Core\\View\\Html\\Component\\StaticHtmlComponent'
+        ComponentInterface::EMPTY_COMPONENT_TYPE   => '\\Arikaim\\Core\\View\\Html\\Component\\EmptyComponent',
+        ComponentInterface::ARIKAIM_COMPONENT_TYPE => '\\Arikaim\\Core\\View\\Html\\Component\\HtmlComponent',
+        ComponentInterface::STATIC_COMPONENT_TYPE  => '\\Arikaim\\Core\\View\\Html\\Component\\StaticHtmlComponent',
+        ComponentInterface::JSON_COMPONENT_TYPE    => '\\Arikaim\\Core\\View\\Html\\Component\\JsonComponent'
     ];
 
     /**
@@ -107,13 +112,6 @@ class View implements ViewInterface
     protected $primaryTemplate;
 
     /**
-     * Component reders ref
-     *
-     * @var array
-     */
-    protected $componentRenders = [];
-
-    /**
      * Services
      *
      * @var array
@@ -174,34 +172,20 @@ class View implements ViewInterface
      * @param string $name
      * @param string $language
      * @param string $type
-     * @return mixed
+     * @return Arikaim\Core\Interfaces\View\ComponentInterface
      */
     public function createComponent(string $name, string $language, string $type)
     {             
-        $type = $type ?? ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE;
-        switch($type) {
-            case ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE: 
-                return new \Arikaim\Core\View\Html\Component\HtmlComponent(
-                    $name,
-                    $language,
-                    $this->viewPath,
-                    $this->extensionsPath,
-                    $this->primaryTemplate);
-            case ComponentDescriptorInterface::STATIC_COMPONENT_TYPE: 
-                return new \Arikaim\Core\View\Html\Component\StaticHtmlComponent(
-                    $name,
-                    $language,
-                    $this->viewPath,
-                    $this->extensionsPath,
-                    $this->primaryTemplate);
-            case ComponentDescriptorInterface::EMAIL_COMPONENT_TYPE: 
-                return new \Arikaim\Core\View\Html\Component\EmailComponent(
-                    $name,
-                    $language,
-                    $this->viewPath,
-                    $this->extensionsPath,
-                    $this->primaryTemplate);
+        $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
+        if (isset(Self::COMPONENT_RENDER_CLASSES[$type]) == false) {
+            $type = ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         }
+
+        $class = Self::COMPONENT_RENDER_CLASSES[$type];
+        $component =  new $class($name,$language,$this->viewPath,$this->extensionsPath,$this->primaryTemplate);
+        $component->init();
+
+        return $component;
     }
 
     /**
@@ -211,24 +195,25 @@ class View implements ViewInterface
      * @param array|null $params
      * @param string $language
      * @param string|null $type
-     * @return \Arikaim\Core\Interfaces\View\ComponentDescriptorInterface
+     * @return Arikaim\Core\Interfaces\View\ComponentInterface
     */
     public function renderComponent(string $name, ?array $params = [], string $language, ?string $type = null)
     {
-        $type = $type ?? ComponentDescriptorInterface::ARIKAIM_COMPONENT_TYPE;
+        $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $cacheItemName = 'html.component.' . $name . '.' . $language;        
         $cached = $this->cache->fetch($cacheItemName);
 
         $component = ($cached === false) ? $this->createComponent($name,$language,$type) : $cached;
 
         if ($component instanceof RequireAccessInterface) {
-            if ($this->checkAccessOption($component) == false) {
-                $component->setError('ACCESS_DENIED',['name' => $component->getFullName()]);   
-                return $component;
+            if ($this->checkAccessOption($component) == false) {              
+                return $this->renderComponentError($name,$language,Self::ACCESS_DENIED_ERROR_CODE,$component->getOptions());
             }               
         }
 
-        $component->resolve($params);
+        if ($component->resolve($params) == false) {
+            return $this->renderComponentError($name,$language,Self::NOT_VALID_COMPONENT_ERROR_CODE,[]);
+        };
 
         if ($component->hasContent() == true) {
             $html = $this->fetch($component->getTemplateFile(),$component->getContext());
@@ -236,11 +221,29 @@ class View implements ViewInterface
         }
 
         if ($cached === false) {
-          //  $this->cache->save($cacheItemName,$component);
+            $this->cache->save($cacheItemName,$component);
         }
             
         return $component;
     }
+
+    /**
+     * Render compoent error
+     *
+     * @param string $name
+     * @param string $language
+     * @param array $options
+     * @return Arikaim\Core\Interfaces\View\ComponentInterface
+    */
+    protected function renderComponentError(string $name, string $language, string $errorCode, array $options = [])
+    {
+        $component = $this->renderComponent(Self::COMPONENT_ERROR_NAME,[],$language,'static');
+        $component->setError($errorCode);
+      
+        $component->setOption('redirect',$options['access']['redirect'] ?? null);
+
+        return $component;
+    } 
 
     /**
      * Get extension funciton

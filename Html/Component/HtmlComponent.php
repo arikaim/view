@@ -11,12 +11,8 @@ namespace Arikaim\Core\View\Html\Component;
 
 use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
-use Arikaim\Core\View\Interfaces\ComponentDescriptorInterface;
-use Arikaim\Core\Interfaces\View\ComponentDataInterface;
-
 use Arikaim\Core\Interfaces\View\RequireAccessInterface;
 
-//use Arikaim\Core\View\Html\Traits\Access;
 use Arikaim\Core\View\Html\Component\Traits\IncludeTrait;
 use Arikaim\Core\View\Html\Component\Traits\Options;
 use Arikaim\Core\View\Html\Component\Traits\Properties;
@@ -25,7 +21,7 @@ use Arikaim\Core\View\Html\Component\Traits\Data;
 /**
  * Html component
  */
-class HtmlComponent extends BaseComponent implements RequireAccessInterface
+class HtmlComponent extends BaseComponent implements HtmlComponentInterface, RequireAccessInterface
 {
     use 
         Options,
@@ -48,21 +44,29 @@ class HtmlComponent extends BaseComponent implements RequireAccessInterface
     }   
 
     /**
+     * Return true if component is valid
+     *
+     * @return boolean
+     */
+    public function isValid(): bool
+    {
+        return ($this->hasContent() == true || $this->hasFiles('js'));
+    }
+
+    /**
      * Init component
      *
      * @return void
      */
     public function init(): void 
-    {       
-    }
+    {     
+        parent::init();
 
-    /**
-     * Process component options
-     *
-     * @return void
-     */
-    protected function processOptions(): void
-    {            
+        $this->loadProperties();
+        $this->loadOptions(); 
+        $this->addComponentFile('js');         
+        $this->resolveHtmlContent(); 
+        // options
         $this->processIncludeOption();      
     }
 
@@ -74,24 +78,16 @@ class HtmlComponent extends BaseComponent implements RequireAccessInterface
      */
     public function resolve(array $params = []): bool
     {        
-        $this->loadProperties();
-        $this->loadOptions(); 
-        $this->addComponentFile('js');    
-        $this->addComponentFile('css');           
-        $this->resolveHtmlContent();
-        
-        // add default params   
-        $this->mergeContext($this->getDefultParams());
-
         if ($this->isValid() == false) {           
-            $this->setError('TEMPLATE_COMPONENT_NOT_FOUND',['full_component_name' => $this->fullName]); 
             return false;                
         }
-
-        $this->processOptions();
+      
         // process data file
-        $this->processDataFile();   
-        
+        $data = $this->processDataFile();   
+        if (\is_null($data) == false) {
+            $params = \array_merge($params,$data);
+        }
+
         $this->mergeContext($this->getProperties());
         $this->mergeContext($params);
         

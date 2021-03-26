@@ -9,8 +9,6 @@
  */
 namespace Arikaim\Core\View\Html\Component\Traits;
 
-use Arikaim\Core\Utils\File;
-
 /**
  * Component properties
  */
@@ -52,11 +50,11 @@ trait Properties
     public function loadProperties(): void
     {       
         $this->resolvePropertiesFileName();
-
         $fileName = $this->getPropertiesFileName();
 
         if (empty($fileName) == false) {
-            $this->properties = File::readJsonFile($fileName);   
+            $json = \file_get_contents($fileName);
+            $this->properties = \json_decode($json,true);              
         }                 
     }
 
