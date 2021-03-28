@@ -12,20 +12,11 @@ namespace Arikaim\Core\View\Html\Component;
 use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
 
-use Arikaim\Core\View\Html\Component\Traits\IncludeOption;
-use Arikaim\Core\View\Html\Component\Traits\Options;
-use Arikaim\Core\View\Html\Component\Traits\Properties;
-
 /**
- * Static html component
+ * Svg component
  */
-class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterface
+class SvgComponent extends BaseComponent implements HtmlComponentInterface
 {
-    use 
-        Properties,
-        Options,
-        IncludeOption;
-
     /**
      * Constructor
      *
@@ -37,7 +28,7 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
      */
     public function __construct(string $name,string $language,string $viewPath,string $extensionsPath,string $primaryTemplate) 
     {
-        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'static');
+        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'svg');
     }
 
     /**
@@ -47,7 +38,7 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
      */
     public function isValid(): bool
     {
-        return ($this->hasContent() == true || $this->hasFiles('js'));
+        return $this->hasContent();
     }
 
     /**
@@ -57,14 +48,9 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
      */
     public function init(): void 
     {
-        parent::init();
+        parent::init();  
 
-        $this->loadProperties();
-        $this->loadOptions();       
         $this->resolveHtmlContent(); 
-        // options
-        $this->processIncludeOption();   
-        $this->addComponentFile('js');          
     }
 
     /**
@@ -75,13 +61,7 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
      */
     public function resolve(array $params = []): bool
     {    
-        if ($this->isValid() == false) {                      
-            return false;                
-        }
-      
-        $this->mergeContext($this->getProperties());
         $this->mergeContext($params);
-
         return true;
     }
 }

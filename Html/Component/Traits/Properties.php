@@ -51,10 +51,12 @@ trait Properties
     {       
         $this->resolvePropertiesFileName();
         $fileName = $this->getPropertiesFileName();
-
+        $this->properties = [];
+        
         if (empty($fileName) == false) {
             $json = \file_get_contents($fileName);
-            $this->properties = \json_decode($json,true);              
+            $properties = \json_decode($json,true);   
+            $this->properties = (\is_array($properties) == true) ? $properties : [];           
         }                 
     }
 

@@ -38,7 +38,8 @@ class View implements ViewInterface
         ComponentInterface::EMPTY_COMPONENT_TYPE   => '\\Arikaim\\Core\\View\\Html\\Component\\EmptyComponent',
         ComponentInterface::ARIKAIM_COMPONENT_TYPE => '\\Arikaim\\Core\\View\\Html\\Component\\HtmlComponent',
         ComponentInterface::STATIC_COMPONENT_TYPE  => '\\Arikaim\\Core\\View\\Html\\Component\\StaticHtmlComponent',
-        ComponentInterface::JSON_COMPONENT_TYPE    => '\\Arikaim\\Core\\View\\Html\\Component\\JsonComponent'
+        ComponentInterface::JSON_COMPONENT_TYPE    => '\\Arikaim\\Core\\View\\Html\\Component\\JsonComponent',
+        ComponentInterface::SVG_COMPONENT_TYPE     => '\\Arikaim\\Core\\View\\Html\\Component\\SvgComponent'
     ];
 
     /**
@@ -221,7 +222,7 @@ class View implements ViewInterface
         }
 
         if ($cached === false) {
-            $this->cache->save($cacheItemName,$component);
+            //$this->cache->save($cacheItemName,$component);
         }
             
         return $component;

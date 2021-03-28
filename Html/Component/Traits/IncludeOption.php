@@ -14,7 +14,7 @@ use Arikaim\Core\Utils\Utils;
 /**
  * Include options for view components
  */
-trait IncludeTrait
+trait IncludeOption
 {
     /**
      * Process component include js files option
@@ -31,7 +31,7 @@ trait IncludeTrait
 
         $include = (\is_array($include) == false) ? [$include] : $include;   
         // include component files
-        foreach ($include as $item) {     
+        foreach ($include as $item) {             
             $file = $this->resolveIncludeFile($item);
             if (\is_null($file) == true) continue;
 
@@ -61,15 +61,19 @@ trait IncludeTrait
         } 
         
         $component = $this->create($includeFile,'en');
+        $component->init();
         $files = $component->getIncludeFile('js');
+     
         if (empty($files) == true) {
             return null;
         }
-      
+
+        $this->addIncludedComponent($includeFile,$this->componentType);
+        
         return [
-            'url'              => $files,
-            'params'           => null,
-            'source_component' => $includeFile
+            'url'            => $files,
+            'component_name' => $includeFile,
+            'type'           => $this->componentType
         ];                     
     }
 }

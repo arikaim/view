@@ -13,7 +13,7 @@ use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
 use Arikaim\Core\Interfaces\View\RequireAccessInterface;
 
-use Arikaim\Core\View\Html\Component\Traits\IncludeTrait;
+use Arikaim\Core\View\Html\Component\Traits\IncludeOption;
 use Arikaim\Core\View\Html\Component\Traits\Options;
 use Arikaim\Core\View\Html\Component\Traits\Properties;
 use Arikaim\Core\View\Html\Component\Traits\Data;
@@ -27,7 +27,7 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface, Req
         Options,
         Properties,
         Data,
-        IncludeTrait;
+        IncludeOption;
 
     /**
      * Constructor
@@ -64,10 +64,10 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface, Req
 
         $this->loadProperties();
         $this->loadOptions(); 
-        $this->addComponentFile('js');         
-        $this->resolveHtmlContent(); 
+        $this->resolveHtmlContent();
         // options
-        $this->processIncludeOption();      
+        $this->processIncludeOption();    
+        $this->addComponentFile('js');           
     }
 
     /**
@@ -82,6 +82,8 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface, Req
             return false;                
         }
       
+        $this->mergeContext($params);
+
         // process data file
         $data = $this->processDataFile();   
         if (\is_null($data) == false) {
@@ -89,8 +91,7 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface, Req
         }
 
         $this->mergeContext($this->getProperties());
-        $this->mergeContext($params);
-        
+      
         return true;
     }
 }

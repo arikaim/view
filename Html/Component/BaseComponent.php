@@ -163,6 +163,13 @@ class BaseComponent implements ComponentInterface
     protected $url = '';
 
     /**
+     * Included compoents
+     *
+     * @var array
+     */
+    protected $includedComponents = [];
+
+    /**
      * Constructor
      *
      * @param string $name
@@ -223,6 +230,44 @@ class BaseComponent implements ComponentInterface
     public function resolve(array $params = []): bool
     {
         return false;
+    }
+   
+    /**
+     * Return true if component is valid
+     *
+     * @return boolean
+     */
+    public function isValid(): bool
+    {
+        return false;
+    }
+  
+    /**
+     * Add included component
+     *
+     * @param string $name
+     * @param string $type
+     * @return void
+     */
+    public function addIncludedComponent(string $name, string $type)
+    {
+        if (\in_array($name,\array_column($this->includedComponents,'name')) == false) {
+            // incldue in page components
+            $this->includedComponents[] = [
+                'name' => $name,
+                'type' => $type
+            ];
+        }
+    }
+
+    /**
+     * Get included components
+     *
+     * @return array
+     */
+    public function getIncludedComponents(): array
+    {
+        return $this->includedComponents;
     } 
 
     /**
@@ -548,16 +593,6 @@ class BaseComponent implements ComponentInterface
     public function setError(string $code): void 
     {
         $this->error = $code;
-    }
-
-    /**
-     * Return true if component is valid
-     *
-     * @return boolean
-     */
-    public function isValid(): bool
-    {
-        return true;
     }
 
     /**

@@ -18,7 +18,7 @@ use Arikaim\Core\Utils\Text;
 use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Http\Url;
 
-use Arikaim\Core\View\Html\Component\Traits\IncludeTrait;
+use Arikaim\Core\View\Html\Component\Traits\IncludeOption;
 use Arikaim\Core\View\Html\Component\Traits\Options;
 use Arikaim\Core\View\Html\Component\Traits\Properties;
 use Arikaim\Core\View\Html\Component\Traits\IndexPage;
@@ -38,7 +38,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         Properties,   
         IndexPage,
         UiLibrary,
-        IncludeTrait;
+        IncludeOption;
 
     /**
      *  Control panel template name
@@ -88,13 +88,6 @@ class Page extends BaseComponent implements HtmlPageInterface
     protected $componentsFiles = [];
 
     /**
-     * Included compoents
-     *
-     * @var array
-     */
-    protected $includedComponents = [];
-
-    /**
      * View 
      *
      * @var ViewInterface
@@ -132,16 +125,6 @@ class Page extends BaseComponent implements HtmlPageInterface
         $this->head = new PageHead();
         Self::$defaultLanguage = $defaultLanguage; 
     }
-
-    /**
-     * Get included components
-     *
-     * @return array
-     */
-    public function getIncludedComponents(): array
-    {
-        return $this->includedComponents;
-    } 
 
     /**
      * Return true if component is valid
@@ -186,14 +169,9 @@ class Page extends BaseComponent implements HtmlPageInterface
         $language = $language ?? $this->language;
         $component = $this->view->renderComponent($name,$params,$language,$type);
 
-        if (\in_array($name,\array_column($this->includedComponents,'name')) == false) {
-            // incldue in page components
-            $this->includedComponents[] = [
-                'name' => $name,
-                'type' => $type
-            ];
-        }
-       
+        $this->addIncludedComponent($name,$type);
+        
+        $this->includedComponents = \array_merge($this->includedComponents,$component->getIncludedComponents());
         $this->componentsFiles['js'] = \array_merge($this->componentsFiles['js'],$component->getFiles('js'));
       
         return $component;   
