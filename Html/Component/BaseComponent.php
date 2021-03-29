@@ -216,8 +216,9 @@ class BaseComponent implements ComponentInterface
         // init context
         $this->context = [
             'component_url'    => $this->url,
-            'template_url'     => $this->templateUrl,
-            'current_language' => $this->language
+            'template_url'     => $this->templateUrl,         
+            'current_language' => $this->language,
+            'primary_template' => $this->primaryTemplate
         ];
     }
     
@@ -627,7 +628,7 @@ class BaseComponent implements ComponentInterface
             'path'           => $this->filePath,
             'full_path'      => $this->fullPath,
             'component_name' => $this->fullName,
-            'component_type' => $this->componentType,
+            'component_type' => $this->componentType,            
             'url'            => $this->getFileUrl($fileName) 
         ];
 

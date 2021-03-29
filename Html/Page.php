@@ -167,6 +167,8 @@ class Page extends BaseComponent implements HtmlPageInterface
     {
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $language = $language ?? $this->language;
+        $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
+
         $component = $this->view->renderComponent($name,$params,$language,$type);
 
         $this->addIncludedComponent($name,$type);
@@ -228,11 +230,8 @@ class Page extends BaseComponent implements HtmlPageInterface
     {  
         // add global variables 
         $language = $language ?? Self::$defaultLanguage;
-
-        $this->view->addGlobal('current_language',$language);
-        $this->view->addGlobal('page_name',$name); 
         $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
-
+       
         $this->fullName = $name;
         $this->language = $language;
 
@@ -243,14 +242,10 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         // set current page template name      
         $this->setCurrentTemplate($this->getTemplateName());
-       
-        $params['component_url'] = $this->url();
-        $params['template_url'] = $this->getTemplateUrl();
-        $params['primary_template'] = $this->view->getPrimaryTemplate();
-
+                    
         // page head
         if (\is_array($properties['head']) == true) {
-            $this->resolvePageHead($properties['head'],$params['template_url']);
+            $this->resolvePageHead($properties['head'],$this->templateUrl);
         }
         
         $params = \array_merge_recursive($params,$properties); 
@@ -368,7 +363,7 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     public function getCurrentTemplate(): string
     { 
-        return (empty($this->currentTenplate) == true) ? $this->view->getPrimaryTemplate() : $this->currentTenplate;
+        return (empty($this->currentTenplate) == true) ? $this->primaryTemplate : $this->currentTenplate;
     }
 
     /**
@@ -427,7 +422,6 @@ class Page extends BaseComponent implements HtmlPageInterface
                 // UI Libraries                                
                 foreach($include['library'] as $library) {
                     $libraryFiles = $this->getLibraryFiles($library);
-            
                     foreach($libraryFiles as $file) {
                         $include[$file['type']][] = $file['file'];
                     }                                      

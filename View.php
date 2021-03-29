@@ -460,8 +460,7 @@ class View implements ViewInterface
         $this->environment = $this->createEnvironment();
         $demoMode = $this->settings['demo_mode'] ?? false;
        
-        $this->environment->addGlobal('demo_mode',$demoMode);
-        $this->environment->addGlobal('current_component_name',$demoMode);   
+        $this->environment->addGlobal('demo_mode',$demoMode);      
         $this->environment->addGlobal('current_language',null);      
         $this->environment->addGlobal('current_url_path',null);      
     }
