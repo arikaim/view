@@ -287,12 +287,12 @@ class Page extends BaseComponent implements HtmlPageInterface
             return $includes;
         }
       
-        // page include files
-        $pageFiles = $this->getPageIncludeFiles();
-
         // template include files        
         $templatefiles = $this->getTemplateIncludeFiles($this->getTemplateName());     
       
+        // page include files
+        $pageFiles = $this->getPageIncludeFiles();
+
         // set page component includ files
         $includes['page_files'] = $this->getFiles();
         // merge template and page include files
@@ -420,9 +420,20 @@ class Page extends BaseComponent implements HtmlPageInterface
         }
 
         // from page options
-        $include = $this->getOption('include');      
+        $include = $this->getOption('include');          
         if (empty($include) == false) {            
             $include = $this->resolveIncludeFiles($include,$this->url,$this->getTemplateName());
+            if (\count($include['library']) > 0) {
+                // UI Libraries                                
+                foreach($include['library'] as $library) {
+                    $libraryFiles = $this->getLibraryFiles($library);
+            
+                    foreach($libraryFiles as $file) {
+                        $include[$file['type']][] = $file['file'];
+                    }                                      
+                }                 
+            }
+
             $this->view->getCache()->save('page.include.files.' . $this->getName(),$include);   
         }
 
@@ -446,7 +457,11 @@ class Page extends BaseComponent implements HtmlPageInterface
         $include = $templateOptions->get('include',[]);
      
         $include = $this->resolveIncludeFiles($include,Url::getTemplateUrl($templateName),$templateName);
-    
+        if (\count($include['library']) > 0) {
+            // UI Libraries                    
+            $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],$templateName);  
+        }
+
         $this->view->getCache()->save('template.include.files.' . $templateName,$include);
       
         return $include;
@@ -482,11 +497,6 @@ class Page extends BaseComponent implements HtmlPageInterface
                 $include['js'][] = $file;
             }                
         }    
-       
-        if (\count($include['library']) > 0) {
-            // UI Libraries                    
-            $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],$templateName);  
-        }
               
         return $include;
     }
@@ -520,39 +530,24 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     public function getLibraryIncludeFiles(array $libraryList, string $templateName): array
     {          
-        $files = $this->view->getCache()->fetch('ui.library.files.' . $templateName);        
+        $files = $this->view->getCache()->fetch('template.library.files.' . $templateName);        
         if ($files !== false) {            
             return $files;
         }
+
         $files = [];
-
-        foreach($libraryList as $libraryItem) {           
-            list($libraryName,$libraryVersion,$forceInclude) = $this->parseLibraryName($libraryItem);
-
-            $properties = $this->getLibraryProperties($libraryName,$libraryVersion);            
-            $params = $this->resolveLibraryParams($properties);           
-            if ($properties->get('disabled',false) == true) {
-                // Library is disabled
-                continue;
-            }
-            $urlParams = ($properties->get('params-type') == 'url') ? '?' . \http_build_query($params) : '';
-
-            foreach($properties->get('files') as $file) {
-                $libraryFile = Path::getLibraryFilePath($libraryName,$file);
-                $type = \pathinfo($libraryFile,PATHINFO_EXTENSION);
-                $item = [
-                    'file'        => (Utils::isValidUrl($file) == true) ? $file . $urlParams : Url::getLibraryFileUrl($libraryName,$file) . $urlParams,
-                    'type'        => (empty($type) == true) ? 'js' : $type,
-                    'params'      => $params,
-                    'library'     => $libraryName,
-                    'async'       => $properties->get('async',false),
-                    'crossorigin' => $properties->get('crossorigin',null)
-                ];
-                \array_push($files,$item);
-            }           
+        foreach($libraryList as $library) {      
+            $libraryFiles = $this->view->getCache()->fetch('library.files.' . $library);    
+            if ($libraryFiles === false) {
+                $libraryFiles = $this->getLibraryFiles($library);
+                $this->view->getCache()->save('library.files.' . $library,$libraryFiles);  
+            } 
+        
+            $files = \array_merge($files,$libraryFiles);       
         }
+
         // Save to cache
-        $this->view->getCache()->save('ui.library.files.' . $templateName,$files); 
+        $this->view->getCache()->save('template.library.files.' . $templateName,$files); 
                                
         return $files;
     }

@@ -84,4 +84,39 @@ trait UiLibrary
             'crossorigin' => $properties->get('crossorigin',null)
         ];
     }
+
+    /**
+     * Get library files
+     *
+     * @param string $name
+     * @return array
+     */
+    public function getLibraryFiles(string $name): array
+    {
+        list($libraryName,$libraryVersion,$forceInclude) = $this->parseLibraryName($name);
+        $properties = $this->getLibraryProperties($libraryName,$libraryVersion);   
+        if ($properties->get('disabled',false) === true) {              
+            return [];
+        }
+      
+        $params = $this->resolveLibraryParams($properties);           
+        $urlParams = ($properties->get('params-type') == 'url') ? '?' . \http_build_query($params) : '';
+        $files = [];
+
+        foreach($properties->get('files') as $file) {
+            $libraryFile = Path::getLibraryFilePath($libraryName,$file);
+            $type = \pathinfo($libraryFile,PATHINFO_EXTENSION);
+            $item = [
+                'file'        => (Utils::isValidUrl($file) == true) ? $file . $urlParams : Url::getLibraryFileUrl($libraryName,$file) . $urlParams,
+                'type'        => (empty($type) == true) ? 'js' : $type,
+                'params'      => $params,
+                'library'     => $libraryName,
+                'async'       => $properties->get('async',false),
+                'crossorigin' => $properties->get('crossorigin',null)
+            ];          
+            $files[] = $item;
+        }   
+        
+        return $files;
+    }
 }
