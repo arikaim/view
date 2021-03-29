@@ -138,7 +138,7 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
 
         $library = $this->getOption('library');
       
-        $code = $this->view->fetch($this->getTemplateFile(),$params);
+        $code = $this->view->fetch($this->getTemplateFile(),$this->getContext());
         if (empty($library) == false) {
             $code = $this->compileCssFrameworkCode($code,$library);
         }
