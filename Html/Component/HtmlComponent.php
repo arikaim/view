@@ -81,15 +81,9 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface, Req
         if ($this->isValid() == false) {           
             return false;                
         }
-      
         $this->mergeContext($params);
-
         // process data file
-        $data = $this->processDataFile();   
-        if (\is_null($data) == false) {
-            $params = \array_merge($params,$data);
-        }
-
+        $this->processDataFile($params);   
         $this->mergeContext($this->getProperties());
       
         return true;

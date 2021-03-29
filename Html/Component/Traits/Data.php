@@ -48,20 +48,25 @@ trait Data
     /**
      * Process daat file
      *
-     * @return array|null
+     * @param array $params
+     * @param Container|null $container
+     * @return bool
      */
-    protected function processDataFile(): ?array
+    protected function processDataFile(array $params, $container = null): bool
     {
         $this->resolveDataFile();
 
         if (empty($this->dataFile) == false) {
             // include data file
-            $componentData = require $dataFile;                       
+            $componentData = require ($this->dataFile);                       
             if ($componentData instanceof ComponentDataInterface) {                   
-                return $componentData->getData($params);              
+                $data = $componentData->getData($params,$container);              
+                $this->mergeContext($data); 
+
+                return true;              
             }          
         }
 
-        return null;
+        return false;
     }
 }
