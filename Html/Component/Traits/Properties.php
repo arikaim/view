@@ -61,6 +61,16 @@ trait Properties
     }
 
     /**
+     * Add properties to context array
+     *
+     * @return void
+     */
+    public function mergeProperties()
+    {
+        $this->context = \array_merge($this->context,$this->properties);
+    }
+
+    /**
      * Return true if component have properties
      *
      * @return boolean

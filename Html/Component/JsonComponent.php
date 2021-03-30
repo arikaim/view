@@ -68,9 +68,10 @@ class JsonComponent extends BaseComponent implements HtmlComponentInterface
         if ($this->isValid() == false) {                      
             return false;                
         }
-        
-        $this->mergeContext($this->getProperties());
+
+        $this->mergeProperties();        
         $this->mergeContext($params);
+      
         return true;
     }
 }

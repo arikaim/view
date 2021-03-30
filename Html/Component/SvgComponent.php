@@ -62,6 +62,7 @@ class SvgComponent extends BaseComponent implements HtmlComponentInterface
     public function resolve(array $params = []): bool
     {    
         $this->mergeContext($params);
+        
         return true;
     }
 }

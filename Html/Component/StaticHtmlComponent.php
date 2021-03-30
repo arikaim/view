@@ -78,10 +78,10 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
         if ($this->isValid() == false) {                      
             return false;                
         }
-      
-        $this->mergeContext($this->getProperties());
-        $this->mergeContext($params);
 
+        $this->mergeProperties();      
+        $this->mergeContext($params);
+     
         return true;
     }
 }

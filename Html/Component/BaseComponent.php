@@ -215,8 +215,7 @@ class BaseComponent implements ComponentInterface
 
         // init context
         $this->context = [
-            'component_url'    => $this->url,
-            'template_url'     => $this->templateUrl,         
+            'component_url'    => $this->url,       
             'current_language' => $this->language,
             'primary_template' => $this->primaryTemplate
         ];

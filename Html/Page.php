@@ -168,7 +168,8 @@ class Page extends BaseComponent implements HtmlPageInterface
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $language = $language ?? $this->language;
         $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
-
+        $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/');
+        
         $component = $this->view->renderComponent($name,$params,$language,$type);
 
         $this->addIncludedComponent($name,$type);
@@ -212,6 +213,7 @@ class Page extends BaseComponent implements HtmlPageInterface
             return false;                
         }
       
+        $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/');      
         $this->mergeContext($this->getProperties());
         $this->mergeContext($params);
         
@@ -231,7 +233,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         // add global variables 
         $language = $language ?? Self::$defaultLanguage;
         $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
-       
+          
         $this->fullName = $name;
         $this->language = $language;
 

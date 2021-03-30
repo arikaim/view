@@ -81,10 +81,10 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface, Req
         if ($this->isValid() == false) {           
             return false;                
         }
-        $this->mergeContext($params);
+        $this->mergeProperties();
+        $this->mergeContext($params);       
         // process data file
         $this->processDataFile($params);   
-        $this->mergeContext($this->getProperties());
       
         return true;
     }
