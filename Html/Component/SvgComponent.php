@@ -49,6 +49,13 @@ class SvgComponent extends BaseComponent implements HtmlComponentInterface
     public function init(): void 
     {
         parent::init();  
+        
+        // default svg params
+        $this->mergeContext([
+            'stroke_width' => '1',
+            'fill'         => 'none',
+            'stroke'       => 'currentColor'
+        ]);
 
         $this->resolveHtmlContent(); 
     }

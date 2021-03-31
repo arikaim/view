@@ -215,8 +215,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         if ($this->isValid() == false) {           
             return false;                
         }
-      
-        $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/');      
+               
         $this->mergeContext($this->getProperties());
         $this->mergeContext($params);
         
@@ -236,7 +235,8 @@ class Page extends BaseComponent implements HtmlPageInterface
         // add global variables 
         $language = $language ?? Self::$defaultLanguage;
         $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
-          
+        $this->view->addGlobal('template_url',Url::getTemplateUrl($this->getCurrentTemplate(),'/'));
+
         $this->fullName = $name;
         $this->language = $language;
 
