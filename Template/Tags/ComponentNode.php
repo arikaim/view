@@ -56,12 +56,13 @@ class ComponentNode extends Node implements NodeOutputInterface
     {
         $compiler->addDebugInfo($this);
         $componentName = $this->getAttribute('name');
+        $type = $this->getAttribute('type');
         $body = $this->getNode('body');
         
         $compiler
             ->write('ob_start();')
             ->subcompile($body,true)
             ->write("\$context['content'] = trim(ob_get_clean());")
-            ->write('echo $this->env->getExtension("' . $this->twigExtensionClass . '")->loadComponent("' . $componentName . '",$context);');    
+            ->write('echo $this->env->getExtension("' . $this->twigExtensionClass . '")->loadComponent("' . $componentName . '",$context,"' . $type .'");');    
     }
 }

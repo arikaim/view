@@ -35,7 +35,7 @@ trait UiLibrary
             return $properties;
         }
         $versions = $properties->get('versions',[]);
-        $properties['files'] = (isset($versions[$version]) == true) ? $versions[$version]['files'] : $properties->get('files',[]);
+        $properties['files'] = (isset($versions[$version]) == true) ? $versions[$version]['files'] : [];
 
         return $properties;
     }

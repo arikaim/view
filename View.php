@@ -17,7 +17,10 @@ use Arikaim\Core\Interfaces\View\ViewInterface;
 use Arikaim\Core\Interfaces\CacheInterface;
 use Arikaim\Core\Interfaces\View\ComponentInterface;
 use Arikaim\Core\Interfaces\View\RequireAccessInterface;
+
 use Arikaim\Core\View\Traits\Access;
+use Arikaim\Core\View\Traits\ThemeGlobals;
+
 use Exception;
 
 /**
@@ -25,7 +28,9 @@ use Exception;
  */
 class View implements ViewInterface
 {
-    use Access;
+    use 
+        Access,
+        ThemeGlobals;
 
     const COMPONENT_ERROR_NAME           = 'components:message.error';
     const ACCESS_DENIED_ERROR_CODE       = 'ACCESS_DENIED';
@@ -36,10 +41,12 @@ class View implements ViewInterface
      */
     const COMPONENT_RENDER_CLASSES = [
         ComponentInterface::EMPTY_COMPONENT_TYPE   => '\\Arikaim\\Core\\View\\Html\\Component\\EmptyComponent',
-        ComponentInterface::ARIKAIM_COMPONENT_TYPE => '\\Arikaim\\Core\\View\\Html\\Component\\HtmlComponent',
+        ComponentInterface::ARIKAIM_COMPONENT_TYPE => '\\Arikaim\\Core\\View\\Html\\Component\\ArikaimComponent',
         ComponentInterface::STATIC_COMPONENT_TYPE  => '\\Arikaim\\Core\\View\\Html\\Component\\StaticHtmlComponent',
         ComponentInterface::JSON_COMPONENT_TYPE    => '\\Arikaim\\Core\\View\\Html\\Component\\JsonComponent',
-        ComponentInterface::SVG_COMPONENT_TYPE     => '\\Arikaim\\Core\\View\\Html\\Component\\SvgComponent'
+        ComponentInterface::SVG_COMPONENT_TYPE     => '\\Arikaim\\Core\\View\\Html\\Component\\SvgComponent',
+        ComponentInterface::HTML_COMPONENT_TYPE    => '\\Arikaim\\Core\\View\\Html\\Component\\HtmlComponent',
+        ComponentInterface::JS_COMPONENT_TYPE      => '\\Arikaim\\Core\\View\\Html\\Component\\JsComponent'
     ];
 
     /**
@@ -113,6 +120,13 @@ class View implements ViewInterface
     protected $primaryTemplate;
 
     /**
+     * Template theme
+     *
+     * @var string|null
+     */
+    protected $templateTheme;
+
+    /**
      * Services
      *
      * @var array
@@ -139,7 +153,8 @@ class View implements ViewInterface
         string $templatesPath,
         string $componentsPath,
         array $settings = [],
-        ?string $primaryTemplate = null)
+        ?string $primaryTemplate = null,
+        ?string $templateTheme = null)
     {
         $this->viewPath = $viewPath;      
         $this->extensionsPath = $extensionsPath;
@@ -149,6 +164,7 @@ class View implements ViewInterface
         $this->cache = $cache;      
         $this->services  = $services;
         $this->primaryTemplate = $primaryTemplate ?? 'system';       
+        $this->templateTheme = $templateTheme;
     }
 
     /**
@@ -278,6 +294,16 @@ class View implements ViewInterface
     public function setPrimaryTemplate(string $templateName): void
     {       
         $this->primaryTemplate = $templateName;
+    }
+
+    /**
+     * Get all global vars
+     *
+     * @return array
+     */
+    public function getGlobals(): array
+    {
+        return $this->getEnvironment()->getGlobals();
     }
 
     /**
@@ -463,6 +489,9 @@ class View implements ViewInterface
         $this->environment->addGlobal('demo_mode',$demoMode);      
         $this->environment->addGlobal('current_language',null);      
         $this->environment->addGlobal('current_url_path',null);      
+
+        // add theme globals
+        $this->includeThemeGlobals($this->templateTheme);
     }
 
     /**

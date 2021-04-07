@@ -13,9 +13,9 @@ use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
 
 /**
- * Svg component
+ * Js file component
  */
-class SvgComponent extends BaseComponent implements HtmlComponentInterface
+class JsComponent extends BaseComponent implements HtmlComponentInterface
 {
     /**
      * Constructor
@@ -28,7 +28,7 @@ class SvgComponent extends BaseComponent implements HtmlComponentInterface
      */
     public function __construct(string $name,string $language,string $viewPath,string $extensionsPath,string $primaryTemplate) 
     {
-        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'svg');
+        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'js');
     }
 
     /**
@@ -38,7 +38,7 @@ class SvgComponent extends BaseComponent implements HtmlComponentInterface
      */
     public function isValid(): bool
     {
-        return $this->hasContent();
+        return $this->hasFiles('js');
     }
 
     /**
@@ -50,14 +50,7 @@ class SvgComponent extends BaseComponent implements HtmlComponentInterface
     {
         parent::init();  
         
-        // default svg params
-        $this->mergeContext([
-            'width'  => '1',
-            'fill'   => 'none',
-            'stroke' => 'currentColor'
-        ]);
-
-        $this->resolveHtmlContent(); 
+        $this->addComponentFile('js');   
     }
 
     /**

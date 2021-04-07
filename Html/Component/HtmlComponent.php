@@ -11,24 +11,12 @@ namespace Arikaim\Core\View\Html\Component;
 
 use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
-use Arikaim\Core\Interfaces\View\RequireAccessInterface;
-
-use Arikaim\Core\View\Html\Component\Traits\IncludeOption;
-use Arikaim\Core\View\Html\Component\Traits\Options;
-use Arikaim\Core\View\Html\Component\Traits\Properties;
-use Arikaim\Core\View\Html\Component\Traits\Data;
 
 /**
  * Html component
  */
-class HtmlComponent extends BaseComponent implements HtmlComponentInterface, RequireAccessInterface
+class HtmlComponent extends BaseComponent implements HtmlComponentInterface
 {
-    use 
-        Options,
-        Properties,
-        Data,
-        IncludeOption;
-
     /**
      * Constructor
      *
@@ -40,8 +28,8 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface, Req
      */
     public function __construct(string $name,string $language,string $viewPath,string $extensionsPath,string $primaryTemplate) 
     {
-        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'arikaim');
-    }   
+        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'html');
+    }
 
     /**
      * Return true if component is valid
@@ -50,7 +38,7 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface, Req
      */
     public function isValid(): bool
     {
-        return ($this->hasContent() == true || $this->hasFiles('js'));
+        return $this->hasContent();
     }
 
     /**
@@ -59,15 +47,10 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface, Req
      * @return void
      */
     public function init(): void 
-    {     
-        parent::init();
-
-        $this->loadProperties();
-        $this->loadOptions(); 
-        $this->resolveHtmlContent();
-        // options
-        $this->processIncludeOption();    
-        $this->addComponentFile('js');           
+    {
+        parent::init();  
+        
+        $this->resolveHtmlContent(); 
     }
 
     /**
@@ -77,15 +60,9 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface, Req
      * @return bool
      */
     public function resolve(array $params = []): bool
-    {        
-        if ($this->isValid() == false) {           
-            return false;                
-        }
-        $this->mergeProperties();
-        $this->mergeContext($params);       
-        // process data file
-        $this->processDataFile($params);   
-      
+    {    
+        $this->mergeContext($params);
+        
         return true;
     }
 }
