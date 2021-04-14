@@ -237,8 +237,8 @@ class View implements ViewInterface
             $component->setHtmlCode($html);  
         }
 
-        if ($cached === false) {
-            //$this->cache->save($cacheItemName,$component);
+        if ($cached === false && $type == ComponentInterface::SVG_COMPONENT_TYPE) {
+            $this->cache->save($cacheItemName,$component);
         }
             
         return $component;
