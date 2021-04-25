@@ -65,7 +65,7 @@ trait UiLibrary
      */
     public function getLibraryDetails(string $libraryName): array
     {
-        list($name, $version) = $this->parseLibraryName($libraryName);
+        list($name,$version) = $this->parseLibraryName($libraryName);
         $properties = $this->getLibraryProperties($name,$version);                   
         $files = [];
 
@@ -93,7 +93,7 @@ trait UiLibrary
      */
     public function getLibraryFiles(string $name): array
     {
-        list($libraryName,$libraryVersion,$forceInclude) = $this->parseLibraryName($name);
+        list($libraryName,$libraryVersion) = $this->parseLibraryName($name);
         $properties = $this->getLibraryProperties($libraryName,$libraryVersion);   
         if ($properties->get('disabled',false) === true) {              
             return [];
@@ -103,9 +103,10 @@ trait UiLibrary
         $urlParams = ($properties->get('params-type') == 'url') ? '?' . \http_build_query($params) : '';
         $files = [];
 
+        $libraryPath = Path::getLibraryPath($libraryName);
+
         foreach($properties->get('files') as $file) {
-            $libraryFile = Path::getLibraryFilePath($libraryName,$file);
-            $type = \pathinfo($libraryFile,PATHINFO_EXTENSION);
+            $type = \pathinfo($libraryPath . $file,PATHINFO_EXTENSION);
             $item = [
                 'file'        => (Utils::isValidUrl($file) == true) ? $file . $urlParams : Url::getLibraryFileUrl($libraryName,$file) . $urlParams,
                 'type'        => (empty($type) == true) ? 'js' : $type,

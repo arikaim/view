@@ -13,7 +13,6 @@ use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\Collection\Collection;
 use Arikaim\Core\View\Html\PageHead;
 use Arikaim\Core\Packages\PackageManager;
-use Arikaim\Core\Utils\Utils;
 use Arikaim\Core\Utils\Text;
 use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Http\Url;
@@ -374,13 +373,15 @@ class Page extends BaseComponent implements HtmlPageInterface
     /**
      * Return url link with current language code
      *
-     * @param string $path
+     * @param string|null $path
      * @param boolean $full
      * @param string|null $language
      * @return string
      */
-    public static function getUrl(string $path = '', bool $full = false, ?string $language = null): string
+    public static function getUrl($path = '', bool $full = false, ?string $language = null): string
     {       
+        $path = $path ?? '';
+        
         return Url::getUrl($path,!$full,$language,Self::$defaultLanguage);
     }
 
