@@ -20,7 +20,7 @@ use Arikaim\Core\Interfaces\View\RequireAccessInterface;
 
 use Arikaim\Core\View\Traits\Access;
 use Arikaim\Core\View\Traits\ThemeGlobals;
-
+use Arikaim\Core\View\ComponentFactory;
 use Exception;
 
 /**
@@ -36,19 +36,6 @@ class View implements ViewInterface
     const ACCESS_DENIED_ERROR_CODE       = 'ACCESS_DENIED';
     const NOT_VALID_COMPONENT_ERROR_CODE = 'NOT_VALID_COMPONENT';
    
-    /**
-     *  Component render classes
-     */
-    const COMPONENT_RENDER_CLASSES = [
-        ComponentInterface::EMPTY_COMPONENT_TYPE   => '\\Arikaim\\Core\\View\\Html\\Component\\EmptyComponent',
-        ComponentInterface::ARIKAIM_COMPONENT_TYPE => '\\Arikaim\\Core\\View\\Html\\Component\\ArikaimComponent',
-        ComponentInterface::STATIC_COMPONENT_TYPE  => '\\Arikaim\\Core\\View\\Html\\Component\\StaticHtmlComponent',
-        ComponentInterface::JSON_COMPONENT_TYPE    => '\\Arikaim\\Core\\View\\Html\\Component\\JsonComponent',
-        ComponentInterface::SVG_COMPONENT_TYPE     => '\\Arikaim\\Core\\View\\Html\\Component\\SvgComponent',
-        ComponentInterface::HTML_COMPONENT_TYPE    => '\\Arikaim\\Core\\View\\Html\\Component\\HtmlComponent',
-        ComponentInterface::JS_COMPONENT_TYPE      => '\\Arikaim\\Core\\View\\Html\\Component\\JsComponent'
-    ];
-
     /**
      * Template loader
      *
@@ -193,16 +180,7 @@ class View implements ViewInterface
      */
     public function createComponent(string $name, string $language, string $type)
     {             
-        $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
-        if (isset(Self::COMPONENT_RENDER_CLASSES[$type]) == false) {
-            $type = ComponentInterface::ARIKAIM_COMPONENT_TYPE;
-        }
-
-        $class = Self::COMPONENT_RENDER_CLASSES[$type];
-        $component =  new $class($name,$language,$this->viewPath,$this->extensionsPath,$this->primaryTemplate);
-        $component->init();
-
-        return $component;
+        return ComponentFactory::create($name,$language,$type,$this->viewPath,$this->extensionsPath,$this->primaryTemplate);
     }
 
     /**
