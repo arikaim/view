@@ -201,7 +201,7 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
      */
     public function readLibraryCode(string $name): array
     {
-        list($libraryName,$libraryVersion,$forceInclude) = $this->parseLibraryName($name);
+        list($libraryName,$libraryVersion) = $this->parseLibraryName($name);
         $properties = $this->getLibraryProperties($libraryName,$libraryVersion); 
         $content = [];
 

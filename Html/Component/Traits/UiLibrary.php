@@ -48,13 +48,13 @@ trait UiLibrary
      */
     public function parseLibraryName(string $libraryName): array
     {
-        $nameTokens = \explode(':',$libraryName);
-        $libraryName = $nameTokens[0] ?? $libraryName;
-        $libraryVersion = $nameTokens[1] ?? null;
-        $libraryOption = $nameTokens[2] ?? $libraryVersion;
-        $include = ($libraryOption == 'include');
-
-        return [$libraryName,$libraryVersion,$include];
+        $tokens = \explode(':',$libraryName);
+      
+        return [
+            $tokens[0] ?? $libraryName,
+            $tokens[1] ?? null,
+            $tokens[2] ?? null
+        ];
     }
 
     /**
@@ -65,7 +65,7 @@ trait UiLibrary
      */
     public function getLibraryDetails(string $libraryName): array
     {
-        list($name,$version) = $this->parseLibraryName($libraryName);
+        list($name,$version,$option) = $this->parseLibraryName($libraryName);
         $properties = $this->getLibraryProperties($name,$version);                   
         $files = [];
 
@@ -80,7 +80,7 @@ trait UiLibrary
         return [
             'files'       => $files,            
             'library'     => $libraryName,
-            'async'       => $properties->get('async',false),
+            'async'       => $properties->get('async',($option == 'async')),
             'crossorigin' => $properties->get('crossorigin',null)
         ];
     }
@@ -93,7 +93,7 @@ trait UiLibrary
      */
     public function getLibraryFiles(string $name): array
     {
-        list($libraryName,$libraryVersion) = $this->parseLibraryName($name);
+        list($libraryName,$libraryVersion,$libraryOption) = $this->parseLibraryName($name);
         $properties = $this->getLibraryProperties($libraryName,$libraryVersion);   
         if ($properties->get('disabled',false) === true) {              
             return [];
@@ -112,7 +112,7 @@ trait UiLibrary
                 'type'        => (empty($type) == true) ? 'js' : $type,
                 'params'      => $params,
                 'library'     => $libraryName,
-                'async'       => $properties->get('async',false),
+                'async'       => $properties->get('async',($libraryOption == 'async')),
                 'crossorigin' => $properties->get('crossorigin',null)
             ];          
             $files[] = $item;
