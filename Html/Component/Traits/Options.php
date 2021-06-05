@@ -31,13 +31,6 @@ trait Options
     protected $optionsFile = 'component.json';
 
     /**
-     * Options
-     *
-     * @var array
-     */
-    protected $options = [];
-
-    /**
      * Component type option
      *
      * @return void
@@ -60,16 +53,6 @@ trait Options
     public function setOptionFile(string $name): void
     {
         $this->optionsFile = $name;
-    }
-
-    /**
-     * Get options
-     *
-     * @return array
-     */
-    public function getOptions(): array
-    {
-        return $this->options;
     }
 
     /**

@@ -427,10 +427,15 @@ class Page extends BaseComponent implements HtmlPageInterface
             if (\count($include['library']) > 0) {
                 // UI Libraries                                
                 foreach($include['library'] as $library) {
-                    $libraryFiles = $this->getLibraryFiles($library);
-                    foreach($libraryFiles as $file) {
-                        $include[$file['type']][] = $file['file'];
-                    }                                      
+                    list($libraryName,$libraryVersion,$libraryOption) = $this->parseLibraryName($library);
+                    $disabled = $this->libraryOptions[$libraryName]['disabled'] ?? false;
+
+                    if ($disabled == false) {
+                        $libraryFiles = $this->getLibraryFiles($libraryName,$libraryVersion,$libraryOption);
+                        foreach($libraryFiles as $file) {
+                            $include[$file['type']][] = $file['file'];
+                        }    
+                    }                                                    
                 }                 
             }
 
@@ -537,9 +542,15 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         $files = [];
         foreach($libraryList as $library) {      
+            list($libraryName,$libraryVersion,$libraryOption) = $this->parseLibraryName($library);
+            $disabled = $this->libraryOptions[$libraryName]['disabled'] ?? false;
+            if ($disabled == true) {
+                continue;
+            }
+            
             $libraryFiles = $this->view->getCache()->fetch('library.files.' . $library);    
             if ($libraryFiles === false) {
-                $libraryFiles = $this->getLibraryFiles($library);
+                $libraryFiles = $this->getLibraryFiles($libraryName,$libraryVersion,$libraryOption);
                 $this->view->getCache()->save('library.files.' . $library,$libraryFiles);  
             } 
         

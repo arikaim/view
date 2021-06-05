@@ -66,14 +66,17 @@ trait UiLibrary
     public function getLibraryDetails(string $libraryName): array
     {
         list($name,$version,$option) = $this->parseLibraryName($libraryName);
-        $properties = $this->getLibraryProperties($name,$version);                   
+        $properties = $this->getLibraryProperties($name,$version); 
+        $params = $this->resolveLibraryParams($properties);           
+        $urlParams = ($properties->get('params-type') == 'url') ? '?' . \http_build_query($params) : '';                  
         $files = [];
 
         foreach($properties->get('files') as $file) {   
             $libraryFile = Path::getLibraryFilePath($libraryName,$file); 
             $fileType = \pathinfo($libraryFile,PATHINFO_EXTENSION);       
+            $fileType = (empty($fileType) == true) ? 'js' : $fileType;
             $files[$fileType][] = [
-                'url' => (Utils::isValidUrl($file) == true) ? $file : Url::getLibraryFileUrl($name,$file) 
+                'url' => (Utils::isValidUrl($file) == true) ? $file . $urlParams : Url::getLibraryFileUrl($name,$file) . $urlParams
             ];               
         }  
 
@@ -88,17 +91,15 @@ trait UiLibrary
     /**
      * Get library files
      *
-     * @param string $name
+     * @param string $libraryName
+     * @param string|null $version
+     * @param string|null $option
      * @return array
      */
-    public function getLibraryFiles(string $name): array
-    {
-        list($libraryName,$libraryVersion,$libraryOption) = $this->parseLibraryName($name);
-        $properties = $this->getLibraryProperties($libraryName,$libraryVersion);   
-        if ($properties->get('disabled',false) === true) {              
-            return [];
-        }
-      
+    public function getLibraryFiles(string $libraryName, ?string $version, ?string $option = null): array
+    {       
+        $properties = $this->getLibraryProperties($libraryName,$version);   
+       
         $params = $this->resolveLibraryParams($properties);           
         $urlParams = ($properties->get('params-type') == 'url') ? '?' . \http_build_query($params) : '';
         $files = [];
@@ -112,7 +113,7 @@ trait UiLibrary
                 'type'        => (empty($type) == true) ? 'js' : $type,
                 'params'      => $params,
                 'library'     => $libraryName,
-                'async'       => $properties->get('async',($libraryOption == 'async')),
+                'async'       => $properties->get('async',($option == 'async')),
                 'crossorigin' => $properties->get('crossorigin',null)
             ];          
             $files[] = $item;

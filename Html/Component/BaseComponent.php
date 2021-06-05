@@ -170,6 +170,13 @@ class BaseComponent implements ComponentInterface
     protected $includedComponents = [];
 
     /**
+     * Options
+     *
+     * @var array
+     */
+    protected $options = [];
+    
+    /**
      * Constructor
      *
      * @param string $name
@@ -215,12 +222,23 @@ class BaseComponent implements ComponentInterface
 
         // init context
         $this->context = [
-            'component_url'    => $this->url,       
+            '_component_name'  => $this->fullName,    
+            'component_url'    => $this->url,                
             'current_language' => $this->language,
             'primary_template' => $this->primaryTemplate
         ];
     }
     
+    /**
+     * Get options
+     *
+     * @return array
+     */
+    public function getOptions(): array
+    {
+        return $this->options;
+    }
+
     /**
      * Resolve component
      *

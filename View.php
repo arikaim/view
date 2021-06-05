@@ -203,7 +203,7 @@ class View implements ViewInterface
         if ($component instanceof RequireAccessInterface) {
             if ($this->checkAccessOption($component) == false) {              
                 return $this->renderComponentError($name,$language,Self::ACCESS_DENIED_ERROR_CODE,$component->getOptions());
-            }               
+            }              
         }
 
         if ($component->resolve($params) == false) {
@@ -215,7 +215,12 @@ class View implements ViewInterface
             $component->setHtmlCode($html);  
         }
 
-        if ($cached === false && $type == ComponentInterface::SVG_COMPONENT_TYPE) {
+        if (
+            ($cached === false) && 
+            ($type == ComponentInterface::SVG_COMPONENT_TYPE || $type == ComponentInterface::STATIC_COMPONENT_TYPE) 
+        ) 
+        {
+            // sve to cache
             $this->cache->save($cacheItemName,$component);
         }
             
