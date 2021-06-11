@@ -13,6 +13,7 @@ use Arikaim\Core\Packages\PackageManager;
 use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Utils\Utils;
 use Arikaim\Core\Http\Url;
+use Arikaim\Core\Utils\Text;
 
 /**
  * UiLibrary helpers
@@ -120,5 +121,25 @@ trait UiLibrary
         }   
         
         return $files;
+    }
+
+    /**
+     * Resolve library params
+     *
+     * @param Collection $properties
+     * @return array
+     */
+    public function resolveLibraryParams($properties)
+    {      
+        $params = $properties->get('params',[]);
+        $vars = [
+            'domian'   => DOMAIN,
+            'base_url' => BASE_PATH
+        ];
+
+        $libraryParams = $this->libraryOptions[$properties['name']] ?? ['params' => []];
+        $vars = \array_merge($vars,$libraryParams['params'] ?? []);
+            
+        return Text::renderMultiple($params,$vars);       
     }
 }

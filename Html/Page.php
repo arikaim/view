@@ -507,26 +507,6 @@ class Page extends BaseComponent implements HtmlPageInterface
     }
 
     /**
-     * Resolve library params
-     *
-     * @param Collection $properties
-     * @return array
-     */
-    public function resolveLibraryParams($properties)
-    {      
-        $params = $properties->get('params',[]);
-        $vars = [
-            'domian'   => DOMAIN,
-            'base_url' => BASE_PATH
-        ];
-
-        $libraryParams = $this->libraryOptions[$properties['name']] ?? [];
-        $vars = \array_merge($vars,$libraryParams);
-            
-        return Text::renderMultiple($params,$vars);       
-    }
-
-    /**
      * Get include library files
      *
      * @param array $libraryList
