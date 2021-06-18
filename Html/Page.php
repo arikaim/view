@@ -235,6 +235,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $language = $language ?? Self::$defaultLanguage;
         $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
         $this->view->addGlobal('template_url',Url::getTemplateUrl($this->getCurrentTemplate(),'/'));
+        $this->view->addGlobal('current_language',$language);
 
         $this->fullName = $name;
         $this->language = $language;
