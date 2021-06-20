@@ -9,8 +9,6 @@
  */
 namespace Arikaim\Core\View\Html\Component\Traits;
 
-use Arikaim\Core\Collection\Arrays;
-
 /**
  * Component options
  */
@@ -70,13 +68,13 @@ trait Options
     /**
      * Set option value
      *
-     * @param string $path
+     * @param string $key
      * @param mixed $value
      * @return void
      */
-    public function setOption(string $path, $value): void
+    public function setOption(string $key, $value): void
     {
-        $this->options = Arrays::setValue($this->options,$path,$value);       
+        $this->options[$key] = $value;
     }
 
     /**

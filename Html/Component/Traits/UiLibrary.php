@@ -99,12 +99,20 @@ trait UiLibrary
      */
     public function getLibraryFiles(string $libraryName, ?string $version, ?string $option = null): array
     {       
-        $properties = $this->getLibraryProperties($libraryName,$version);   
-       
-        $params = $this->resolveLibraryParams($properties);           
-        $urlParams = ($properties->get('params-type') == 'url') ? '?' . \http_build_query($params) : '';
+        $properties = $this->getLibraryProperties($libraryName,$version);          
+        $params = $this->resolveLibraryParams($properties);  
+        $paramsText = '';
+        $urlParams = '';
         $files = [];
 
+        if (count($params) > 0) {
+            $urlParams = ($properties->get('params-type') == 'url') ? '?' . \http_build_query($params) : '';
+            \array_walk($params,function (&$value,$key) {
+                $value = ' ' . $key .'="'. $value. '"';
+            });
+            $paramsText = \implode(',',\array_values($params));
+        }         
+    
         $libraryPath = Path::getLibraryPath($libraryName);
 
         foreach($properties->get('files') as $file) {
@@ -113,6 +121,7 @@ trait UiLibrary
                 'file'        => (Utils::isValidUrl($file) == true) ? $file . $urlParams : Url::getLibraryFileUrl($libraryName,$file) . $urlParams,
                 'type'        => (empty($type) == true) ? 'js' : $type,
                 'params'      => $params,
+                'params_text' => $paramsText,
                 'library'     => $libraryName,
                 'async'       => $properties->get('async',($option == 'async')),
                 'crossorigin' => $properties->get('crossorigin',null)

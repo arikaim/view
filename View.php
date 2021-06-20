@@ -208,7 +208,7 @@ class View implements ViewInterface
 
         if ($component->resolve($params) == false) {
             return $this->renderComponentError($name,$language,Self::NOT_VALID_COMPONENT_ERROR_CODE,[]);
-        };
+        }
 
         if ($component->hasContent() == true) {
             $html = $this->fetch($component->getTemplateFile(),$component->getContext());
@@ -237,7 +237,11 @@ class View implements ViewInterface
     */
     protected function renderComponentError(string $name, string $language, string $errorCode, array $options = [])
     {
-        $component = $this->renderComponent(Self::COMPONENT_ERROR_NAME,[],$language,'static');
+        $errorMessage = [
+            'message' => 'Error in html component <b>' . $name . '</b>'. $errorCode
+        ];
+
+        $component = $this->renderComponent(Self::COMPONENT_ERROR_NAME,$errorMessage,$language,'static');
         $component->setError($errorCode);
       
         $component->setOption('redirect',$options['access']['redirect'] ?? null);
