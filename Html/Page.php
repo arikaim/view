@@ -172,13 +172,14 @@ class Page extends BaseComponent implements HtmlPageInterface
         $component = $this->view->renderComponent($name,$params,$language,$type);
 
         if (\count($component->getFiles('js')) > 0) {
-            // include
+            // include    
+            if (\in_array($name,\array_column($this->includedComponents,'name')) == false) {
+                $this->componentsFiles['js'] = \array_merge($this->componentsFiles['js'],$component->getFiles('js'));              
+            }
             $this->addIncludedComponent($name,$type);
+            $this->includedComponents = \array_merge($this->includedComponents,$component->getIncludedComponents());
         } 
               
-        $this->includedComponents = \array_merge($this->includedComponents,$component->getIncludedComponents());
-        $this->componentsFiles['js'] = \array_merge($this->componentsFiles['js'],$component->getFiles('js'));
-      
         return $component;   
     }
 
@@ -263,7 +264,7 @@ class Page extends BaseComponent implements HtmlPageInterface
             'library_files'    => $includes['library_files'],
             'template_files'   => $includes['template_files'],
             'page_files'       => $includes['page_files'], 
-            'component_files'  => $this->getComponentsFiles(),
+            'component_files'  => $this->componentsFiles,
             'head'             => $this->head->toArray()
         ]);   
 

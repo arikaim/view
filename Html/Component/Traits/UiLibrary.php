@@ -31,12 +31,16 @@ trait UiLibrary
     {
         $properties = PackageManager::loadPackageProperties($name,Path::LIBRARY_PATH);
        
-        if (empty($version) == true) {
-            $properties['files'] = $properties->get('files',[]);
+        if (empty($version) == true) {       
             return $properties;
         }
         $versions = $properties->get('versions',[]);
+       
+
         $properties['files'] = (isset($versions[$version]) == true) ? $versions[$version]['files'] : [];
+        if (isset($versions[$version]['async']) == true) {
+            $properties['async'] = $versions[$version]['async'];
+        }
 
         return $properties;
     }

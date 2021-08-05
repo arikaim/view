@@ -713,6 +713,7 @@ class BaseComponent implements ComponentInterface
         if ($this->location == ComponentInterface::PRIMARY_TEMLATE) {
             // resolve component location (template or extension)
             $componentPath = $this->getComponentFullPath(ComponentInterface::TEMPLATE_COMPONENT,$this->primaryTemplate);
+           
             if (\file_exists($componentPath) == true) {               
                 // primary template component
                 $this->location = ComponentInterface::TEMPLATE_COMPONENT;

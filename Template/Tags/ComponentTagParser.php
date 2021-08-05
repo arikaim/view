@@ -22,16 +22,16 @@ class ComponentTagParser extends AbstractTokenParser
     /**
      * Twig extension class  
      *
-     * @var string
+     * @var string|null
      */
     protected $twigExtensionClass;
 
     /**
      * Constructor
      *
-     * @param string|null $twigExtensionClass
+     * @param string $twigExtensionClass
      */
-    public function __construct($twigExtensionClass = null)
+    public function __construct(string $twigExtensionClass)
     {
         $this->twigExtensionClass = $twigExtensionClass;
     }
@@ -43,8 +43,7 @@ class ComponentTagParser extends AbstractTokenParser
      * @return ComponentNode
      */
     public function parse(Token $token)
-    {
-        $line = $token->getLine();
+    {       
         $stream = $this->parser->getStream();
         // tag params
         $componentName = $stream->expect(Token::STRING_TYPE)->getValue();  
@@ -58,7 +57,7 @@ class ComponentTagParser extends AbstractTokenParser
                 'name' => $componentName,
                 'type' => $type
             ],
-            $line,
+            $token->getLine(),
             $this->getTag(),
             $this->twigExtensionClass
         );

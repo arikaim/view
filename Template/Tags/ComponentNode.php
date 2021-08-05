@@ -19,11 +19,6 @@ use Twig\Node\NodeOutputInterface;
 class ComponentNode extends Node implements NodeOutputInterface
 {
     /**
-     * Twig extension class   
-     */
-    const TWIG_EXTENSION_CLASS = 'Arikaim\\Core\\View\\Template\\Extension';
-
-    /**
      * Twig extension class  
      *
      * @var string
@@ -37,11 +32,11 @@ class ComponentNode extends Node implements NodeOutputInterface
      * @param array $params
      * @param integer $line
      * @param string $tag
-     * @param string|null $twigExtensionClass
+     * @param string $twigExtensionClass
      */
-    public function __construct(Node $body, $params = [], $line = 0, $tag = 'component', $twigExtensionClass = null)
+    public function __construct(Node $body, $params = [], $line = 0, $tag = 'component', string $twigExtensionClass)
     {
-        $this->twigExtensionClass = $twigExtensionClass ?? Self::TWIG_EXTENSION_CLASS;
+        $this->twigExtensionClass = $twigExtensionClass;
 
         parent::__construct(['body' => $body],$params,$line,$tag);
     }

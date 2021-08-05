@@ -21,7 +21,6 @@ use Arikaim\Core\Interfaces\View\RequireAccessInterface;
 use Arikaim\Core\View\Traits\Access;
 use Arikaim\Core\View\Traits\ThemeGlobals;
 use Arikaim\Core\View\ComponentFactory;
-use Exception;
 
 /**
  * View class
@@ -162,12 +161,7 @@ class View implements ViewInterface
      */
     public function getService(string $name)
     {
-        if (isset($this->services[$name]) == false) {
-            throw new Exception('Service not exists ' . $name, 1);
-            return null;            
-        }
-
-        return $this->services[$name];
+        return $this->services[$name] ?? null;
     }
 
     /**

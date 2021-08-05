@@ -19,9 +19,11 @@ use Twig\Node\NodeOutputInterface;
 class MdNode extends Node implements NodeOutputInterface
 {
     /**
-     * Twig extension class   
+     * Ext class name
+     *
+     * @var string
      */
-    const TWIG_EXTENSION_CLASS = 'Arikaim\\Core\\View\\Template\\Extension';
+    protected $twigExtensionClass;
 
     /**
      * Constructor
@@ -30,10 +32,11 @@ class MdNode extends Node implements NodeOutputInterface
      * @param array $params
      * @param integer $line
      * @param string $tag
+     * @param string $twigExtensionClass
      */
-    public function __construct(Node $body, $params = [], $line = 0, $tag = 'md', $twigExtensionClass = null)
+    public function __construct(Node $body, $params = [], $line = 0, $tag = 'md', string $twigExtensionClass)
     {
-        $this->twigExtensionClass = $twigExtensionClass ?? Self::TWIG_EXTENSION_CLASS;
+        $this->twigExtensionClass = $twigExtensionClass;
 
         parent::__construct(['body' => $body],$params,$line,$tag);
     }

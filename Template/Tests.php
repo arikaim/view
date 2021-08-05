@@ -12,7 +12,7 @@ namespace Arikaim\Core\View\Template;
 use Arikaim\Core\Utils\Utils;
 
 /**
- * Tmplate tests functions
+ * Template tests functions
  */
 class Tests  
 {
@@ -45,7 +45,7 @@ class Tests
      * @param string|null $currentVersion   
      * @return boolean
      */
-    public static function versionCompare($requiredVersion, $currentVersion)
+    public static function versionCompare(?string $requiredVersion, ?string $currentVersion): bool
     {
         return Utils::checkVersion($currentVersion,$requiredVersion,'>');  
     }

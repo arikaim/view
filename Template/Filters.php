@@ -58,9 +58,7 @@ class Filters
      */
     public static function emptyLabel($value, ?string $label = '')
     {
-        $label = $label ?? '';
-
-        return (empty($value) == true) ? $label : $value;
+        return (empty($value) == true) ? $label ?? '' : $value;
     }
 
     /**
@@ -90,11 +88,8 @@ class Filters
         if (\is_bool($value) === true) {
             return ($value === true) ? 'true' : 'false';
         }  
-        if (\is_array($value) === true) {    
-            return Arrays::toString($value,$separator);
-        }
-        
-        return (string)$value;
+
+        return (\is_array($value) === true) ? Arrays::toString($value,$separator) : (string)$value;            
     }
 
     /**
@@ -107,9 +102,6 @@ class Filters
      */
     public static function attr($value, ?string $name = null, $default = '')
     {      
-        $name = $name ?? '';
-        $default = $default ?? '';
-
-        return (\is_array($value) == true) ? Html::getAttributes($value) : Html::attr($value,$name,$default);
+        return (\is_array($value) == true) ? Html::getAttributes($value) : Html::attr($value,$name ?? '',$default ?? '');
     }
 }

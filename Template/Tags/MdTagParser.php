@@ -31,7 +31,7 @@ class MdTagParser extends AbstractTokenParser
      *
      * @param string|null $twigExtensionClass
     */
-    public function __construct($twigExtensionClass = null)
+    public function __construct(string $twigExtensionClass)
     {
         $this->twigExtensionClass = $twigExtensionClass;
     }
