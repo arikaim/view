@@ -15,6 +15,9 @@ use Twig\TokenParser\AbstractTokenParser;
 
 use Arikaim\Core\View\Template\Tags\CacheNode;
 
+/**
+ * Cache parser class
+ */
 class CacheTagParser extends AbstractTokenParser
 {
     /**
@@ -44,14 +47,13 @@ class CacheTagParser extends AbstractTokenParser
     {
         $stream = $this->parser->getStream();     
         $key = $stream->expect(Token::STRING_TYPE)->getValue();
-        $saveTime = ($stream->nextIf(Token::NAME_TYPE,'saveTime') == true ) ? $stream->expect(Token::STRING_TYPE)->getValue() : null;
-
+        $keyName = ($stream->nextIf(Token::NAME_TYPE,'keyName') == true) ? $stream->expect(Token::STRING_TYPE)->getValue() : '';
+   
         $stream->expect(Token::BLOCK_END_TYPE);
-        $body = $this->parser->subparse([$this,'decideCacheEnd'],true);
+        $body = $this->parser->subparse([$this,'decideTagEnd'],true);
         $stream->expect(Token::BLOCK_END_TYPE);
-
         
-        return new CacheNode($key,$saveTime,$body,$token->getLine(),$this->getTag(),$this->twigExtensionClass);
+        return new CacheNode($key,$keyName,null,$body,$token->getLine(),$this->getTag(),$this->twigExtensionClass);
     }
 
     /**
@@ -60,7 +62,7 @@ class CacheTagParser extends AbstractTokenParser
      * @param Token $token
      * @return boolean
      */
-    public function decideCacheEnd(Token $token): bool
+    public function decideTagEnd(Token $token): bool
     {
         return $token->test('endcache');
     }
