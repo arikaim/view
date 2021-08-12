@@ -426,7 +426,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         // from page options
         $include = $this->getOption('include');          
         if (empty($include) == false) {            
-            $include = $this->resolveIncludeFiles($include,$this->url,$this->getTemplateName());
+            $include = $this->resolveIncludeFiles($include,$this->url);
             if (\count($include['library']) > 0) {
                 // UI Libraries                                
                 foreach($include['library'] as $library) {
@@ -464,7 +464,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $templateOptions = PackageManager::loadPackageProperties($templateName,Path::TEMPLATES_PATH);
         $include = $templateOptions->get('include',[]);
      
-        $include = $this->resolveIncludeFiles($include,Url::getTemplateUrl($templateName),$templateName);
+        $include = $this->resolveIncludeFiles($include,Url::getTemplateUrl($templateName));
         if (\count($include['library']) > 0) {
             // UI Libraries                    
             $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],$templateName);  
@@ -482,7 +482,7 @@ class Page extends BaseComponent implements HtmlPageInterface
      * @param string $url
      * @return array
      */
-    protected function resolveIncludeFiles(array $include, string $url, string $templateName): array
+    protected function resolveIncludeFiles(array $include, string $url): array
     {
         $include['js'] = $include['js'] ?? [];
         $include['css'] = $include['css'] ?? [];
@@ -490,10 +490,26 @@ class Page extends BaseComponent implements HtmlPageInterface
         $include['library'] = $include['library'] ?? [];
 
         $include['js'] = \array_map(function($value) use($url) {
+            $tokens = \explode(':',$value);
+            if (isset($tokens[1]) == true) {
+                $value = $tokens[1];
+                $url = Url::getTemplateUrl($tokens[0]);
+            } else {
+                $value = $tokens[0];
+            }
+           
             return $url . '/js/' . $value; 
         },$include['js']);
       
         $include['css'] = \array_map(function($value) use($url) {
+            $tokens = \explode(':',$value);
+            if (isset($tokens[1]) == true) {
+                $value = $tokens[1];
+                $url = Url::getTemplateUrl($tokens[0]);
+            } else {
+                $value = $tokens[0];
+            }
+            
             return $url . '/css/' . $value;         
         },$include['css']);
        
