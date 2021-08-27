@@ -59,7 +59,7 @@ trait UiLibrary
 
         return [
             $tokens[0] ?? $libraryName,
-            $version,
+            ($version == 'async') ? null : $version,
             (empty($option) == true && $version == 'async') ? 'async' : $option 
         ];
     }
