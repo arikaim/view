@@ -46,7 +46,7 @@ trait UiLibrary
     }
 
     /**
-     * Parse library name   (name:version)
+     * Parse library name (name:version)
      *
      * @param string $libraryName
      * @return array
@@ -54,11 +54,13 @@ trait UiLibrary
     public function parseLibraryName(string $libraryName): array
     {
         $tokens = \explode(':',$libraryName);
-      
+        $version = $tokens[1] ?? null;
+        $option = $tokens[2] ?? null;
+
         return [
             $tokens[0] ?? $libraryName,
-            $tokens[1] ?? null,
-            $tokens[2] ?? null
+            $version,
+            (empty($option) == true && $version == 'async') ? 'async' : $option 
         ];
     }
 
