@@ -232,7 +232,7 @@ class Page extends BaseComponent implements HtmlPageInterface
     */
     public function render(string $name, array $params = [], ?string $language = null)
     {  
-        // add global variables 
+        // add global variables       
         $language = $language ?? Self::$defaultLanguage;
         $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
         $this->view->addGlobal('template_url',Url::getTemplateUrl($this->getCurrentTemplate(),'/'));
