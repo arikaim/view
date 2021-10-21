@@ -37,11 +37,11 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
         Properties;
   
     /**
-     * Emeil compilers list
+     * Email css inliner
      *
-     * @var array
+     * @var EmailCompilerInterface|null
      */
-    protected $emailCompilers = [];
+    protected $cssInliner = null;
 
     /**
      * Default language
@@ -56,7 +56,7 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
      * @param ViewInterface $view
      * @param string $defaultLanguage    
      */
-    public function __construct(ViewInterface $view, string $defaultLanguage) 
+    public function __construct(ViewInterface $view, string $defaultLanguage, ?string $emailComplierClass = null) 
     {
         parent::__construct(
             '',
@@ -69,7 +69,14 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
         );
 
         $this->defaultLanguage = $defaultLanguage;
-        $this->view = $view;         
+        $this->view = $view;   
+        
+        if (empty($emailComplierClass) == false) {
+            $this->cssInliner = (\class_exists($emailComplierClass) == true) ? new $emailComplierClass() : null; 
+            if (($this->cssInliner instanceof EmailCompilerInterface) == false) {
+                $this->cssInliner = null;
+            }     
+        }
     }   
 
     /**
@@ -116,6 +123,36 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
     }
 
     /**
+     * Get css email library name
+     *
+     * @return string
+     */
+    public function getLibraryName(): string
+    {
+        return $this->getOption('library','');
+    }
+
+    /**
+     * Get inline css option
+     *
+     * @return boolean
+     */
+    public function inlineCssOption(): bool
+    {
+        return (bool)$this->getOption('inlineCss',false);
+    }
+
+    /**
+     * Get css inliner class
+     *
+     * @return string|null
+     */
+    public function getCssInlinerClass(): ?string
+    {
+        return (\is_object($this->cssInliner) == true) ? \get_class($this->cssInliner) : null;
+    }
+
+    /**
      * Render email component
      *
      * @param string $name
@@ -131,29 +168,35 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
         $this->language = $language;
 
         $this->init();
-
+        
         if ($this->resolve($params) == false) { 
             return null;
         }
 
-        $library = $this->getOption('library');
-      
+        $library = $this->getLibraryName();      
         $code = $this->view->fetch($this->getTemplateFile(),$this->getContext());
-        if (empty($library) == false) {
-            $code = $this->compileCssFrameworkCode($code,$library);
-        }
 
         if (Utils::hasHtml($code) == true) {
             // Email is html  
-            $file = $this->getComponentFile('css');           
-            $params['component_css_file'] = ($file !== false) ? File::read($this->getFullPath() . $file) : null;              
-            $params['library_code'] = (empty($library) == false) ? $this->readLibraryCode($library) : [];
+            $file = $this->getComponentFile('css');
+            $componentCss = ($file !== false) ? File::read($this->getFullPath() . $file) : '';
+            $libraryCss = $this->readLibraryCode($library);
+
+            if ($this->inlineCssOption() != true) {
+                $params['component_css'] = $componentCss;             
+                $params['library_css'] = $libraryCss;
+            }  
+          
             $params['body'] = $code;
-
+         
             $indexFile = $this->getIndexFile($this->primaryTemplate);
-            $code = $this->view->fetch($indexFile,$params);                    
-        }
+            $code = $this->view->fetch($indexFile,$params); 
 
+            if ($this->inlineCssOption() == true) {
+                $code = $this->inlineCss($code,$libraryCss . $componentCss);
+                $params['body'] = $code;
+            }                   
+        }
         $this->setHtmlCode($code);   
 
         return $this;
@@ -173,54 +216,49 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
      * Compile email code
      *
      * @param string $code
-     * @param string|null $library
+     * @param string $cssCode
      * @return string
      */
-    public function compileCssFrameworkCode(string $code, ?string $library): string
+    public function inlineCss(string $code, string $cssCode): string
     {
-        $compilerClass = $this->emailCompilers[$library] ?? null;
-        if (empty($compilerClass) == true) {
+        if (\is_object($this->cssInliner) == false || empty($cssCode) == true) {
             return $code;
         }
 
-        if (\class_exists($compilerClass) == true) {
-            $compiller = new $compilerClass();
-            if ($compiller instanceof EmailCompilerInterface) {
-                $code = $compiller->compile($code);
-            }
-        }
-        
-        return $code;
+        return $this->cssInliner->compile($code,$cssCode);       
     } 
 
     /**
      * Read UI library css code
      *
      * @param string $name
-     * @return array
+     * @return string
      */
-    public function readLibraryCode(string $name): array
+    public function readLibraryCode(string $name): string
     {
+        if (empty($name) == true) {
+            return '';
+        }
         list($libraryName,$libraryVersion) = $this->parseLibraryName($name);
         $properties = $this->getLibraryProperties($libraryName,$libraryVersion); 
-        $content = [];
+        $content = '';
 
         foreach($properties->get('files') as $file) {
             $libraryFile = Path::getLibraryFilePath($libraryName,$file);
-            $content[] = File::read($libraryFile);
+            $content .= File::read($libraryFile);
         }
 
-        return $content;
+        return \trim($content);
     }    
 
     /**
-     * Set email compilers
+     * Set email css inliner
      *
-     * @param array $compilers
+     * @param EmailCompilerInterface|null $inliner
      * @return void
      */
-    public function setEmailCompillers(array $compilers): void
+    public function setCssInliner(?EmailCompilerInterface $inliner): void
     {
-        $this->emailCompilers = $compilers;       
+        $this->cssInliner = $inliner;       
     }
 }
