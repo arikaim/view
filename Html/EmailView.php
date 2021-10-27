@@ -13,6 +13,7 @@ use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\Utils\File;
 use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Utils\Utils;
+use Arikaim\Core\Http\Url;
 
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
 use Arikaim\Core\Interfaces\View\ComponentInterface;
@@ -172,6 +173,8 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
         if ($this->resolve($params) == false) { 
             return null;
         }
+        // set current email component url
+        $this->context['component_url'] = DOMAIN . $this->url;
 
         $library = $this->getLibraryName();      
         $code = $this->view->fetch($this->getTemplateFile(),$this->getContext());
