@@ -301,7 +301,7 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         $includes['template_files'] = \array_merge_recursive($templatefiles,$pageFiles);
 
-        $includes['library_files'] = $includes['template_files']['library_files']; 
+        $includes['library_files'] = $includes['template_files']['library_files'] ?? []; 
         unset($includes['template_files']['library_files']);
 
         // get index file
