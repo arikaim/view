@@ -251,7 +251,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $this->setCurrentTemplate($this->templateName);
                     
         // page head
-        if (\is_array($properties['head']) == true) {
+        if (\is_array($properties['head'] ?? null) == true) {
             $this->resolvePageHead($properties['head'],$this->templateUrl);
         }
         
@@ -262,9 +262,9 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         $params = \array_merge($params,[              
             'body'             => $body,           
-            'library_files'    => $includes['library_files'],
-            'template_files'   => $includes['template_files'],
-            'page_files'       => $includes['page_files'], 
+            'library_files'    => $includes['library_files'] ?? null,
+            'template_files'   => $includes['template_files'] ?? null,
+            'page_files'       => $includes['page_files'] ?? null, 
             'component_files'  => $this->componentsFiles,
             'head'             => $this->head->toArray()
         ]);   
