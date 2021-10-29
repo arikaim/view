@@ -301,7 +301,7 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         $includes['template_files'] = \array_merge_recursive($templatefiles,$pageFiles);
 
-        $includes['library_files'] = $includes['template_files']['library_files'] ?? []; 
+        $includes['library_files'] = $pageFiles['library_files'] ?? $includes['template_files']['library_files'] ?? []; 
         unset($includes['template_files']['library_files']);
 
         // get index file
@@ -422,24 +422,13 @@ class Page extends BaseComponent implements HtmlPageInterface
         if ($include !== false) {        
             return $include;
         }
-
         // from page options
         $include = $this->getOption('include');          
         if (empty($include) == false) {            
             $include = $this->resolveIncludeFiles($include,Url::getTemplateUrl($this->templateName));
             if (\count($include['library']) > 0) {
-                // UI Libraries                                
-                foreach($include['library'] as $library) {
-                    list($libraryName,$libraryVersion,$libraryOption) = $this->parseLibraryName($library);
-                    $disabled = $this->libraryOptions[$libraryName]['disabled'] ?? false;
-
-                    if ($disabled == false) {
-                        $libraryFiles = $this->getLibraryFiles($libraryName,$libraryVersion,$libraryOption);
-                        foreach($libraryFiles as $file) {
-                            $include[$file['type']][] = $file['file'];
-                        }    
-                    }                                                    
-                }                 
+                // UI Libraries    
+                $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],null);                   
             }
 
             $this->view->getCache()->save('page.include.files.' . $this->getName(),$include);   
@@ -528,15 +517,18 @@ class Page extends BaseComponent implements HtmlPageInterface
      * Get include library files
      *
      * @param array $libraryList
-     * @param string $templateName
+     * @param string|null $templateName
      * @return array
      */
-    public function getLibraryIncludeFiles(array $libraryList, string $templateName): array
+    public function getLibraryIncludeFiles(array $libraryList, ?string $templateName): array
     {          
-        $files = $this->view->getCache()->fetch('template.library.files.' . $templateName);        
-        if ($files !== false) {            
-            return $files;
+        if (empty($templateName) == false) {
+            $files = $this->view->getCache()->fetch('template.library.files.' . $templateName);        
+            if ($files !== false) {            
+                return $files;
+            }
         }
+       
 
         $files = [];
         foreach($libraryList as $library) {      
@@ -546,7 +538,7 @@ class Page extends BaseComponent implements HtmlPageInterface
                 continue;
             }
             
-            $libraryFiles = $this->view->getCache()->fetch('library.files.' . $library);    
+            $libraryFiles = (empty($templateName) == false) ? $this->view->getCache()->fetch('library.files.' . $library) : false;    
             if ($libraryFiles === false) {
                 $libraryFiles = $this->getLibraryFiles($libraryName,$libraryVersion,$libraryOption);
                 $this->view->getCache()->save('library.files.' . $library,$libraryFiles);  
@@ -555,8 +547,10 @@ class Page extends BaseComponent implements HtmlPageInterface
             $files = \array_merge($files,$libraryFiles);       
         }
 
-        // Save to cache
-        $this->view->getCache()->save('template.library.files.' . $templateName,$files); 
+        if (empty($templateName) == false) {
+            // Save to cache
+            $this->view->getCache()->save('template.library.files.' . $templateName,$files); 
+        }
                                
         return $files;
     }
