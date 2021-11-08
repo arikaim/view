@@ -31,7 +31,7 @@ class View implements ViewInterface
         Access,
         ThemeGlobals;
 
-    const COMPONENT_ERROR_NAME           = 'components:message.error';
+    const COMPONENT_ERROR_NAME           = 'semantic~message.error';
     const ACCESS_DENIED_ERROR_CODE       = 'ACCESS_DENIED';
     const NOT_VALID_COMPONENT_ERROR_CODE = 'NOT_VALID_COMPONENT';
    
