@@ -640,16 +640,14 @@ class BaseComponent implements ComponentInterface
             return false;
         }
         
-        $file = [
+        return $this->addFile([
             'file_name'      => $fileName,
             'path'           => $this->filePath,
             'full_path'      => $this->fullPath,
             'component_name' => $this->fullName,
             'component_type' => $this->componentType,            
             'url'            => $this->getFileUrl($fileName) 
-        ];
-
-        return $this->addFile($file,$fileExt);       
+        ],$fileExt);       
     }
 
     /**

@@ -12,7 +12,6 @@ namespace Arikaim\Core\View\Html;
 use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\Collection\Collection;
 use Arikaim\Core\View\Html\PageHead;
-use Arikaim\Core\Packages\PackageManager;
 use Arikaim\Core\Utils\Text;
 use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Http\Url;
@@ -71,13 +70,6 @@ class Page extends BaseComponent implements HtmlPageInterface
      * @var array
      */
     protected $libraryOptions;
-
-    /**
-     * Current template name
-     *
-     * @var string
-     */
-    protected $currentTenplate;
 
     /**
      * Component include files (js)
@@ -166,8 +158,8 @@ class Page extends BaseComponent implements HtmlPageInterface
     {
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $language = $language ?? $this->language;
-        $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
-        $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/');
+        $params['template_path'] = Path::TEMPLATES_PATH . $this->templateName . DIRECTORY_SEPARATOR;
+        $params['template_url'] = $this->templateUrl . '/';
         
         $component = $this->view->renderComponent($name,$params,$language,$type);
 
@@ -181,17 +173,6 @@ class Page extends BaseComponent implements HtmlPageInterface
         } 
               
         return $component;   
-    }
-
-    /**
-     * Set current template name
-     *
-     * @param string $name
-     * @return void
-     */
-    public function setCurrentTemplate(string $name): void
-    {
-        $this->currentTenplate = $name;
     }
 
     /**
@@ -235,7 +216,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         // add global variables       
         $language = $language ?? Self::$defaultLanguage;
         $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
-        $this->view->addGlobal('template_url',Url::getTemplateUrl($this->getCurrentTemplate(),'/'));
+        $this->view->addGlobal('template_url',$this->templateUrl . '/');
         $this->view->addGlobal('current_language',$language);
         $this->view->addGlobal('page_component_name',$name);
 
@@ -244,18 +225,13 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         $this->init();
         $this->resolve($params);  
-     
-        $properties = $this->getProperties();
-
-        // set current page template name      
-        $this->setCurrentTemplate($this->templateName);
-                    
+           
         // page head
-        if (\is_array($properties['head'] ?? null) == true) {
-            $this->resolvePageHead($properties['head'],$this->templateUrl);
+        if (\is_array($this->properties['head'] ?? null) == true) {
+            $this->resolvePageHead($this->properties['head'],$this->templateUrl);
         }
         
-        $params = \array_merge_recursive($params,$properties); 
+        $params = \array_merge_recursive($params,$this->properties); 
         $body = $this->view->fetch($this->getTemplateFile(),$params);  
 
         $includes = $this->getPageIncludes($name,$language);   
@@ -290,13 +266,12 @@ class Page extends BaseComponent implements HtmlPageInterface
         }
       
         // template include files        
-        $templatefiles = $this->getTemplateIncludeFiles($this->templateName);     
-      
+        $templatefiles = $this->getTemplateIncludeFiles();     
         // page include files
         $pageFiles = $this->getPageIncludeFiles();
-
         // set page component includ files
         $includes['page_files'] = $this->getFiles();
+
         // merge template and page include files
         $includes['template_files'] = \array_merge_recursive($templatefiles,$pageFiles);
         // library files
@@ -304,7 +279,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         unset($includes['template_files']['library_files']);
 
         // get index file
-        $includes['index'] = $this->getIndexFile($this->getCurrentTemplate());   
+        $includes['index'] = $this->getIndexFile($this->templateName);   
 
         // save to cache
         $this->view->getCache()->save('html.page.includes.' . $name . '.' . $language,$includes);
@@ -369,7 +344,7 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     public function getCurrentTemplate(): string
     { 
-        return (empty($this->currentTenplate) == true) ? $this->primaryTemplate : $this->currentTenplate;
+        return $this->templateName;
     }
 
     /**
@@ -424,7 +399,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         // from page options
         $include = $this->getOption('include');          
         if (empty($include) == false) {            
-            $include = $this->resolveIncludeFiles($include,Url::getTemplateUrl($this->templateName));
+            $include = $this->resolveIncludeFiles($include,$this->templateUrl);
             if (\count($include['library']) > 0) {
                 // UI Libraries    
                 $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],null);                   
@@ -438,27 +413,29 @@ class Page extends BaseComponent implements HtmlPageInterface
 
     /**
      * Get template include files
-     *
-     * @param string $templateName
+     *   
      * @return array
      */
-    public function getTemplateIncludeFiles(string $templateName): array
+    protected function getTemplateIncludeFiles(): array
     {               
-        $include = $this->view->getCache()->fetch('template.include.files.' . $templateName);
+        $include = $this->view->getCache()->fetch('template.include.files.' . $this->templateName);
         if ($include !== false) {        
             return $include;
         }
        
-        $templateOptions = PackageManager::loadPackageProperties($templateName,Path::TEMPLATES_PATH);
-        $include = $templateOptions->get('include',[]);
+        $json = \file_get_contents(Path::TEMPLATES_PATH . $this->templateName . DIRECTORY_SEPARATOR . 'arikaim-package.json');
+        $data = \json_decode($json,true);
+        $templateOptions = (\is_array($data) == true) ? $data : [];
+
+        $include = $templateOptions['include'] ?? [];
      
-        $include = $this->resolveIncludeFiles($include,Url::getTemplateUrl($templateName));
+        $include = $this->resolveIncludeFiles($include,$this->templateUrl);
         if (\count($include['library']) > 0) {
             // UI Libraries                    
-            $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],$templateName);  
+            $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],$this->templateName);  
         }
 
-        $this->view->getCache()->save('template.include.files.' . $templateName,$include);
+        $this->view->getCache()->save('template.include.files.' . $this->templateName,$include);
       
         return $include;
     }
@@ -564,7 +541,7 @@ class Page extends BaseComponent implements HtmlPageInterface
     */
     public function renderPageNotFound(array $data = [], ?string $language = null, ?string $templateName = null)
     {
-        $templateName = $templateName ?? $this->getCurrentTemplate();
+        $templateName = $templateName ?? $this->templateName;
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';
         $language = $language ?? Self::$defaultLanguage;
 
@@ -581,7 +558,7 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     public function renderApplicationError(array $data = [], ?string $language = null, ?string $templateName = null)
     {
-        $templateName = $templateName ?? $this->getCurrentTemplate();
+        $templateName = $templateName ?? $this->templateName;
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';
         $language = $language ?? Self::$defaultLanguage;
 
@@ -598,7 +575,7 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     public function renderSystemError(array $error = [], ?string $language = null, ?string $templateName = null)
     {    
-        $templateName = $templateName ?? $this->getCurrentTemplate();
+        $templateName = $templateName ?? $this->templateName;
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';        
         $language = $language ?? Self::$defaultLanguage;
 

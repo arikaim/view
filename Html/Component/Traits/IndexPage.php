@@ -27,10 +27,10 @@ trait IndexPage
 
         switch ($this->location) {
             case ComponentInterface::TEMPLATE_COMPONENT:
-                $templateName = $this->getTemplateName();
+                $templateName = $this->templateName;
                 break;
             case ComponentInterface::EXTENSION_COMPONENT:
-                $templateName = $this->getTemplateName() . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR;
+                $templateName = $this->templateName . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR;
                 break; 
         }
     

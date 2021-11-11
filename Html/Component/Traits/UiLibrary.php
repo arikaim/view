@@ -36,7 +36,6 @@ trait UiLibrary
         }
         $versions = $properties->get('versions',[]);
        
-
         $properties['files'] = (isset($versions[$version]) == true) ? $versions[$version]['files'] : [];
         if (isset($versions[$version]['async']) == true) {
             $properties['async'] = $versions[$version]['async'];
@@ -78,7 +77,7 @@ trait UiLibrary
         $urlParams = ($properties->get('params-type') == 'url') ? '?' . \http_build_query($params) : '';                  
         $files = [];
 
-        foreach($properties->get('files') as $file) {   
+        foreach ($properties->get('files') as $file) {   
             $libraryFile = Path::getLibraryFilePath($libraryName,$file); 
             $fileType = \pathinfo($libraryFile,PATHINFO_EXTENSION);       
             $fileType = (empty($fileType) == true) ? 'js' : $fileType;
@@ -121,7 +120,7 @@ trait UiLibrary
     
         $libraryPath = Path::getLibraryPath($libraryName);
 
-        foreach($properties->get('files') as $file) {
+        foreach ($properties->get('files') as $file) {
             $type = \pathinfo($libraryPath . $file,PATHINFO_EXTENSION);
             $item = [
                 'file'        => (Utils::isValidUrl($file) == true) ? $file . $urlParams : Url::getLibraryFileUrl($libraryName,$file) . $urlParams,
