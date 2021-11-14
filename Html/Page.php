@@ -215,17 +215,17 @@ class Page extends BaseComponent implements HtmlPageInterface
     {  
         // add global variables       
         $language = $language ?? Self::$defaultLanguage;
-        $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
-        $this->view->addGlobal('template_url',$this->templateUrl . '/');
-        $this->view->addGlobal('current_language',$language);
-        $this->view->addGlobal('page_component_name',$name);
-
         $this->fullName = $name;
         $this->language = $language;
 
         $this->init();
         $this->resolve($params);  
-           
+       
+        $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
+        $this->view->addGlobal('template_url',$this->templateUrl . '/');
+        $this->view->addGlobal('current_language',$language);
+        $this->view->addGlobal('page_component_name',$name);
+
         // page head
         if (\is_array($this->properties['head'] ?? null) == true) {
             $this->resolvePageHead($this->properties['head'],$this->templateUrl);
