@@ -68,12 +68,13 @@ trait IncludeOption
             return null;
         }
 
-        $this->addIncludedComponent($includeFile,$this->componentType);
+        $this->addIncludedComponent($includeFile,$this->componentType,$component->id);
         
         return [
             'url'            => $files,
             'component_name' => $includeFile,
-            'type'           => $this->componentType
+            'component_id'   => $component->id,
+            'component_type' => $component->getComponentType()
         ];                     
     }
 }

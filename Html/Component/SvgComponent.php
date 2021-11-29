@@ -28,7 +28,15 @@ class SvgComponent extends BaseComponent implements HtmlComponentInterface
      */
     public function __construct(string $name, string $language, string $viewPath, string $extensionsPath, string $primaryTemplate) 
     {
-        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'svg');
+        parent::__construct(
+            $name,
+            'components',
+            $language,
+            $viewPath,
+            $extensionsPath,
+            $primaryTemplate,
+            HtmlComponentInterface::SVG_COMPONENT_TYPE
+        );
     }
 
     /**
@@ -68,6 +76,7 @@ class SvgComponent extends BaseComponent implements HtmlComponentInterface
      */
     public function resolve(array $params = []): bool
     {    
+        parent::resolve($params);
         $this->mergeContext($params);
         
         return true;

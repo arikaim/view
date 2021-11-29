@@ -177,6 +177,13 @@ class BaseComponent implements ComponentInterface
     protected $options = [];
     
     /**
+     * Component Id
+     *
+     * @var string|null
+     */
+    public $id;
+
+    /**
      * Constructor
      *
      * @param string $name
@@ -222,7 +229,8 @@ class BaseComponent implements ComponentInterface
 
         // init context
         $this->context = [
-            '_component_name'  => $this->fullName,    
+            '_component_name'  => $this->fullName,  
+            'component_id'     => $this->id,  
             'component_url'    => $this->url,                
             'current_language' => $this->language,
             'primary_template' => $this->primaryTemplate
@@ -247,6 +255,10 @@ class BaseComponent implements ComponentInterface
      */
     public function resolve(array $params = []): bool
     {
+        // resolve id 
+        $this->id = $params['component_id'] ?? $params['id'] ?? $this->id;
+        $this->context['component_id'] = $this->id;
+        
         return false;
     }
    
@@ -265,15 +277,17 @@ class BaseComponent implements ComponentInterface
      *
      * @param string $name
      * @param string $type
+     * @param string|null $id
      * @return void
      */
-    public function addIncludedComponent(string $name, string $type)
+    public function addIncludedComponent(string $name, string $type, ?string $id = null)
     {
         if (\in_array($name,\array_column($this->includedComponents,'name')) == false) {
             // incldue in page components
             $this->includedComponents[] = [
                 'name' => $name,
-                'type' => $type
+                'type' => $type,
+                'id'   => $id
             ];
         }
     }
@@ -645,7 +659,8 @@ class BaseComponent implements ComponentInterface
             'path'           => $this->filePath,
             'full_path'      => $this->fullPath,
             'component_name' => $this->fullName,
-            'component_type' => $this->componentType,            
+            'component_id'   => $this->id,
+            'component_type' => $this->componentType,                               
             'url'            => $this->getFileUrl($fileName) 
         ],$fileExt);       
     }
@@ -701,6 +716,7 @@ class BaseComponent implements ComponentInterface
             return;  
         }
   
+        $this->id = \str_replace('.','-',$tokens[1]);
         $this->path = \str_replace('.','/',$tokens[1]);
         $this->templateName = $tokens[0];          
         

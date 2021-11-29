@@ -26,7 +26,8 @@ class ComponentFactory
         ComponentInterface::JSON_COMPONENT_TYPE    => '\\Arikaim\\Core\\View\\Html\\Component\\JsonComponent',
         ComponentInterface::SVG_COMPONENT_TYPE     => '\\Arikaim\\Core\\View\\Html\\Component\\SvgComponent',
         ComponentInterface::HTML_COMPONENT_TYPE    => '\\Arikaim\\Core\\View\\Html\\Component\\HtmlComponent',
-        ComponentInterface::JS_COMPONENT_TYPE      => '\\Arikaim\\Core\\View\\Html\\Component\\JsComponent'
+        ComponentInterface::JS_COMPONENT_TYPE      => '\\Arikaim\\Core\\View\\Html\\Component\\JsComponent',
+        ComponentInterface::EMAIL_COMPONENT_TYPE   => '\\Arikaim\\Core\\View\\Html\\EmailView'
     ];
 
     /**
@@ -55,7 +56,7 @@ class ComponentFactory
         }
 
         $class = Self::COMPONENT_RENDER_CLASSES[$type];
-        $component =  new $class($name,$language,$viewPath,$extensionsPath,$primaryTemplate);
+        $component = new $class($name,$language,$viewPath,$extensionsPath,$primaryTemplate);
         $component->init();
 
         return $component;

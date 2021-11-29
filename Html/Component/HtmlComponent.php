@@ -28,7 +28,14 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface
      */
     public function __construct(string $name,string $language,string $viewPath,string $extensionsPath,string $primaryTemplate) 
     {
-        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'html');
+        parent::__construct(
+            $name,
+            'components',
+            $language,
+            $viewPath,
+            $extensionsPath,
+            $primaryTemplate,
+            HtmlComponentInterface::HTML_COMPONENT_TYPE);
     }
 
     /**
@@ -61,6 +68,7 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface
      */
     public function resolve(array $params = []): bool
     {    
+        parent::resolve($params);
         $this->mergeContext($params);
         
         return true;

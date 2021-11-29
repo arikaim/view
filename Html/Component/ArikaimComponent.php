@@ -40,7 +40,14 @@ class ArikaimComponent extends BaseComponent implements HtmlComponentInterface, 
      */
     public function __construct(string $name,string $language,string $viewPath,string $extensionsPath,string $primaryTemplate) 
     {
-        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'arikaim');
+        parent::__construct(
+            $name,'components',
+            $language,
+            $viewPath,
+            $extensionsPath,
+            $primaryTemplate,
+            HtmlComponentInterface::ARIKAIM_COMPONENT_TYPE
+        );
     }   
 
     /**
@@ -66,8 +73,7 @@ class ArikaimComponent extends BaseComponent implements HtmlComponentInterface, 
         $this->loadOptions(); 
         $this->resolveHtmlContent();
         // options
-        $this->processIncludeOption();    
-        $this->addComponentFile('js');           
+        $this->processIncludeOption();                  
     }
 
     /**
@@ -77,10 +83,14 @@ class ArikaimComponent extends BaseComponent implements HtmlComponentInterface, 
      * @return bool
      */
     public function resolve(array $params = []): bool
-    {        
+    {         
+        parent::resolve($params);
+        $this->addComponentFile('js');    
+
         if ($this->isValid() == false) {           
             return false;                
         }
+       
         $this->mergeProperties();
         $this->mergeContext($params);       
         // process data file

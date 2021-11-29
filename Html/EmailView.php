@@ -66,7 +66,7 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
             $view->getViewPath(),
             $view->getExtensionsPath(),
             $view->getPrimaryTemplate(),
-            ComponentInterface::ARIKAIM_COMPONENT_TYPE
+            ComponentInterface::EMAIL_COMPONENT_TYPE
         );
 
         $this->defaultLanguage = $defaultLanguage;

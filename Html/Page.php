@@ -101,7 +101,7 @@ class Page extends BaseComponent implements HtmlPageInterface
             $view->getViewPath(),
             $view->getExtensionsPath(),
             $view->getPrimaryTemplate(),
-            ComponentInterface::ARIKAIM_COMPONENT_TYPE
+            ComponentInterface::PAGE_COMPONENT_TYPE
         );
 
         $this->view = $view; 
@@ -168,7 +168,7 @@ class Page extends BaseComponent implements HtmlPageInterface
             if (\in_array($name,\array_column($this->includedComponents,'name')) == false) {
                 $this->componentsFiles['js'] = \array_merge($this->componentsFiles['js'],$component->getFiles('js'));              
             }
-            $this->addIncludedComponent($name,$type);
+            $this->addIncludedComponent($name,$type,$component->id);
             $this->includedComponents = \array_merge($this->includedComponents,$component->getIncludedComponents());
         } 
               

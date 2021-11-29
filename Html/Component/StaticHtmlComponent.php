@@ -37,7 +37,15 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
      */
     public function __construct(string $name,string $language,string $viewPath,string $extensionsPath,string $primaryTemplate) 
     {
-        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'static');
+        parent::__construct(
+            $name,
+            'components',
+            $language,
+            $viewPath,
+            $extensionsPath,
+            $primaryTemplate,
+            HtmlComponentInterface::STATIC_COMPONENT_TYPE
+        );
     }
 
     /**
@@ -63,8 +71,7 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
         $this->loadOptions();       
         $this->resolveHtmlContent(); 
         // options
-        $this->processIncludeOption();   
-        $this->addComponentFile('js');          
+        $this->processIncludeOption();                
     }
 
     /**
@@ -75,6 +82,9 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
      */
     public function resolve(array $params = []): bool
     {    
+        parent::resolve($params);
+        $this->addComponentFile('js');   
+        
         if ($this->isValid() == false) {                      
             return false;                
         }

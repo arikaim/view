@@ -32,7 +32,15 @@ class JsonComponent extends BaseComponent implements HtmlComponentInterface
      */
     public function __construct(string $name,string $language,string $viewPath,string $extensionsPath,string $primaryTemplate) 
     {
-        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'json');
+        parent::__construct(
+            $name,
+            'components',
+            $language,
+            $viewPath,
+            $extensionsPath,
+            $primaryTemplate,
+            HtmlComponentInterface::JS_COMPONENT_TYPE
+        );
     }
 
     /**
@@ -65,6 +73,7 @@ class JsonComponent extends BaseComponent implements HtmlComponentInterface
      */
     public function resolve(array $params = []): bool
     {    
+        parent::resolve($params);
         if ($this->isValid() == false) {                      
             return false;                
         }

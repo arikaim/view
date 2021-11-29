@@ -28,7 +28,14 @@ class JsComponent extends BaseComponent implements HtmlComponentInterface
      */
     public function __construct(string $name,string $language,string $viewPath,string $extensionsPath,string $primaryTemplate) 
     {
-        parent::__construct($name,'components',$language,$viewPath,$extensionsPath,$primaryTemplate,'js');
+        parent::__construct(
+            $name,
+            'components',
+            $language,
+            $viewPath,
+            $extensionsPath,
+            $primaryTemplate,
+            HtmlComponentInterface::JS_COMPONENT_TYPE);
     }
 
     /**
@@ -48,9 +55,7 @@ class JsComponent extends BaseComponent implements HtmlComponentInterface
      */
     public function init(): void 
     {
-        parent::init();  
-        
-        $this->addComponentFile('js');   
+        parent::init();    
     }
 
     /**
@@ -61,6 +66,9 @@ class JsComponent extends BaseComponent implements HtmlComponentInterface
      */
     public function resolve(array $params = []): bool
     {    
+        parent::resolve($params);
+        $this->addComponentFile('js');  
+
         $this->mergeContext($params);
         
         return true;
