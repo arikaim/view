@@ -482,7 +482,12 @@ class Page extends BaseComponent implements HtmlPageInterface
             $component = $this->view->createComponent($componentName,'en','empty');
             $file = $component->getIncludeFile('js');
             if (empty($file) == false) {
-                $include['js'][] = $file;
+                $include['js'][] = [
+                    'url'            => $file,
+                    'component_name' => $component->getFullName(),
+                    'component_id'   => $component->id,
+                    'component_type' => 'js',      
+                ];              
             }                
         }    
               
