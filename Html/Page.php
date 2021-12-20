@@ -158,8 +158,8 @@ class Page extends BaseComponent implements HtmlPageInterface
     {
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $language = $language ?? $this->language;
-        $params['template_path'] = Path::TEMPLATES_PATH . $this->templateName . DIRECTORY_SEPARATOR;
-        $params['template_url'] = $this->templateUrl . '/';
+        $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
+        $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/');
         
         $component = $this->view->renderComponent($name,$params,$language,$type);
 
@@ -212,15 +212,15 @@ class Page extends BaseComponent implements HtmlPageInterface
      * @return ComponentInterface
     */
     public function render(string $name, array $params = [], ?string $language = null)
-    {  
-        // add global variables       
-        $language = $language ?? Self::$defaultLanguage;
+    {         
+        $language = $language ?? $this->language;
         $this->fullName = $name;
         $this->language = $language;
 
         $this->init();
         $this->resolve($params);  
-       
+
+        // add global variables       
         $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
         $this->view->addGlobal('template_url',$this->templateUrl . '/');
         $this->view->addGlobal('current_language',$language);
@@ -344,7 +344,7 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     public function getCurrentTemplate(): string
     { 
-        return $this->templateName;
+        return (empty($this->templateName) == true) ? $this->primaryTemplate : $this->templateName;
     }
 
     /**
@@ -546,9 +546,9 @@ class Page extends BaseComponent implements HtmlPageInterface
     */
     public function renderPageNotFound(array $data = [], ?string $language = null, ?string $templateName = null)
     {
-        $templateName = $templateName ?? $this->templateName;
+        $templateName = $templateName ?? $this->getCurrentTemplate();
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';
-        $language = $language ?? Self::$defaultLanguage;
+        $language = $language ?? $this->language;
 
         return $this->render($templateName . Self::PAGE_NOT_FOUND,['error' => $data],$language);
     }
@@ -563,9 +563,9 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     public function renderApplicationError(array $data = [], ?string $language = null, ?string $templateName = null)
     {
-        $templateName = $templateName ?? $this->templateName;
+        $templateName = $templateName ?? $this->getCurrentTemplate();
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';
-        $language = $language ?? Self::$defaultLanguage;
+        $language = $language ?? $this->language;
 
         return $this->render($templateName . Self::APPLICATION_ERROR_PAGE,['error' => $data],$language);
     }
@@ -580,9 +580,9 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     public function renderSystemError(array $error = [], ?string $language = null, ?string $templateName = null)
     {    
-        $templateName = $templateName ?? $this->templateName;
+        $templateName = $templateName ?? $this->getCurrentTemplate();
         $templateName = ($templateName == Self::SYSTEM_TEMPLATE_NAME) ? $templateName . ':' : $templateName . '>';        
-        $language = $language ?? Self::$defaultLanguage;
+        $language = $language ?? $this->language;
 
         return $this->render($templateName . Self::SYSTEM_ERROR_PAGE,$error,$language);      
     }
