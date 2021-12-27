@@ -13,6 +13,7 @@ use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\Collection\Collection;
 use Arikaim\Core\View\Html\PageHead;
 use Arikaim\Core\Utils\Text;
+
 use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Http\Url;
 
@@ -448,37 +449,40 @@ class Page extends BaseComponent implements HtmlPageInterface
      * @return array
      */
     protected function resolveIncludeFiles(array $include, string $url): array
-    {
-        $include['js'] = $include['js'] ?? [];
-        $include['css'] = $include['css'] ?? [];
-        $include['components'] = $include['components'] ?? [];
+    {                    
         $include['library'] = $include['library'] ?? [];
-        $include['js'] = \array_map(function($value) use($url) {
-            $tokens = \explode(':',$value);
+        $include['js'] = \array_map(function($file) use($url) {
+            if (Url::isValid($file) == true) {
+                return $file;
+            }            
+            $tokens = \explode(':',$file);           
             if (isset($tokens[1]) == true) {
-                $value = $tokens[1];
+                $file = $tokens[1];
                 $url = Url::getTemplateUrl($tokens[0]);
             } else {
-                $value = $tokens[0];
+                $file = $tokens[0];
             }
            
-            return $url . '/js/' . $value; 
-        },$include['js']);
+            return $url . '/js/' . $file; 
+        },$include['js'] ?? []);
       
-        $include['css'] = \array_map(function($value) use($url) {
-            $tokens = \explode(':',$value);
+        $include['css'] = \array_map(function($file) use($url) {
+            if (Url::isValid($file) == true) {
+                return $file;
+            }
+            $tokens = \explode(':',$file);           
             if (isset($tokens[1]) == true) {
-                $value = $tokens[1];
+                $file = $tokens[1];
                 $url = Url::getTemplateUrl($tokens[0]);
             } else {
-                $value = $tokens[0];
+                $file = $tokens[0];
             }
             
-            return $url . '/css/' . $value;         
-        },$include['css']);
+            return $url . '/css/' . $file;         
+        },$include['css'] ?? []);
        
         // include components
-        foreach ($include['components'] as $componentName) {               
+        foreach ($include['components'] ?? [] as $componentName) {               
             $component = $this->view->createComponent($componentName,'en','empty');
             $file = $component->getIncludeFile('js');
             if (empty($file) == false) {
