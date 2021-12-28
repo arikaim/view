@@ -9,11 +9,11 @@
  */
 namespace Arikaim\Core\View\Html\Component\Traits;
 
-use Arikaim\Core\Packages\PackageManager;
 use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Utils\Utils;
 use Arikaim\Core\Http\Url;
 use Arikaim\Core\Utils\Text;
+use Arikaim\Core\Collection\Collection;
 
 /**
  * UiLibrary helpers
@@ -28,9 +28,13 @@ trait UiLibrary
      * @return Collection
      */
     public function getLibraryProperties(string $name, ?string $version = null)
-    {
-        $properties = PackageManager::loadPackageProperties($name,Path::LIBRARY_PATH);
-       
+    { 
+        $fileName = Path::getLibraryPath($name) . 'arikaim-package.json';
+        $json = \file_get_contents($fileName);
+        $data = \json_decode($json,true);
+        $data = (\is_array($data) == false) ? [] : $data;
+        $properties = new Collection($data);
+
         if (empty($version) == true) {       
             return $properties;
         }
@@ -113,7 +117,7 @@ trait UiLibrary
         if (count($params) > 0) {
             $urlParams = ($properties->get('params-type') == 'url') ? '?' . \http_build_query($params) : '';
             \array_walk($params,function (&$value,$key) {
-                $value = ' ' . $key .'="'. $value. '"';
+                $value = ' ' . $key . '="' . $value. '"';
             });
             $paramsText = \implode(',',\array_values($params));
         }         

@@ -26,7 +26,13 @@ class EmptyComponent extends BaseComponent implements HtmlComponentInterface
      * @param string $extensionsPath
      * @param string $primaryTemplate
      */
-    public function __construct(string $name,string $language,string $viewPath,string $extensionsPath,string $primaryTemplate) 
+    public function __construct(
+        string $name,
+        string $language,
+        string $viewPath,
+        string $extensionsPath,
+        string $primaryTemplate
+    ) 
     {
         parent::__construct(
             $name,'components',

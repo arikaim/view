@@ -28,15 +28,8 @@ trait Properties
     */
     private function resolvePropertiesFileName(): void
     {
-        if ($this->language != 'en') {
-            $fileName = $this->name . '-' . $this->language . '.json';
-            if (\file_exists($this->fullPath . $fileName) == true) {
-                $this->setPropertiesFileName($this->fullPath . $fileName);   
-                return;
-            }          
-        }
-
-        $fileName = $this->name . '.json';
+        $fileName = ($this->language != 'en') ? $this->name . '-' . $this->language . '.json' : $this->name . '.json';
+                   
         if (\file_exists($this->fullPath . $fileName) == true) {
             $this->setPropertiesFileName($this->fullPath . $fileName);   
         }      
@@ -52,7 +45,7 @@ trait Properties
         $this->resolvePropertiesFileName();
         $fileName = $this->getPropertiesFileName();
         $this->properties = [];
-        
+    
         if (empty($fileName) == false) {
             $json = \file_get_contents($fileName);
             $properties = \json_decode($json,true);   
@@ -77,11 +70,7 @@ trait Properties
      */
     public function hasProperties(): bool
     {
-        if (isset($this->files['properties']) == true) {
-            return (\count($this->files['properties']) > 0);
-        }
-
-        return false;
+        return (isset($this->files['properties']) == true) ? (\count($this->files['properties']) > 0) : false;         
     }
 
     /**

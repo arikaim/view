@@ -161,7 +161,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $language = $language ?? $this->language;
         $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
         $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/');
-        
+    
         $component = $this->view->renderComponent($name,$params,$language,$type);
 
         if (\count($component->getFiles('js')) > 0) {
@@ -514,9 +514,8 @@ class Page extends BaseComponent implements HtmlPageInterface
             }
         }
        
-
         $files = [];
-        foreach($libraryList as $library) {      
+        foreach ($libraryList as $library) {      
             list($libraryName,$libraryVersion,$libraryOption) = $this->parseLibraryName($library);
             $disabled = $this->libraryOptions[$libraryName]['disabled'] ?? false;
             if ($disabled == true) {

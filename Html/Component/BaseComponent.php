@@ -17,6 +17,13 @@ use Arikaim\Core\Interfaces\View\ComponentInterface;
  */
 class BaseComponent implements ComponentInterface
 {
+    const NAME_SEPARATORS = [
+        '::' => ComponentInterface::EXTENSION_COMPONENT,
+        '>'  => ComponentInterface::PRIMARY_TEMLATE,
+        ':'  => ComponentInterface::TEMPLATE_COMPONENT,
+        '~'  => ComponentInterface::COMPONENTS_LIBRARY
+    ];
+
     /**
      * Component name
      *
@@ -175,7 +182,14 @@ class BaseComponent implements ComponentInterface
      * @var array
      */
     protected $options = [];
-    
+
+    /**
+     * Template path
+     *
+     * @var string|null
+     */
+    protected $templatePath = null;
+
     /**
      * Component Id
      *
@@ -307,7 +321,7 @@ class BaseComponent implements ComponentInterface
      *
      * @param string $name
      * @param string $language
-     * @return mixed
+     * @return ComponentInterface
      */
     public function create(string $name, string $language)
     {
@@ -689,33 +703,20 @@ class BaseComponent implements ComponentInterface
     {
         $nameSplit = \explode('/',$name);  
         $name = $nameSplit[0];
- 
-        if (\stripos($name,'::') !== false) {
-            // extension component
-            $tokens = \explode('::',$name);     
-            $this->location = ComponentInterface::EXTENSION_COMPONENT;
-        } elseif (\stripos($name,'>') !== false) {
-            // Primary template
-            $tokens = \explode('>',$name);
-            $this->location = ComponentInterface::PRIMARY_TEMLATE;
-        } elseif (\stripos($name,':') !== false) {
-            // template component          
-            $tokens = \explode(':',$name);  
-            $this->location = ComponentInterface::TEMPLATE_COMPONENT;
-            if ($tokens[0] == 'components') {
-                $tokens[0] = 'semantic';
-                $this->location = ComponentInterface::COMPONENTS_LIBRARY;
-            } 
-        } elseif (\stripos($name,'~') !== false) {
-            // template component          
-            $tokens = \explode('~',$name);  
-            $this->location = ComponentInterface::COMPONENTS_LIBRARY;      
-        } else {
-            // component location not set                         
-            $this->location = ComponentInterface::UNKNOWN_COMPONENT;     
+        
+        foreach (Self::NAME_SEPARATORS as $key => $value) {
+            $tokens = \explode($key,$name);
+            if (isset($tokens[1]) == true) {
+                $this->location = $value;
+                break;
+            }    
+        }
+
+        if ($this->location == ComponentInterface::UNKNOWN_COMPONENT) {
+            // component location not set                                    
             return;  
         }
-  
+
         $this->id = \str_replace('.','-',$tokens[1]);
         $this->path = \str_replace('.','/',$tokens[1]);
         $this->templateName = $tokens[0];          
@@ -726,17 +727,21 @@ class BaseComponent implements ComponentInterface
 
         if ($this->location == ComponentInterface::PRIMARY_TEMLATE) {
             // resolve component location (template or extension)
-            $componentPath = $this->getComponentFullPath(ComponentInterface::TEMPLATE_COMPONENT,$this->primaryTemplate);
+            $this->fullPath = $this->getComponentFullPath(ComponentInterface::TEMPLATE_COMPONENT,$this->primaryTemplate);
            
-            if (\file_exists($componentPath) == true) {               
+            if (\file_exists($this->fullPath) == true) {               
                 // primary template component
                 $this->location = ComponentInterface::TEMPLATE_COMPONENT;
-                $this->templateName = $this->primaryTemplate;                
+                $this->templateName = $this->primaryTemplate;
+
+                return;                
             } else {
                 // set extension component
-                $this->location = ComponentInterface::EXTENSION_COMPONENT;               
-            }                 
+                $this->location = ComponentInterface::EXTENSION_COMPONENT;                       
+            }                      
         }
+
+        $this->fullPath = $this->getComponentFullPath($this->location,$this->templateName);      
     }   
 
     /**
@@ -784,7 +789,7 @@ class BaseComponent implements ComponentInterface
      */
     public function getTemplatePath(string $template, int $location): string 
     {   
-        switch($location) {
+        switch ($location) {
             case ComponentInterface::EXTENSION_COMPONENT:
                 return $this->extensionsPath . $template . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR;
             case ComponentInterface::TEMPLATE_COMPONENT:
@@ -831,6 +836,7 @@ class BaseComponent implements ComponentInterface
         if ($location == ComponentInterface::COMPONENTS_LIBRARY)  {
             return $this->getTemplatePath($templateName,$location) . $this->path . DIRECTORY_SEPARATOR; 
         } 
+        
         return $this->getTemplatePath($templateName,$location) . $this->basePath . DIRECTORY_SEPARATOR . $this->path . DIRECTORY_SEPARATOR;     
     }
 
@@ -841,8 +847,6 @@ class BaseComponent implements ComponentInterface
      */
     protected function resolvePath(): void 
     {
-        $this->fullPath = $this->getComponentFullPath($this->location,$this->templateName);
-
         $path = $this->basePath . DIRECTORY_SEPARATOR . $this->path . DIRECTORY_SEPARATOR;   
         $templatePath = DIRECTORY_SEPARATOR . $this->templateName . DIRECTORY_SEPARATOR;
         $urlPath = (empty($this->path) == false) ? $this->path . '/' : '';

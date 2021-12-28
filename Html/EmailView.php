@@ -13,7 +13,6 @@ use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\Utils\File;
 use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Utils\Utils;
-use Arikaim\Core\Http\Url;
 
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
 use Arikaim\Core\Interfaces\View\ComponentInterface;
