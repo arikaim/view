@@ -162,7 +162,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
         $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/');
     
-        $component = $this->view->renderComponent($name,$params,$language,$type);
+        $component = $this->view->renderComponent($name,$language,$params,$type);
 
         if (\count($component->getFiles('js')) > 0) {
             // include    
