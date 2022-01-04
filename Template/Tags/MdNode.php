@@ -34,7 +34,7 @@ class MdNode extends Node implements NodeOutputInterface
      * @param string $tag
      * @param string $twigExtensionClass
      */
-    public function __construct(Node $body, $params = [], $line = 0, $tag = 'md', string $twigExtensionClass)
+    public function __construct(Node $body, string $twigExtensionClass, $params = [], $line = 0, $tag = 'md')
     {
         $this->twigExtensionClass = $twigExtensionClass;
 

@@ -34,7 +34,7 @@ class ComponentNode extends Node implements NodeOutputInterface
      * @param string $tag
      * @param string $twigExtensionClass
      */
-    public function __construct(Node $body, $params = [], $line = 0, $tag = 'component', string $twigExtensionClass)
+    public function __construct(Node $body, string $twigExtensionClass, $params = [], $line = 0, $tag = 'component')
     {
         $this->twigExtensionClass = $twigExtensionClass;
 

@@ -53,7 +53,15 @@ class CacheTagParser extends AbstractTokenParser
         $body = $this->parser->subparse([$this,'decideTagEnd'],true);
         $stream->expect(Token::BLOCK_END_TYPE);
         
-        return new CacheNode($key,$keyName,null,$body,$token->getLine(),$this->getTag(),$this->twigExtensionClass);
+        return new CacheNode(
+            $key,
+            $keyName,
+            null,
+            $body,
+            $token->getLine(),
+            $this->getTag(),
+            $this->twigExtensionClass
+        );
     }
 
     /**
