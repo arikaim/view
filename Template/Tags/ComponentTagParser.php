@@ -53,13 +53,15 @@ class ComponentTagParser extends AbstractTokenParser
         $body = $this->parser->subparse([$this,'decideTagEnd'],true);
         $stream->expect(Token::BLOCK_END_TYPE);
           
-        return new ComponentNode($body,[
+        return new ComponentNode(
+            $body,
+            $this->twigExtensionClass,
+            [
                 'name' => $componentName,
                 'type' => $type
             ],
             $token->getLine(),
-            $this->getTag(),
-            $this->twigExtensionClass
+            $this->getTag()           
         );
     }
 

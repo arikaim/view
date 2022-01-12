@@ -265,7 +265,8 @@ class Page extends BaseComponent implements HtmlPageInterface
         if ($includes !== false) {           
             return $includes;
         }
-      
+        $includes = [];
+        
         // template include files        
         $templatefiles = $this->getTemplateIncludeFiles();     
         // page include files

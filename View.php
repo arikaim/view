@@ -132,12 +132,12 @@ class View implements ViewInterface
      * @param string|null $primaryTemplate
      */
     public function __construct(
-        CacheInterface $cache,   
-        array $services = [],    
+        CacheInterface $cache,           
         string $viewPath,
         string $extensionsPath,
         string $templatesPath,
         string $componentsPath,
+        array $services = [],   
         array $settings = [],
         ?string $primaryTemplate = null,
         ?string $templateTheme = null)
@@ -235,7 +235,7 @@ class View implements ViewInterface
             'message' => 'Error in html component <b>' . $name . '</b>'. $errorCode
         ];
 
-        $component = $this->renderComponent(Self::COMPONENT_ERROR_NAME,$errorMessage,$language,'static');
+        $component = $this->renderComponent(Self::COMPONENT_ERROR_NAME,$language,$errorMessage,'static');
         $component->setError($errorCode);
       
         $component->setOption('redirect',$options['access']['redirect'] ?? null);

@@ -51,7 +51,13 @@ class MdTagParser extends AbstractTokenParser
         $body = $this->parser->subparse([$this,'decideTagEnd'],true);
         $stream->expect(Token::BLOCK_END_TYPE);
         
-        return new MdNode($body,[],$line,$this->getTag(),$this->twigExtensionClass);
+        return new MdNode(
+            $body,
+            $this->twigExtensionClass,
+            [],
+            $line,
+            $this->getTag()          
+        );
     }
 
     /**

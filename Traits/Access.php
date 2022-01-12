@@ -47,7 +47,7 @@ trait Access
      */
     public function checkAuthOption(array $accessOptions): bool
     {
-        $auth = $accessOptions['auth'] ?? null;
+        $auth = $accessOptions['auth'] ?? '';
         if ((\strtolower($auth) == 'none') || (empty($auth) == true)) {
             return true;
         }
@@ -69,7 +69,7 @@ trait Access
      */
     public function checkPermissionOption(array $accessOptions): bool
     {
-        $permission = $accessOptions['permission'] ?? null;
+        $permission = $accessOptions['permission'] ?? '';
 
         if ((\strtolower($permission) == 'none') || (empty($permission) == true)) {
             return true;
