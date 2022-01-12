@@ -181,12 +181,12 @@ class View implements ViewInterface
      * Render html component
      *
      * @param string $name
-     * @param array|null $params
      * @param string $language
+     * @param array|null $params
      * @param string|null $type
      * @return Arikaim\Core\Interfaces\View\ComponentInterface
     */
-    public function renderComponent(string $name, ?array $params = [], string $language, ?string $type = null)
+    public function renderComponent(string $name, string $language, ?array $params = [], ?string $type = null)
     {
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $cacheItemName = 'html.component.' . $name . '.' . $language;        
