@@ -296,7 +296,7 @@ class BaseComponent implements ComponentInterface
      */
     public function addIncludedComponent(string $name, string $type, ?string $id = null)
     {
-        if (\in_array($name,\array_column($this->includedComponents,'name')) == false) {
+        if (\in_array($id,\array_column($this->includedComponents,'id')) == false) {
             // incldue in page components
             $this->includedComponents[] = [
                 'name' => $name,

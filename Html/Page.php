@@ -80,6 +80,13 @@ class Page extends BaseComponent implements HtmlPageInterface
     protected $componentsFiles = [];
 
     /**
+     * Component instances list
+     *
+     * @var array
+     */
+    public $componentInstances = [];
+
+    /**
      * View 
      *
      * @var ViewInterface
@@ -168,12 +175,35 @@ class Page extends BaseComponent implements HtmlPageInterface
             // include    
             if (\in_array($name,\array_column($this->includedComponents,'name')) == false) {
                 $this->componentsFiles['js'] = \array_merge($this->componentsFiles['js'],$component->getFiles('js'));              
+            } else {
+                $this->addComponentInstance($name,$type,$component->id);
             }
+
             $this->addIncludedComponent($name,$type,$component->id);
             $this->includedComponents = \array_merge($this->includedComponents,$component->getIncludedComponents());
         } 
               
         return $component;   
+    }
+
+    /**
+     * Add component instance
+     *
+     * @param string $name
+     * @param string $type
+     * @param string|null $id
+     * @return void
+     */
+    public function addComponentInstance(string $name, string $type, ?string $id = null)
+    {
+        if (\in_array($id,\array_column($this->componentInstances,'id')) == false) {
+            // incldue in page components
+            $this->componentInstances[] = [
+                'name' => $name,
+                'type' => $type,
+                'id'   => $id
+            ];
+        }
     }
 
     /**
@@ -238,12 +268,14 @@ class Page extends BaseComponent implements HtmlPageInterface
         $includes = $this->getPageIncludes($name,$language);   
 
         $params = \array_merge($params,[              
-            'body'             => $body,           
-            'library_files'    => $includes['library_files'] ?? null,
-            'template_files'   => $includes['template_files'] ?? null,
-            'page_files'       => $includes['page_files'] ?? null, 
-            'component_files'  => $this->componentsFiles,
-            'head'             => $this->head->toArray()
+            'body'                => $body,           
+            'library_files'       => $includes['library_files'] ?? null,
+            'template_files'      => $includes['template_files'] ?? null,
+            'page_files'          => $includes['page_files'] ?? null, 
+            'component_files'     => $this->componentsFiles,
+            'included_components' => $this->includedComponents,
+            'component_instances' => $this->componentInstances,
+            'head'                => $this->head->toArray()
         ]);   
 
         $htmlCode = $this->view->fetch($includes['index'],$params);
