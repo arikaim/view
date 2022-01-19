@@ -84,7 +84,7 @@ class Page extends BaseComponent implements HtmlPageInterface
      *
      * @var array
      */
-    public $componentInstances = [];
+    protected $componentInstances = [];
 
     /**
      * View 
@@ -369,6 +369,16 @@ class Page extends BaseComponent implements HtmlPageInterface
     public function getComponentsFiles(): array
     {
         return $this->componentsFiles;
+    }
+
+    /**
+     * Get components include files
+     *
+     * @return array
+     */
+    public function getComponentInstances(): array
+    {
+        return $this->componentInstances;
     }
 
     /**
