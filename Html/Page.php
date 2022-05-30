@@ -303,13 +303,21 @@ class Page extends BaseComponent implements HtmlPageInterface
         $templatefiles = $this->getTemplateIncludeFiles();     
         // page include files
         $pageFiles = $this->getPageIncludeFiles();
-        // set page component includ files
+        // set page component include files
         $includes['page_files'] = $this->getFiles();
 
-        // merge template and page include files
-        $includes['template_files'] = \array_merge_recursive($templatefiles,$pageFiles);
-        // library files
-        $includes['library_files'] = \array_merge($includes['template_files']['library_files'] ?? [],$pageFiles['library_files'] ?? []); 
+        $removeTemplateFiles = (bool)$this->getOption('remove-template-files',false);  
+        if ($removeTemplateFiles == true) {
+            $templatefiles = [];
+            $includes['template_files'] = $pageFiles;
+            $includes['library_files'] = $pageFiles['library_files'] ?? [];
+        } else {
+            // merge template and page include files
+            $includes['template_files'] = \array_merge_recursive($templatefiles,$pageFiles);
+            // library files
+            $includes['library_files'] = \array_merge($includes['template_files']['library_files'] ?? [],$pageFiles['library_files'] ?? []); 
+        }
+
         unset($includes['template_files']['library_files']);
 
         // get index file
