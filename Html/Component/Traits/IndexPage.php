@@ -23,8 +23,6 @@ trait IndexPage
      */
     public function getIndexFile(string $currentTemlate): string
     {        
-        $templateName = $currentTemlate;
-
         switch ($this->location) {
             case ComponentInterface::TEMPLATE_COMPONENT:
                 $templateName = $this->templateName;
@@ -32,6 +30,9 @@ trait IndexPage
             case ComponentInterface::EXTENSION_COMPONENT:
                 $templateName = $this->templateName . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR;
                 break; 
+            default:
+                $templateName = $currentTemlate;
+                break;
         }
     
         return DIRECTORY_SEPARATOR . $templateName . DIRECTORY_SEPARATOR . $this->getBasePath() . DIRECTORY_SEPARATOR . 'index.html';            

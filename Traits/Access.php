@@ -54,7 +54,7 @@ trait Access
 
         // add auth provider
         $provider = $this->getService('access')->requireProvider($auth);
-        if (\is_object($provider) == false) {
+        if ($provider == null) {
             return false;
         }
 
