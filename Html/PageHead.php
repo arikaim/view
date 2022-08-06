@@ -94,11 +94,11 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param array $data
      * @return PageHead
      */
-    public function setMetaTags(array $data)
+    public function setMetaTags(array $data): object
     {
-        $this->set('title',$data['title']);
-        $this->set('description',$data['description']);
-        $this->set('keywords',$data['keywords']);
+        $this->set('title',$data['title'] ?? '');
+        $this->set('description',$data['description'] ?? '');
+        $this->set('keywords',$data['keywords'] ?? '');
         
         return $this;
     }
@@ -109,7 +109,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param array $data
      * @return PageHead
      */
-    public function applyDefaultMetaTags(array $data)
+    public function applyDefaultMetaTags(array $data): object
     {
         $this->applyDefault('title',$data);
         $this->applyDefault('description',$data);
@@ -124,7 +124,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param array $items
      * @return PageHead
      */
-    public function applyDefaultItems(array $items)
+    public function applyDefaultItems(array $items): object
     {
         foreach ($items as $key => $value) {           
             if (empty($this->get($key)) == true) {               
@@ -142,11 +142,10 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param array $data
      * @return PageHead
      */
-    public function applyDefault(string $key, array $data)
+    public function applyDefault(string $key, array $data): object
     {
-        if (empty($this->get($key)) == true) {
-            $value = $data[$key] ?? null;
-            $this->set($key,$value);
+        if (empty($this->get($key)) == true) {          
+            $this->set($key,$data[$key] ?? null);
         }
 
         return $this;
@@ -159,7 +158,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param string $default
      * @return PageHead
      */
-    public function applyOgProperty(string $key, $default = '')
+    public function applyOgProperty(string $key, $default = ''): object
     {
         $value = $this->get($key,$default);
         if (empty($value) == false) {
@@ -176,7 +175,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param string $default
      * @return PageHead
      */
-    public function applyTwitterProperty(string $key, $default = '')
+    public function applyTwitterProperty(string $key, $default = ''): object
     {
         $value = $this->get($key,$default);
         if (empty($value) == false) {
@@ -205,7 +204,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param mixed ...$keywords
      * @return string
      */
-    public function createKeywords(...$keywords)
+    public function createKeywords(...$keywords): string
     {
         $words = [];
         foreach ($keywords as $text) {          
@@ -222,7 +221,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param array ...$keywords
      * @return PageHead
      */
-    public function applyDefaultKeywors(...$keywords)
+    public function applyDefaultKeywors(...$keywords): object
     {
         if (empty($this->get('keywords')) == true) {
             $this->keywords(...$keywords);
@@ -239,7 +238,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param array $options
      * @return PageHead
      */
-    public function og(string $name, $value, array $options = []) 
+    public function og(string $name, $value, array $options = []): object
     {      
         return $this->addProperty('og',$name,$value,$options);
     }
@@ -250,11 +249,9 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param string|null $title
      * @return PageHead
      */
-    public function ogTitle(?string $title = null)
+    public function ogTitle(?string $title = null): object
     {
-        $title = $this->get('title',$title);   
-
-        return $this->og('title',$title);
+        return $this->og('title',$this->get('title',$title));
     }
     
     /**
@@ -263,11 +260,9 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param string|null $description
      * @return PageHead
      */
-    public function ogDescription(?string $description = null)
+    public function ogDescription(?string $description = null): object
     {
-        $description = $this->get('description',$description);   
-
-        return $this->og('description',$description);
+        return $this->og('description',$this->get('description',$description));
     }
 
     /**
@@ -278,7 +273,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param array $options
      * @return PageHead
      */
-    public function twitter(string $name, $value, array $options = [])
+    public function twitter(string $name, $value, array $options = []): object
     {
         return $this->addProperty('twitter',$name,$value,$options);      
     }
@@ -289,11 +284,9 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param string|null $title
      * @return PageHead
      */
-    public function twitterTitle(?string $title = null)
+    public function twitterTitle(?string $title = null): object
     {
-        $title = $this->get('title',$title); 
-
-        return $this->twitter('title',$title);
+        return $this->twitter('title',$this->get('title',$title));
     }
 
     /**
@@ -302,11 +295,9 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param string|null $description
      * @return PageHead
      */
-    public function twitterDescription(?string $description = null)
+    public function twitterDescription(?string $description = null): object
     {
-        $description = $this->get('description',$description);     
-
-        return $this->twitter('description',$description);
+        return $this->twitter('description',$this->get('description',$description));
     }
 
     /**
@@ -318,10 +309,9 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * @param array $options
      * @return PageHead
      */
-    protected function addProperty(string $key, string $name, $value, array $options = [])
-    {
-        $property = $this->createProperty($name,$value,$options);
-        $this->data[$key][$name] = $property;
+    protected function addProperty(string $key, string $name, $value, array $options = []): object
+    {      
+        $this->data[$key][$name] = $this->createProperty($name,$value,$options);
 
         return $this;
     }
@@ -359,7 +349,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
         $properties = [];
         foreach ($items as $name => $value) {
             $property = (\is_array($value) == false) ? $this->createProperty($name,$value,[]) : $value;  
-            \array_push($properties,$property);            
+            $properties[] = $property;           
         }
         $this->data[$key] = $properties;
 

@@ -231,11 +231,9 @@ class View implements ViewInterface
     */
     protected function renderComponentError(string $name, string $language, string $errorCode, array $options = [])
     {
-        $errorMessage = [
-            'message' => 'Error in html component <b>' . $name . '</b>'. $errorCode
-        ];
-
-        $component = $this->renderComponent(Self::COMPONENT_ERROR_NAME,$language,$errorMessage,'static');
+        $component = $this->renderComponent(Self::COMPONENT_ERROR_NAME,$language,[
+            'message' => 'Error in html component <b>' . $name . '</b>' . $errorCode
+        ],'static');
         $component->setError($errorCode);
       
         $component->setOption('redirect',$options['access']['redirect'] ?? null);
@@ -451,10 +449,13 @@ class View implements ViewInterface
      */
     public function createEnvironment(?array $paths = null, ?array $settings = null)
     {
-        $loader = $this->createLoader($paths);
-        $settings = $settings ?? $this->settings;
-        
-        return new Environment($loader,$settings);          
+        $loader = new FilesystemLoader($paths ?? [
+            $this->extensionsPath,
+            $this->templatesPath,
+            $this->componentsPath
+        ]);
+         
+        return new Environment($loader,$settings ?? $this->settings);          
     }
 
     /**
@@ -465,30 +466,12 @@ class View implements ViewInterface
     protected function resolveEnvironment(): void
     {
         $this->environment = $this->createEnvironment();
-        $demoMode = $this->settings['demo_mode'] ?? false;
-       
-        $this->environment->addGlobal('demo_mode',$demoMode);      
+        
+        $this->environment->addGlobal('demo_mode',$this->settings['demo_mode'] ?? false);      
         $this->environment->addGlobal('current_language',null);      
         $this->environment->addGlobal('current_url_path',null);      
 
         // add theme globals
         $this->includeThemeGlobals($this->templateTheme);
-    }
-
-    /**
-     * Create template loader
-     *   
-     * @param array|null $paths
-     * @return FilesystemLoader
-     */
-    private function createLoader(?array $paths = null)
-    {             
-        $paths = $paths ?? [
-            $this->extensionsPath,
-            $this->templatesPath,
-            $this->componentsPath
-        ];           
-     
-        return new FilesystemLoader($paths);
     }
 }

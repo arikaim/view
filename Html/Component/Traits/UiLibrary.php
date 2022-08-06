@@ -29,9 +29,8 @@ trait UiLibrary
      */
     public function getLibraryProperties(string $name, ?string $version = null)
     { 
-        $fileName = Path::getLibraryPath($name) . 'arikaim-package.json';
-        $json = \file_get_contents($fileName);
-        $data = \json_decode($json,true);
+        $fileName = Path::getLibraryPath($name) . 'arikaim-package.json';     
+        $data = \json_decode(\file_get_contents($fileName),true);
         $data = (\is_array($data) == false) ? [] : $data;
         $properties = new Collection($data);
 

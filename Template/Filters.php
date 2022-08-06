@@ -54,7 +54,7 @@ class Filters
      *
      * @param mixed $value
      * @param string|null $label
-     * @return mxied
+     * @return mixed
      */
     public static function emptyLabel($value, ?string $label = '')
     {

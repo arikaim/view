@@ -419,12 +419,7 @@ class BaseComponent implements ComponentInterface
      */
     public function hasParent(): bool
     {
-        if (empty($this->path) == true) {
-            return false;
-        }
-        $tokens = \explode('/',$this->path);
-
-        return (\count($tokens) > 0);
+        return (empty($this->path) == true) ? false : (\count(\explode('/',$this->path)) > 0);           
     }
 
     /**
@@ -690,7 +685,7 @@ class BaseComponent implements ComponentInterface
     {
         $this->files[$fileType] = $this->files[$fileType] ?? [];
 
-        \array_push($this->files[$fileType],$file);
+        $this->files[$fileType][] = $file;
     }
 
     /**

@@ -44,13 +44,14 @@ trait Properties
     {       
         $this->resolvePropertiesFileName();
         $fileName = $this->getPropertiesFileName();
-        $this->properties = [];
-    
-        if (empty($fileName) == false) {
-            $json = \file_get_contents($fileName);
-            $properties = \json_decode($json,true);   
-            $this->properties = (\is_array($properties) == true) ? $properties : [];           
-        }                 
+       
+        if (empty($fileName) == false) {        
+            $properties = \json_decode(\file_get_contents($fileName),true);   
+            $this->properties = (\is_array($properties) == true) ? $properties : [];  
+            return;         
+        }           
+        
+        $this->properties = [];      
     }
 
     /**

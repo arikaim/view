@@ -91,8 +91,7 @@ trait Options
             return;
         }
 
-        $json = \file_get_contents($optionsFile);
-        $options = \json_decode($json,true);
+        $options = \json_decode(\file_get_contents($optionsFile),true);
                
         if (($this->removeIncludeOptions == true) && (isset($options['include']) == true)) {
             unset($options['include']);

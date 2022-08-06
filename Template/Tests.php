@@ -22,7 +22,7 @@ class Tests
      * @param mixed $var
      * @return boolean
      */
-    public static function isObject($var)
+    public static function isObject($var): bool
     {
         return \is_object($var);
     }
@@ -33,7 +33,7 @@ class Tests
      * @param mixed $var
      * @return boolean
      */
-    public static function isString($var)
+    public static function isString($var): bool
     {
         return \is_string($var);
     }

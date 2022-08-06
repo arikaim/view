@@ -51,11 +51,10 @@ trait IncludeOption
             $tokens = \explode('|',$includeFile);
             $url = $tokens[0];
             $tokens[0] = 'external';
-            $params = (isset($tokens[1]) == true) ? $tokens : [];  
-
+        
             return [
                 'url'              => $url,
-                'params'           => $params,
+                'params'           => (isset($tokens[1]) == true) ? $tokens : [],
                 'source_component' => 'url'
             ];
         } 

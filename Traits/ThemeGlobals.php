@@ -42,9 +42,8 @@ trait ThemeGlobals
             $fileName = $this->getTemplateThemeFile($themeName);
             if (\file_exists($fileName) == false) {
                 return false;
-            }
-            $json = \file_get_contents($fileName);
-            $themeGlobals = \json_decode($json,true);   
+            }          
+            $themeGlobals = \json_decode(\file_get_contents($fileName),true);   
             if (\is_array($themeGlobals) == false) {
                 return false;
             } 
