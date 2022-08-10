@@ -26,7 +26,6 @@ trait Access
         if (empty($access) == true) {
             return true;
         }
-
         // check access 
         if ($this->checkAuthOption($access) == false) {
            return false;

@@ -10,10 +10,8 @@
 namespace Arikaim\Core\View\Html;
 
 use Arikaim\Core\View\Html\Component\BaseComponent;
-use Arikaim\Core\Collection\Collection;
 use Arikaim\Core\View\Html\PageHead;
 use Arikaim\Core\Utils\Text;
-
 use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Http\Url;
 
@@ -356,17 +354,6 @@ class Page extends BaseComponent implements HtmlPageInterface
         }
 
         $this->head->applyDefaultItems($head);
-    }
-
-    /**
-     * Set page head properties
-     *
-     * @param Collection $head
-     * @return void
-     */
-    public function setHead(Collection $head): void
-    {
-        $this->head = $head;
     }
 
     /**
