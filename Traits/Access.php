@@ -51,13 +51,8 @@ trait Access
             return true;
         }
 
-        // add auth provider
-        $provider = $this->getService('access')->requireProvider($auth);
-        if ($provider == null) {
-            return false;
-        }
-
-        return $this->getService('access')->isLogged();  
+        // switch auth provider
+        return $this->getService('access')->withProvider($auth)->isLogged();
     }
 
     /**

@@ -33,7 +33,7 @@ trait IncludeOption
         // include component files
         foreach ($include as $item) {             
             $file = $this->resolveIncludeFile($item);
-            if (\is_null($file) == true) continue;
+            if ($file === null) continue;
 
             $this->addFile($file,'js');
         }                 
