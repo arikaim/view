@@ -235,7 +235,6 @@ class View implements ViewInterface
             'message' => 'Error in html component <b>' . $name . '</b>' . $errorCode
         ],'static');
         $component->setError($errorCode);
-      
         $component->setOption('redirect',$options['access']['redirect'] ?? null);
 
         return $component;

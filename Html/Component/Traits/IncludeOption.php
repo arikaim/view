@@ -9,8 +9,6 @@
  */
 namespace Arikaim\Core\View\Html\Component\Traits;
 
-use Arikaim\Core\Utils\Utils;
-
 /**
  * Include options for view components
  */
@@ -47,7 +45,7 @@ trait IncludeOption
      */
     protected function resolveIncludeFile(string $includeFile): ?array
     {
-        if (Utils::isValidUrl($includeFile) == true) {             
+        if (\filter_var($includeFile,FILTER_VALIDATE_URL) !== false) {             
             $tokens = \explode('|',$includeFile);
             $url = $tokens[0];
             $tokens[0] = 'external';

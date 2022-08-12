@@ -241,10 +241,9 @@ class Page extends BaseComponent implements HtmlPageInterface
      * @return ComponentInterface
     */
     public function render(string $name, array $params = [], ?string $language = null)
-    {         
-        $language = $language ?? $this->language;
-        $this->fullName = $name;
-        $this->language = $language;
+    {  
+        $this->fullName = $name;       
+        $this->language = $language ?? $this->language;
 
         $this->init();
         $this->resolve($params);  
@@ -252,7 +251,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         // add global variables       
         $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
         $this->view->addGlobal('template_url',$this->templateUrl . '/');
-        $this->view->addGlobal('current_language',$language);
+        $this->view->addGlobal('current_language',$this->language);
         $this->view->addGlobal('page_component_name',$name);
 
         // page head
@@ -263,7 +262,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $params = \array_merge_recursive($params,$this->properties); 
         $body = $this->view->fetch($this->getTemplateFile(),$params);  
 
-        $includes = $this->getPageIncludes($name,$language);   
+        $includes = $this->getPageIncludes($name,$this->language);   
 
         $params = \array_merge($params,[              
             'body'                => $body,           

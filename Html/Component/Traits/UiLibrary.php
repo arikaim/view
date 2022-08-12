@@ -10,10 +10,8 @@
 namespace Arikaim\Core\View\Html\Component\Traits;
 
 use Arikaim\Core\Utils\Path;
-use Arikaim\Core\Utils\Utils;
 use Arikaim\Core\Http\Url;
 use Arikaim\Core\Utils\Text;
-use Arikaim\Core\Collection\Collection;
 
 /**
  * UiLibrary helpers
@@ -25,26 +23,24 @@ trait UiLibrary
      *
      * @param string $name
      * @param string|null $version
-     * @return Collection
+     * @return array
      */
-    public function getLibraryProperties(string $name, ?string $version = null)
+    public function getLibraryProperties(string $name, ?string $version = null): array
     { 
         $fileName = Path::getLibraryPath($name) . 'arikaim-package.json';     
         $data = \json_decode(\file_get_contents($fileName),true);
         $data = (\is_array($data) == false) ? [] : $data;
-        $properties = new Collection($data);
-
         if (empty($version) == true) {       
-            return $properties;
+            return $data;
         }
-        $versions = $properties->get('versions',[]);
+        $versions = $data['versions'] ?? [];
        
-        $properties['files'] = (isset($versions[$version]) == true) ? $versions[$version]['files'] : [];
+        $data['files'] = (isset($versions[$version]) == true) ? $versions[$version]['files'] : [];
         if (isset($versions[$version]['async']) == true) {
-            $properties['async'] = $versions[$version]['async'];
+            $data['async'] = $versions[$version]['async'];
         }
 
-        return $properties;
+        return $data;
     }
 
     /**
@@ -77,23 +73,23 @@ trait UiLibrary
         list($name,$version,$option) = $this->parseLibraryName($libraryName);
         $properties = $this->getLibraryProperties($name,$version); 
         $params = $this->resolveLibraryParams($properties);           
-        $urlParams = ($properties->get('params-type') == 'url') ? '?' . \http_build_query($params) : '';                  
+        $urlParams = (($properties['params-type'] ?? null) == 'url') ? '?' . \http_build_query($params) : '';                  
         $files = [];
 
-        foreach ($properties->get('files') as $file) {   
+        foreach ($properties['files'] as $file) {   
             $libraryFile = Path::getLibraryFilePath($libraryName,$file); 
             $fileType = \pathinfo($libraryFile,PATHINFO_EXTENSION);       
             $fileType = (empty($fileType) == true) ? 'js' : $fileType;
             $files[$fileType][] = [
-                'url' => (Utils::isValidUrl($file) == true) ? $file . $urlParams : Url::getLibraryFileUrl($name,$file) . $urlParams
+                'url' => (\filter_var($file,FILTER_VALIDATE_URL) !== false) ? $file . $urlParams : Url::getLibraryFileUrl($name,$file) . $urlParams
             ];               
         }  
 
         return [
             'files'       => $files,            
             'library'     => $libraryName,
-            'async'       => $properties->get('async',($option == 'async')),
-            'crossorigin' => $properties->get('crossorigin',null)
+            'async'       => $properties['async'] ?? ($option == 'async'),
+            'crossorigin' => $properties['crossorigin'] ?? null
         ];
     }
 
@@ -114,7 +110,7 @@ trait UiLibrary
         $files = [];
 
         if (count($params) > 0) {
-            $urlParams = ($properties->get('params-type') == 'url') ? '?' . \http_build_query($params) : '';
+            $urlParams = (($properties['params-type'] ?? null) == 'url') ? '?' . \http_build_query($params) : '';
             \array_walk($params,function (&$value,$key) {
                 $value = ' ' . $key . '="' . $value. '"';
             });
@@ -123,18 +119,17 @@ trait UiLibrary
     
         $libraryPath = Path::getLibraryPath($libraryName);
 
-        foreach ($properties->get('files') as $file) {
+        foreach ($properties['files'] as $file) {
             $type = \pathinfo($libraryPath . $file,PATHINFO_EXTENSION);
-            $item = [
-                'file'        => (Utils::isValidUrl($file) == true) ? $file . $urlParams : Url::getLibraryFileUrl($libraryName,$file) . $urlParams,
+            $files[] = [
+                'file'        => (\filter_var($file,FILTER_VALIDATE_URL) !== false) ? $file . $urlParams : Url::getLibraryFileUrl($libraryName,$file) . $urlParams,
                 'type'        => (empty($type) == true) ? 'js' : $type,
                 'params'      => $params,
                 'params_text' => $paramsText,
                 'library'     => $libraryName,
-                'async'       => $properties->get('async',($option == 'async')),
-                'crossorigin' => $properties->get('crossorigin',null)
-            ];          
-            $files[] = $item;
+                'async'       => $properties['async'] ?? ($option == 'async'),
+                'crossorigin' => $properties['crossorigin'] ?? null
+            ];                      
         }   
         
         return $files;
@@ -143,19 +138,17 @@ trait UiLibrary
     /**
      * Resolve library params
      *
-     * @param Collection $properties
+     * @param array $properties
      * @return array
      */
-    public function resolveLibraryParams($properties)
+    public function resolveLibraryParams(array $properties): array
     {      
-        $params = $properties->get('params',[]);
-        $vars = [
+        $params = $properties['params'] ?? [];
+        $libraryParams = $this->libraryOptions[$properties['name']] ?? ['params' => []];
+        $vars = \array_merge([
             'domian'   => DOMAIN,
             'base_url' => BASE_PATH
-        ];
-
-        $libraryParams = $this->libraryOptions[$properties['name']] ?? ['params' => []];
-        $vars = \array_merge($vars,$libraryParams['params'] ?? []);
+        ],$libraryParams['params'] ?? []);
             
         return Text::renderMultiple($params,$vars);       
     }
