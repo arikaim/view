@@ -171,7 +171,7 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         if (\count($component->getFiles('js')) > 0) {
             // include    
-            if (\in_array($name,\array_column($this->includedComponents,'name')) == false) {
+            if (\in_array($name,\array_column($this->includedComponents,'name')) == false) {            
                 $this->componentsFiles['js'] = \array_merge($this->componentsFiles['js'],$component->getFiles('js'));              
             } else {
                 $this->addComponentInstance($name,$type,$component->id);

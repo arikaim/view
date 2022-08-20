@@ -663,15 +663,15 @@ class BaseComponent implements ComponentInterface
             return false;
         }
         
-        return $this->addFile([
+        $this->files[$fileExt][] = [
             'file_name'      => $fileName,
             'path'           => $this->filePath,
-            'full_path'      => $this->fullPath,
+         // 'full_path'      => $this->fullPath,
             'component_name' => $this->fullName,
             'component_id'   => $this->id,
             'component_type' => $this->componentType,                               
-            'url'            => $this->getFileUrl($fileName) 
-        ],$fileExt);       
+            'url'            => $this->url . $fileName
+        ];       
     }
 
     /**
@@ -683,8 +683,6 @@ class BaseComponent implements ComponentInterface
      */
     public function addFile(array $file, string $fileType): void
     {
-        $this->files[$fileType] = $this->files[$fileType] ?? [];
-
         $this->files[$fileType][] = $file;
     }
 

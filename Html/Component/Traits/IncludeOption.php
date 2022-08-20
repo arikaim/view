@@ -33,7 +33,7 @@ trait IncludeOption
             $file = $this->resolveIncludeFile($item);
             if ($file === null) continue;
 
-            $this->addFile($file,'js');
+            $this->files['js'][] = $file;           
         }                 
     }
 
