@@ -32,9 +32,10 @@ class Filters
                 return $returnValue;
             }
         }
-        if ($value === 'false') $value = false;
-        if ($value === 'true')  $value = true;
-
+        $value = (\is_bool($value) == true) ? (int)$value : $value;
+        $value = ($value === 'false') ? false : $value;
+        $value = ($value === 'true') ? true : $value;
+      
         return ($value == $var2) ? $returnValue : null;                
     }   
 
