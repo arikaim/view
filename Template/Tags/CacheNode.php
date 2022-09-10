@@ -65,17 +65,18 @@ class CacheNode extends Node
         $key = $this->getAttribute('key');    
         $keyName = $this->getAttribute('keyName');
         $keyName = $keyName ?? '';
+
         $compiler
             ->addDebugInfo($this)          
             ->write('$cache = $this->env->getExtension("' . $this->twigExtensionClass . '")->getCache();')
             ->write('$keyName = $context["' . $keyName . '"] ?? "";')
-            ->write('$key = "' . $key . '" . $keyName;')        
+            ->write('$key = "' . $key . '" . $keyName;')                
             ->write('$cached = $cache->fetch("$key");')            
             ->write('if ($cached === false) { ')
                 ->write("ob_start();\n")
                 ->subcompile($this->getNode('body'))                          
                 ->write('$cached = ob_get_clean();')             
-                ->write('$cache->save("' . $key . '",' . '$cached);')
+                ->write('$cache->save("$key",$cached);')
             ->write("}\n")                 
             ->write('echo $cached;');
     }

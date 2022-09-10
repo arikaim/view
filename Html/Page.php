@@ -168,11 +168,12 @@ class Page extends BaseComponent implements HtmlPageInterface
         $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/');
     
         $component = $this->view->renderComponent($name,$language,$params,$type);
+        $jsFiles = $component->getFiles('js');
 
-        if (\count($component->getFiles('js')) > 0) {
+        if (\count($jsFiles) > 0) {
             // include    
             if (\in_array($name,\array_column($this->includedComponents,'name')) == false) {            
-                $this->componentsFiles['js'] = \array_merge($this->componentsFiles['js'],$component->getFiles('js'));              
+                $this->componentsFiles['js'] = \array_merge($this->componentsFiles['js'],$jsFiles);              
             } else {
                 $this->addComponentInstance($name,$type,$component->id);
             }

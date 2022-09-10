@@ -33,6 +33,7 @@ class ErrorTagParser extends AbstractTokenParser
         $nodes = [];
         if ($stream->test(Token::STRING_TYPE)) {
             $nodes['message'] = $this->parser->getExpressionParser()->parseExpression();
+            $nodes['message'] = $nodes['message'] ?? '';
         }
         $stream->expect(Token::BLOCK_END_TYPE);
        
