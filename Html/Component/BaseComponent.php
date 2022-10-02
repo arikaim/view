@@ -765,12 +765,14 @@ class BaseComponent implements ComponentInterface
      */
     public function getRootPath(bool $relative = false): string
     {
-        $tokens = \explode(DIRECTORY_SEPARATOR,$this->path);
-
-        $path = (\count($tokens) <= 1) ? $this->path : $tokens[0];  
-        $templatePath = $this->getTemplatePath($this->templateName,$this->location);
-
-        return ($relative == true) ? $path : $templatePath . $this->basePath . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR;
+        $path = \dirname($this->path,1);
+      
+        return ($relative == true) ? $path : 
+            $this->getTemplatePath($this->templateName,$this->location) . 
+            $this->basePath . 
+            DIRECTORY_SEPARATOR . 
+            $path . 
+            DIRECTORY_SEPARATOR;
     }
 
     /**

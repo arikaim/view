@@ -265,7 +265,7 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         $includes = $this->getPageIncludes($name,$this->language);   
 
-        $params = \array_merge($params,[              
+        $merged = \array_merge($params,[              
             'body'                => $body,           
             'library_files'       => $includes['library_files'] ?? null,
             'template_files'      => $includes['template_files'] ?? null,
@@ -276,7 +276,7 @@ class Page extends BaseComponent implements HtmlPageInterface
             'head'                => $this->head->toArray()
         ]);   
 
-        $htmlCode = $this->view->fetch($includes['index'],$params);
+        $htmlCode = $this->view->fetch($includes['index'],$merged);
         $this->setHtmlCode($htmlCode);
      
         return $this;
@@ -292,7 +292,7 @@ class Page extends BaseComponent implements HtmlPageInterface
     protected function getPageIncludes(string $name, string $language): array
     {
         $includes = $this->view->getCache()->fetch('html.page.includes.' . $name . '.' . $language);
-        if ($includes !== false) {           
+        if ($includes !== false) {      
             return $includes;
         }
         $includes = [];
@@ -317,10 +317,8 @@ class Page extends BaseComponent implements HtmlPageInterface
         }
 
         unset($includes['template_files']['library_files']);
-
         // get index file
         $includes['index'] = $this->getIndexFile($this->templateName);   
-
         // save to cache
         $this->view->getCache()->save('html.page.includes.' . $name . '.' . $language,$includes);
 

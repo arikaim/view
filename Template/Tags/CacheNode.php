@@ -70,7 +70,7 @@ class CacheNode extends Node
             ->addDebugInfo($this)          
             ->write('$cache = $this->env->getExtension("' . $this->twigExtensionClass . '")->getCache();')
             ->write('$keyName = $context["' . $keyName . '"] ?? "";')
-            ->write('$key = "' . $key . '" . $keyName;')                
+            ->write('$key = "' . $key . '" . $keyName;')        
             ->write('$cached = $cache->fetch("$key");')            
             ->write('if ($cached === false) { ')
                 ->write("ob_start();\n")
