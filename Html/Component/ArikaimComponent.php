@@ -79,7 +79,9 @@ class ArikaimComponent extends BaseComponent implements HtmlComponentInterface, 
         $this->loadOptions(); 
         $this->resolveHtmlContent();
         // options
-        $this->processIncludeOption();                  
+        $this->processIncludeOption();   
+        $this->processStylesOption(); 
+        $this->processDataOption();
     }
 
     /**
@@ -96,9 +98,15 @@ class ArikaimComponent extends BaseComponent implements HtmlComponentInterface, 
         if ($this->isValid() == false) {           
             return false;                
         }
-       
-        $this->mergeProperties();
-        $this->mergeContext($params);       
+        
+        $this->mergeProperties();     
+        // merge params context
+        $this->mergeContext($params);  
+        // merge styles json file
+        $this->mergeStyles();   
+        // merge data json file
+        $this->mergeData(); 
+
         // process data file
         $this->processDataFile($params);   
       

@@ -15,6 +15,20 @@ namespace Arikaim\Core\View\Html\Component\Traits;
 trait Options
 {
     /**
+     * Component styles file content
+     *
+     * @var array
+     */
+    protected $styles = [];
+
+    /**
+     * Component data file content
+     *
+     * @var array
+     */
+    protected $data = [];
+
+    /**
      * Remove include options
      *
      * @var boolean
@@ -40,6 +54,69 @@ trait Options
         if (empty($componentType) == false) {
             $this->setComponentType($componentType);
         } 
+    }
+
+    /**
+     * Process component include styles option
+     *
+     * @return void
+     */
+    protected function processStylesOption(): void
+    {
+        // component "include-styles" option
+        if ($this->getOption('include-styles',false) == true) {
+            $this->styles = $this->loadJsonFile('styles.json','styles');
+        } 
+    }
+
+    /**
+     * Process component include data file option
+     *
+     * @return void
+     */
+    protected function processDataOption(): void
+    {
+        // component "include-data" option
+        if ($this->getOption('include-data',false) == true) {          
+            $this->data = $this->loadJsonFile('data.json','data');
+        } 
+    }
+
+    /**
+     * Load styles json file
+     *
+     * @return bool
+     */
+    protected function loadJsonFile(string $fileName, string $key): array
+    {       
+        $this->files[$key]['file_name'] = $this->fullPath . $fileName;
+    
+        if (\file_exists($this->files[$key]['file_name']) == true) {        
+            $styles = \json_decode(\file_get_contents($this->files[$key]['file_name']),true);   
+            return (\is_array($styles) == true) ? $styles : [];                
+        }           
+
+        return [];
+    }
+
+    /**
+     * Add styles to context array
+     *
+     * @return void
+     */
+    public function mergeStyles(): void
+    {
+        $this->context['styles'] = \array_replace($this->styles,$this->context['styles'] ?? []);
+    }
+
+    /**
+     * Add data to context array
+     *
+     * @return void
+     */
+    public function mergeData(): void
+    {
+        $this->context['data'] = \array_replace($this->data,$this->context['data'] ?? []);
     }
 
     /**

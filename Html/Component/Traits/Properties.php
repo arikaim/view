@@ -43,7 +43,7 @@ trait Properties
     public function loadProperties(): void
     {       
         $this->resolvePropertiesFileName();
-        $fileName = $this->getPropertiesFileName();
+        $fileName = $this->files['properties']['file_name'] ?? null;
        
         if (empty($fileName) == false) {        
             $properties = \json_decode(\file_get_contents($fileName),true);   

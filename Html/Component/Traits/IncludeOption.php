@@ -19,7 +19,7 @@ trait IncludeOption
      *      
      * @return void
      */
-    protected function processIncludeOption()
+    protected function processIncludeOption(): void
     { 
         $include = $this->getOption('include');   
         $include = $include['js'] ?? null;
@@ -47,11 +47,10 @@ trait IncludeOption
     {
         if (\filter_var($includeFile,FILTER_VALIDATE_URL) !== false) {             
             $tokens = \explode('|',$includeFile);
-            $url = $tokens[0];
             $tokens[0] = 'external';
         
             return [
-                'url'              => $url,
+                'url'              => $tokens[0] ?? null,
                 'params'           => (isset($tokens[1]) == true) ? $tokens : [],
                 'source_component' => 'url'
             ];
