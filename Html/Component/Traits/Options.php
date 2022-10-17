@@ -91,12 +91,8 @@ trait Options
     {       
         $this->files[$key]['file_name'] = $this->fullPath . $fileName;
     
-        if (\file_exists($this->files[$key]['file_name']) == true) {        
-            $styles = \json_decode(\file_get_contents($this->files[$key]['file_name']),true);   
-            return (\is_array($styles) == true) ? $styles : [];                
-        }           
-
-        return [];
+        return (\file_exists($this->files[$key]['file_name']) == true) ?
+            \json_decode(\file_get_contents($this->files[$key]['file_name']),true) : [];                             
     }
 
     /**
