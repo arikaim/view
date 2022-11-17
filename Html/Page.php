@@ -92,6 +92,13 @@ class Page extends BaseComponent implements HtmlPageInterface
     protected $view;
 
     /**
+     * Template modules 
+     *
+     * @var array|null
+     */
+    protected $templateModules;
+
+    /**
      * Constructor
      * 
      * @param ViewInterface $view
@@ -110,6 +117,7 @@ class Page extends BaseComponent implements HtmlPageInterface
             ComponentInterface::PAGE_COMPONENT_TYPE
         );
 
+        $this->templateModules = [];
         $this->view = $view; 
         $this->setOptionFile('page.json');
 
@@ -249,11 +257,14 @@ class Page extends BaseComponent implements HtmlPageInterface
         $this->init();
         $this->resolve($params);  
 
+        $includes = $this->getPageIncludes($name,$this->language);   
+
         // add global variables       
         $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
         $this->view->addGlobal('template_url',$this->templateUrl . '/');
         $this->view->addGlobal('current_language',$this->language);
         $this->view->addGlobal('page_component_name',$name);
+        $this->view->addGlobal('template_modules',$this->templateModules);
 
         // page head
         if (\is_array($this->properties['head'] ?? null) == true) {
@@ -262,8 +273,6 @@ class Page extends BaseComponent implements HtmlPageInterface
         
         $params = \array_merge_recursive($params,$this->properties); 
         $body = $this->view->fetch($this->getTemplateFile(),$params);  
-
-        $includes = $this->getPageIncludes($name,$this->language);   
 
         $merged = \array_merge($params,[              
             'body'                => $body,           
@@ -456,7 +465,8 @@ class Page extends BaseComponent implements HtmlPageInterface
     protected function getTemplateIncludeFiles(): array
     {               
         $include = $this->view->getCache()->fetch('template.include.files.' . $this->templateName);
-        if ($include !== false) {        
+        if ($include !== false) {    
+            $this->templateModules = $this->view->getCache()->fetch('template.include.modules.' . $this->templateName);      
             return $include;
         }
        
@@ -465,7 +475,8 @@ class Page extends BaseComponent implements HtmlPageInterface
         $templateOptions = (\is_array($data) == true) ? $data : [];
 
         $include = $templateOptions['include'] ?? [];
-     
+        $this->templateModules = $templateOptions['modules'] ?? [];
+
         $include = $this->resolveIncludeFiles($include,$this->templateUrl);
         if (\count($include['library']) > 0) {
             // UI Libraries                    
@@ -473,7 +484,8 @@ class Page extends BaseComponent implements HtmlPageInterface
         }
 
         $this->view->getCache()->save('template.include.files.' . $this->templateName,$include);
-      
+        $this->view->getCache()->save('template.include.modules.' . $this->templateName,$this->templateModules);
+
         return $include;
     }
 
