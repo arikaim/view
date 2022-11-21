@@ -57,7 +57,8 @@ class ComponentNode extends Node implements NodeOutputInterface
         $compiler
             ->write('ob_start();')
             ->subcompile($body,true)
-            ->write("\$context['content'] = trim(ob_get_clean());")                    
+            ->write("\$context['content'] = trim(ob_get_clean());")    
+            ->write("unset(\$context['component_id']);")             
             ->write('echo $this->env->getExtension("' . $this->twigExtensionClass . '")->loadComponent("' . $componentName . '",$context,"' . $type .'");');    
     }
 }
