@@ -297,6 +297,20 @@ class View implements ViewInterface
     }
 
     /**
+     * Get global variable
+     *
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public function getGlobalVar(string $name, $default = null)
+    {
+        $globals = $this->getEnvironment()->getGlobals();
+
+        return $globals[$name] ?? $default;
+    }
+
+    /**
      * Get components path
      *
      * @return string
