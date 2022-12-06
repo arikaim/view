@@ -149,7 +149,7 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
      */
     public function getCssInlinerClass(): ?string
     {
-        return (\is_object($this->cssInliner) == true) ? \get_class($this->cssInliner) : null;
+        return ($this->cssInliner != null) ? \get_class($this->cssInliner) : null;
     }
 
     /**
@@ -223,7 +223,7 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
      */
     public function inlineCss(string $code, string $cssCode): string
     {
-        if (\is_object($this->cssInliner) == false || empty($cssCode) == true) {
+        if ($this->cssInliner == null || empty($cssCode) == true) {
             return $code;
         }
 
