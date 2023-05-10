@@ -73,7 +73,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      */
     public function __call($name, $arguments)
     {       
-        $value = \trim($arguments[0]);
+        $value = \trim($arguments[0] ?? '');
         $options = (isset($arguments[1]) == true) ? $arguments[1] : [];
 
         if (\substr($name,0,2) == 'og') {

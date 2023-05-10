@@ -27,7 +27,8 @@ class ComponentFactory
         ComponentInterface::SVG_COMPONENT_TYPE     => '\\Arikaim\\Core\\View\\Html\\Component\\SvgComponent',
         ComponentInterface::HTML_COMPONENT_TYPE    => '\\Arikaim\\Core\\View\\Html\\Component\\HtmlComponent',
         ComponentInterface::JS_COMPONENT_TYPE      => '\\Arikaim\\Core\\View\\Html\\Component\\JsComponent',
-        ComponentInterface::EMAIL_COMPONENT_TYPE   => '\\Arikaim\\Core\\View\\Html\\EmailView'
+        ComponentInterface::EMAIL_COMPONENT_TYPE   => '\\Arikaim\\Core\\View\\Html\\EmailView',
+        ComponentInterface::WIWGET_COMPONENT_TYPE  => '\\Arikaim\\Core\\View\\Html\\Component\\WidgetComponent'
     ];
 
     /**
