@@ -189,7 +189,10 @@ class Page extends BaseComponent implements HtmlPageInterface
             $this->addIncludedComponent($name,$type,$component->id);
             $this->includedComponents = \array_merge($this->includedComponents,$component->getIncludedComponents());
         } 
-              
+             
+        // include css files
+        $this->componentsFiles['css'] = \array_merge($this->componentsFiles['css'],$component->getFiles('css'));      
+
         return $component;   
     }
 
