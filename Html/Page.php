@@ -117,6 +117,7 @@ class Page extends BaseComponent implements HtmlPageInterface
             ComponentInterface::PAGE_COMPONENT_TYPE
         );
 
+        
         $this->templateModules = [];
         $this->view = $view; 
         $this->setOptionFile('page.json');
