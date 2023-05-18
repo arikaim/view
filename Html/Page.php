@@ -110,7 +110,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         parent::__construct(
             '',
             'pages',
-            'en',
+            $defaultLanguage,
             $view->getViewPath(),
             $view->getExtensionsPath(),
             $view->getPrimaryTemplate(),
