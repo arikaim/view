@@ -15,6 +15,7 @@ use Arikaim\Core\Interfaces\View\RequireAccessInterface;
 
 use Arikaim\Core\View\Html\Component\Traits\IncludeOption;
 use Arikaim\Core\View\Html\Component\Traits\Options;
+use Arikaim\Core\View\Html\Component\Traits\ComponentEditor;
 use Arikaim\Core\View\Html\Component\Traits\Properties;
 use Arikaim\Core\View\Html\Component\Traits\Data;
 
@@ -25,6 +26,7 @@ class ArikaimComponent extends BaseComponent implements HtmlComponentInterface, 
 {
     use 
         Options,
+        ComponentEditor,
         Properties,
         Data,
         IncludeOption;
@@ -82,6 +84,11 @@ class ArikaimComponent extends BaseComponent implements HtmlComponentInterface, 
         $this->processIncludeOption();   
         $this->processStylesOption(); 
         $this->processDataOption();
+
+        if ($this->renderMode == 1) {
+            // edit mode
+            $this->loadEditorOptions();                    
+        }
     }
 
     /**

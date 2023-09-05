@@ -176,7 +176,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
         $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/');
     
-        $component = $this->view->renderComponent($name,$language,$params,$type);
+        $component = $this->view->renderComponent($name,$language,$params,$type,$this->renderMode);
         $jsFiles = $component->getFiles('js');
 
         if (\count($jsFiles) > 0) {

@@ -40,6 +40,7 @@ class ComponentFactory
      * @param string $viewPath
      * @param string $extensionsPath
      * @param string $primaryTemplate
+     * @param int $renderMode
      * @return Arikaim\Core\Interfaces\View\ComponentInterface
      */
     public static function create(
@@ -48,7 +49,8 @@ class ComponentFactory
         string $type,
         string $viewPath,
         string $extensionsPath,
-        string $primaryTemplate
+        string $primaryTemplate,
+        ?int $renderMode = null
     )
     {
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
@@ -58,8 +60,10 @@ class ComponentFactory
 
         $class = Self::COMPONENT_RENDER_CLASSES[$type];
         $component = new $class($name,$language,$viewPath,$extensionsPath,$primaryTemplate);
-        $component->init();
+        $component->setRenderMode($renderMode ?? ComponentInterface::RENDER_MODE_VIEW);
 
+        $component->init();
+        
         return $component;
     }
 }

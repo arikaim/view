@@ -191,6 +191,13 @@ class BaseComponent implements ComponentInterface
     protected $templatePath = null;
 
     /**
+     * Render mode
+     *
+     * @var int
+     */
+    protected $renderMode;
+
+    /**
      * Component Id
      *
      * @var string|null
@@ -228,7 +235,29 @@ class BaseComponent implements ComponentInterface
         $this->files = [
             'js'   => [],
             'css'  => []           
-        ];     
+        ];   
+        $this->renderMode = ComponentInterface::RENDER_MODE_VIEW;  
+    }
+
+    /**
+     * Set render mode
+     *
+     * @param integer $mode
+     * @return void
+     */
+    public function setRenderMode(int $mode): void 
+    {
+        $this->renderMode = $mode;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return integer
+     */
+    public function getRenderMode(): int 
+    {
+        return $this->renderMode;
     }
 
     /**

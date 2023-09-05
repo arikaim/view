@@ -12,11 +12,15 @@ namespace Arikaim\Core\View\Html\Component;
 use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
 
+use Arikaim\Core\View\Html\Component\Traits\ComponentEditor;
+
 /**
  * Html component
  */
 class HtmlComponent extends BaseComponent implements HtmlComponentInterface
 {
+    use ComponentEditor;
+
     /**
      * Constructor
      *
@@ -58,6 +62,11 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface
         parent::init();  
         
         $this->resolveHtmlContent(); 
+
+        if ($this->renderMode == 1) {
+            // edit mode
+            $this->loadEditorOptions();                    
+        } 
     }
 
     /**

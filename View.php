@@ -170,11 +170,19 @@ class View implements ViewInterface
      * @param string $name
      * @param string $language
      * @param string $type
+     * @param int|null $renderMode
      * @return Arikaim\Core\Interfaces\View\ComponentInterface
      */
-    public function createComponent(string $name, string $language, string $type)
+    public function createComponent(string $name, string $language, string $type, ?int $renderMode = null)
     {             
-        return ComponentFactory::create($name,$language,$type,$this->viewPath,$this->extensionsPath,$this->primaryTemplate);
+        return ComponentFactory::create(
+            $name,
+            $language,
+            $type,$this->viewPath,
+            $this->extensionsPath,
+            $this->primaryTemplate,
+            $renderMode
+        );
     }
 
     /**
@@ -184,15 +192,22 @@ class View implements ViewInterface
      * @param string $language
      * @param array|null $params
      * @param string|null $type
+     * @param int|null $mode
      * @return Arikaim\Core\Interfaces\View\ComponentInterface
     */
-    public function renderComponent(string $name, string $language, ?array $params = [], ?string $type = null)
+    public function renderComponent(
+        string $name, 
+        string $language, 
+        ?array $params = [], 
+        ?string $type = null,
+        ?int $mode = null
+    )
     {
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $cacheItemName = 'html.component.' . $name . '.' . $language;        
         $cached = $this->cache->fetch($cacheItemName);
 
-        $component = ($cached === false) ? $this->createComponent($name,$language,$type) : $cached;
+        $component = ($cached === false) ? $this->createComponent($name,$language,$type,$mode) : $cached;
 
         if ($component instanceof RequireAccessInterface) {
             if ($this->checkAccessOption($component) == false) {              
@@ -209,12 +224,20 @@ class View implements ViewInterface
             $component->setHtmlCode($html);  
         }
 
+        // check for edit mode
+        if ($mode == ComponentInterface::RENDER_MODE_EDIT && empty($component->getEditorOption('component')) == false) {
+            $params['edit_component'] = $component->getContext();
+            $params['edit_component_html'] = $component->getHtmlCode();
+
+            return $this->renderComponent($component->getEditorOption('component'),$language,$params);
+        }
+
         if (
             ($cached === false) && 
             ($type == ComponentInterface::SVG_COMPONENT_TYPE || $type == ComponentInterface::STATIC_COMPONENT_TYPE) 
         ) 
         {
-            // sve to cache
+            // save cache
             $this->cache->save($cacheItemName,$component);
         }
             

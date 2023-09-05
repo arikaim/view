@@ -15,6 +15,7 @@ use Arikaim\Core\Interfaces\View\HtmlComponentInterface;
 use Arikaim\Core\View\Html\Component\Traits\IncludeOption;
 use Arikaim\Core\View\Html\Component\Traits\Options;
 use Arikaim\Core\View\Html\Component\Traits\Properties;
+use Arikaim\Core\View\Html\Component\Traits\ComponentEditor;
 
 /**
  * Static html component
@@ -24,6 +25,7 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
     use 
         Properties,
         Options,
+        ComponentEditor,
         IncludeOption;
 
     /**
@@ -71,7 +73,12 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
         $this->loadOptions();       
         $this->resolveHtmlContent(); 
         // options
-        $this->processIncludeOption();                
+        $this->processIncludeOption();      
+        
+        if ($this->renderMode == 1) {
+            // edit mode
+            $this->loadEditorOptions();                    
+        }          
     }
 
     /**
