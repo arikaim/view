@@ -224,12 +224,17 @@ class View implements ViewInterface
             $component->setHtmlCode($html);  
         }
 
+        
         // check for edit mode
-        if ($mode == ComponentInterface::RENDER_MODE_EDIT && empty($component->getEditorOption('component')) == false) {
-            $params['edit_component'] = $component->getContext();
-            $params['edit_component_html'] = $component->getHtmlCode();
+        if ($mode == ComponentInterface::RENDER_MODE_EDIT) {
+            $editorComponent = $component->getContext()['_editor']['component'] ?? null;
+            if (empty($editorComponent) == false) {
+                $params['edit_component'] = $component->getContext();
+                $params['edit_component_name'] = $component->getName();
+                $params['edit_component_html'] = $component->getHtmlCode();
 
-            return $this->renderComponent($component->getEditorOption('component'),$language,$params);
+                return $this->renderComponent($editorComponent,$language,$params);
+            }                
         }
 
         if (
