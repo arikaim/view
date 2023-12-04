@@ -153,11 +153,12 @@ trait Options
     /**
      * Load options json file
      *
+     * @param bool $useParent
      * @return void
      */
-    public function loadOptions(): void
+    public function loadOptions(bool $useParent = true): void
     {         
-        $this->resolveOptionsFileName();
+        $this->resolveOptionsFileName(null,$useParent);
         $optionsFile = $this->getOptionsFileName();
 
         if (empty($optionsFile) == true) {
@@ -198,20 +199,28 @@ trait Options
      * Resolve options file name
      *
      * @param string|null $path  
+     * @param bool $useParent
      * @return void
      */
-    protected function resolveOptionsFileName(?string $path = null): void
+    protected function resolveOptionsFileName(?string $path = null, bool $useParent = true): void
     {   
         $path = $path ?? $this->fullPath;
         $fileName = $path . $this->optionsFile;
 
         if (\file_exists($fileName) == true) {
+            $this->removeIncludeOptions = false;
             $this->setOptionsFileName($fileName);
             return;
         }
 
-        // Check for root component options file             
+        if ($useParent == false) {
+            // skip parent folder
+            return;   
+        }
+
+        // Check for parent component options file             
         $fileName = $this->getRootPath() . $this->optionsFile;
+
         if (\file_exists($fileName) == true) {
             // disable includes from parent component     
             $this->removeIncludeOptions = true;

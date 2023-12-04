@@ -152,7 +152,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         parent::init();
         
         $this->loadProperties();
-        $this->loadOptions(); 
+        $this->loadOptions(false); 
         $this->addComponentFile('js');    
         $this->addComponentFile('css');           
         $this->resolveHtmlContent(); 
