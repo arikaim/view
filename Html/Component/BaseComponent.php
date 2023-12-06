@@ -198,6 +198,13 @@ class BaseComponent implements ComponentInterface
     protected $renderMode;
 
     /**
+     * Parent component info
+     *
+     * @var array
+     */
+    protected $parent = [];
+
+    /**
      * Component Id
      *
      * @var string|null
@@ -240,6 +247,17 @@ class BaseComponent implements ComponentInterface
     }
 
     /**
+     * Set parent component info
+     *
+     * @param array $parent
+     * @return void
+     */
+    public function setParent(array $parent): void 
+    {
+        $this->parent = $parent;
+    }
+
+    /**
      * Set render mode
      *
      * @param integer $mode
@@ -272,11 +290,13 @@ class BaseComponent implements ComponentInterface
 
         // init context
         $this->context = [
-            '_component_name'  => $this->fullName,  
-            'component_id'     => $this->id,  
-            'component_url'    => $this->url,                
-            'current_language' => $this->language,
-            'primary_template' => $this->primaryTemplate
+            '_component_name'         => $this->fullName,  
+            'component_id'            => $this->id,  
+            'component_url'           => $this->url,                
+            'current_language'        => $this->language,
+            'primary_template'        => $this->primaryTemplate,
+            'component_location'      => $this->location,
+            'component_template_name' => $this->templateName
         ];
     }
     
@@ -695,7 +715,6 @@ class BaseComponent implements ComponentInterface
         $this->files[$fileExt][] = [
             'file_name'      => $fileName,
             'path'           => $this->filePath,
-         // 'full_path'      => $this->fullPath,
             'component_name' => $this->fullName,
             'component_id'   => $this->id,
             'component_type' => $this->componentType,                               
@@ -735,14 +754,22 @@ class BaseComponent implements ComponentInterface
         }
 
         if ($this->location == ComponentInterface::UNKNOWN_COMPONENT) {
-            // component location not set                                    
-            return;  
+            // check parent component info
+            $this->location = $this->parent['component_location'] ?? ComponentInterface::UNKNOWN_COMPONENT;
+            if ($this->location == ComponentInterface::UNKNOWN_COMPONENT) {
+                // component location not set                                    
+                return;  
+            }
+            // 
+            $this->id = \str_replace('.','-',$tokens[0]);
+            $this->path = \str_replace('.','/',$tokens[0]);
+            $this->templateName = $this->parent['component_template_name'] ?? '';          
+        } else {
+            $this->id = \str_replace('.','-',$tokens[1]);
+            $this->path = \str_replace('.','/',$tokens[1]);
+            $this->templateName = $tokens[0];       
         }
 
-        $this->id = \str_replace('.','-',$tokens[1]);
-        $this->path = \str_replace('.','/',$tokens[1]);
-        $this->templateName = $tokens[0];          
-        
         $path = \explode('/',$this->path);
         $this->name = \end($path);
         $this->htmlFileName = (empty($nameSplit[1]) == false) ? $nameSplit[1] . '.html' : $this->name . '.html';

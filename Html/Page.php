@@ -167,16 +167,24 @@ class Page extends BaseComponent implements HtmlPageInterface
      * @param array $params
      * @param string|null $language
      * @param string|null $type
+     * @param array $parent
+     * 
      * @return \Arikaim\Core\Interfaces\View\HtmlComponentInterface
      */
-    public function renderHtmlComponent(string $name, array $params = [], ?string $language = null, ?string $type = null)
+    public function renderHtmlComponent(
+        string $name, 
+        array $params = [], 
+        ?string $language = null, 
+        ?string $type = null,
+        array $parent = []
+    )
     {
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $language = $language ?? $this->language;
         $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
         $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/');
     
-        $component = $this->view->renderComponent($name,$language,$params,$type,$this->renderMode);
+        $component = $this->view->renderComponent($name,$language,$params,$type,$this->renderMode,$parent);
         $jsFiles = $component->getFiles('js');
 
         if (\count($jsFiles) > 0) {

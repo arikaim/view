@@ -171,9 +171,17 @@ class View implements ViewInterface
      * @param string $language
      * @param string $type
      * @param int|null $renderMode
+     * @param array $parent 
+     * 
      * @return Arikaim\Core\Interfaces\View\ComponentInterface
      */
-    public function createComponent(string $name, string $language, string $type, ?int $renderMode = null)
+    public function createComponent(
+        string $name, 
+        string $language, 
+        string $type, 
+        ?int $renderMode = null,
+        array $parent = []
+    )
     {             
         return ComponentFactory::create(
             $name,
@@ -181,7 +189,8 @@ class View implements ViewInterface
             $type,$this->viewPath,
             $this->extensionsPath,
             $this->primaryTemplate,
-            $renderMode
+            $renderMode,
+            $parent
         );
     }
 
@@ -193,6 +202,8 @@ class View implements ViewInterface
      * @param array|null $params
      * @param string|null $type
      * @param int|null $mode
+     * @param array $parent
+     * 
      * @return Arikaim\Core\Interfaces\View\ComponentInterface
     */
     public function renderComponent(
@@ -200,14 +211,15 @@ class View implements ViewInterface
         string $language, 
         ?array $params = [], 
         ?string $type = null,
-        ?int $mode = null
+        ?int $mode = null,
+        array $parent = []
     )
     {
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $cacheItemName = 'html.component.' . $name . '.' . $language;        
         $cached = $this->cache->fetch($cacheItemName);
 
-        $component = ($cached === false) ? $this->createComponent($name,$language,$type,$mode) : $cached;
+        $component = ($cached === false) ? $this->createComponent($name,$language,$type,$mode,$parent) : $cached;
 
         if ($component instanceof RequireAccessInterface) {
             if ($this->checkAccessOption($component) == false) {              
