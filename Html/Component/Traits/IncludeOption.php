@@ -50,7 +50,7 @@ trait IncludeOption
             $tokens[0] = 'external';
         
             return [
-                'url'              => $tokens[0] ?? null,
+                'url'              => $tokens[0],
                 'params'           => (isset($tokens[1]) == true) ? $tokens : [],
                 'source_component' => 'url'
             ];
@@ -60,10 +60,6 @@ trait IncludeOption
         $component->init();
         $files = $component->getIncludeFile('js');
      
-        if (empty($files) == true) {
-            return null;
-        }
-
         $this->addIncludedComponent($includeFile,$this->componentType,$component->id);
         
         return [

@@ -91,6 +91,7 @@ class WidgetComponent extends BaseComponent implements HtmlComponentInterface, R
     public function resolve(array $params = []): bool
     {         
         parent::resolve($params);
+        
         $this->addComponentFile('js');    
         $this->addComponentFile('css');    
 

@@ -71,7 +71,7 @@ class StaticHtmlComponent extends BaseComponent implements HtmlComponentInterfac
 
         $this->loadProperties();
         $this->loadOptions();       
-        $this->resolveHtmlContent(); 
+        $this->hasHtmlContent = true;
         // options
         $this->processIncludeOption();      
         

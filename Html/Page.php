@@ -155,7 +155,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $this->loadOptions(false); 
         $this->addComponentFile('js');    
         $this->addComponentFile('css');           
-        $this->resolveHtmlContent(); 
+        $this->hasHtmlContent = true;
         // options
         $this->processIncludeOption();      
     }
@@ -544,15 +544,12 @@ class Page extends BaseComponent implements HtmlPageInterface
         // include components
         foreach ($include['components'] ?? [] as $componentName) {               
             $component = $this->view->createComponent($componentName,'en','empty');
-            $file = $component->getIncludeFile('js');
-            if (empty($file) == false) {
-                $include['js'][] = [
-                    'url'            => $file,
-                    'component_name' => $component->getFullName(),
-                    'component_id'   => $component->id,
-                    'component_type' => 'js',      
-                ];              
-            }                
+            $include['js'][] = [
+                'url'            => $component->getIncludeFile('js'),
+                'component_name' => $component->getFullName(),
+                'component_id'   => $component->id,
+                'component_type' => 'js',      
+            ];                    
         }    
               
         return $include;

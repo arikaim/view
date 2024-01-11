@@ -65,7 +65,7 @@ class SvgComponent extends BaseComponent implements HtmlComponentInterface
             'stroke' => 'currentColor'
         ]);
 
-        $this->resolveHtmlContent(); 
+        $this->hasHtmlContent = true;
     }
 
     /**

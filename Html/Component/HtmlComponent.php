@@ -61,7 +61,7 @@ class HtmlComponent extends BaseComponent implements HtmlComponentInterface
     {
         parent::init();  
         
-        $this->resolveHtmlContent(); 
+        $this->hasHtmlContent = true;
 
         if ($this->renderMode == 1) {
             // edit mode

@@ -94,7 +94,7 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
         $this->loadProperties();
         $this->loadOptions(); 
         $this->addComponentFile('css');           
-        $this->resolveHtmlContent(); 
+        $this->hasHtmlContent = true; 
     }
 
     /**

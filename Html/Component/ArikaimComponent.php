@@ -79,7 +79,7 @@ class ArikaimComponent extends BaseComponent implements HtmlComponentInterface, 
 
         $this->loadProperties();
         $this->loadOptions(); 
-        $this->resolveHtmlContent();
+        $this->hasHtmlContent = true;
         // options
         $this->processIncludeOption();   
         $this->processStylesOption(); 

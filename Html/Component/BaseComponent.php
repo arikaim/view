@@ -374,7 +374,7 @@ class BaseComponent implements ComponentInterface
      */
     public function create(string $name, string $language)
     {
-        return new Self(
+        return new BaseComponent(
             $name,
             $this->basePath,
             $language,
@@ -435,9 +435,7 @@ class BaseComponent implements ComponentInterface
      */
     public function getIncludeFile(string $fileType): ?string
     {
-        $file = $this->getComponentFile($fileType);   
-
-        return ($file !== false) ? $this->getFileUrl($file) : null;      
+        return $this->getFileUrl($this->name . '.' . $fileType);      
     }
 
     /**
@@ -775,19 +773,13 @@ class BaseComponent implements ComponentInterface
         $this->htmlFileName = (empty($nameSplit[1]) == false) ? $nameSplit[1] . '.html' : $this->name . '.html';
 
         if ($this->location == ComponentInterface::PRIMARY_TEMLATE) {
-            // resolve component location (template or extension)
-            $this->fullPath = $this->getComponentFullPath(ComponentInterface::TEMPLATE_COMPONENT,$this->primaryTemplate);
-           
-            if (\file_exists($this->fullPath) == true) {               
-                // primary template component
-                $this->location = ComponentInterface::TEMPLATE_COMPONENT;
-                $this->templateName = $this->primaryTemplate;
+            // resolve component location
+            $this->fullPath = $this->getComponentFullPath(ComponentInterface::TEMPLATE_COMPONENT,$this->primaryTemplate);                       
+            // template component
+            $this->location = ComponentInterface::TEMPLATE_COMPONENT;
+            $this->templateName = $this->primaryTemplate;
 
-                return;                
-            } else {
-                // set extension component
-                $this->location = ComponentInterface::EXTENSION_COMPONENT;                       
-            }                      
+            return;                                               
         }
 
         $this->fullPath = $this->getComponentFullPath($this->location,$this->templateName);      
