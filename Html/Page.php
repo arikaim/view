@@ -57,13 +57,6 @@ class Page extends BaseComponent implements HtmlPageInterface
     private static $defaultLanguage;
 
     /**
-     * Page head properties
-     *
-     * @var PageHead
-     */
-    protected $head;
-    
-    /**
      * Ui Library options
      *
      * @var array
@@ -99,6 +92,13 @@ class Page extends BaseComponent implements HtmlPageInterface
     protected $templateModules;
 
     /**
+     * Page head properties
+     *
+     * @var PageHead|null
+     */
+    private $head;
+    
+    /**
      * Constructor
      * 
      * @param ViewInterface $view
@@ -117,7 +117,6 @@ class Page extends BaseComponent implements HtmlPageInterface
             ComponentInterface::PAGE_COMPONENT_TYPE
         );
 
-        
         $this->templateModules = [];
         $this->view = $view; 
         $this->setOptionFile('page.json');
@@ -278,11 +277,9 @@ class Page extends BaseComponent implements HtmlPageInterface
         $this->view->addGlobal('page_component_name',$name);
         $this->view->addGlobal('template_modules',$this->templateModules);
 
-        // page head
-        if (\is_array($this->properties['head'] ?? null) == true) {
-            $this->resolvePageHead($this->properties['head'],$this->templateUrl);
-        }
-        
+        // page head      
+        $this->resolvePageHead($this->properties['head'] ?? [],$this->templateUrl);
+      
         $params = \array_merge_recursive($params,$this->properties); 
         $body = $this->view->fetch($this->getTemplateFile(),$params);  
 
@@ -450,23 +447,25 @@ class Page extends BaseComponent implements HtmlPageInterface
     */
     public function getPageIncludeFiles(): array
     {
-        $include = $this->view->getCache()->fetch('page.include.files.' . $this->getName());
+        $include = $this->view->getCache()->fetch('page.include.files.' . $this->templateName . $this->id);
         if ($include !== false) {        
             return $include;
         }
         // from page options
-        $include = $this->getOption('include');          
-        if (empty($include) == false) {            
-            $include = $this->resolveIncludeFiles($include,$this->templateUrl);
-            if (\count($include['library']) > 0) {
-                // UI Libraries    
-                $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],null);                   
-            }
-
-            $this->view->getCache()->save('page.include.files.' . $this->getName(),$include);   
+        $include = $this->getOption('include',null);     
+        if (empty($include) == true) {       
+            return [];
         }
 
-        return $include ?? [];
+        $include = $this->resolveIncludeFiles($include,$this->templateUrl);
+        if (\count($include['library']) > 0) {
+            // UI Libraries    
+            $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],$this->templateName . $this->id);                   
+        }
+
+        $this->view->getCache()->save('page.include.files.' . $this->templateName . $this->id,$include);   
+       
+        return $include;
     }
 
     /**
@@ -559,16 +558,14 @@ class Page extends BaseComponent implements HtmlPageInterface
      * Get include library files
      *
      * @param array $libraryList
-     * @param string|null $templateName
+     * @param string $cacheKey
      * @return array
      */
-    public function getLibraryIncludeFiles(array $libraryList, ?string $templateName): array
-    {          
-        if (empty($templateName) == false) {
-            $files = $this->view->getCache()->fetch('template.library.files.' . $templateName);        
-            if ($files !== false) {            
-                return $files;
-            }
+    public function getLibraryIncludeFiles(array $libraryList, string $cacheKey): array
+    {                
+        $files = $this->view->getCache()->fetch('template.library.files.' . $cacheKey);        
+        if ($files !== false) {            
+            return $files;
         }
        
         $files = [];
@@ -579,19 +576,17 @@ class Page extends BaseComponent implements HtmlPageInterface
                 continue;
             }
             
-            $libraryFiles = (empty($templateName) == false) ? $this->view->getCache()->fetch('library.files.' . $library) : false;    
+            $libraryFiles = $this->view->getCache()->fetch('library.files.' . $library . $libraryVersion ?? '');    
             if ($libraryFiles === false) {
                 $libraryFiles = $this->getLibraryFiles($libraryName,$libraryVersion,$libraryOption);
-                $this->view->getCache()->save('library.files.' . $library,$libraryFiles);  
+                $this->view->getCache()->save('library.files.' . $library . $libraryVersion ?? '',$libraryFiles);  
             } 
         
             $files = \array_merge($files,$libraryFiles);       
         }
-
-        if (empty($templateName) == false) {
-            // Save to cache
-            $this->view->getCache()->save('template.library.files.' . $templateName,$files); 
-        }
+ 
+        // Save to cache
+        $this->view->getCache()->save('template.library.files.' . $cacheKey,$files); 
                                
         return $files;
     }

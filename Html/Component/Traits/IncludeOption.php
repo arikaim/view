@@ -21,18 +21,16 @@ trait IncludeOption
      */
     protected function processIncludeOption(): void
     { 
-        $include = $this->getOption('include');   
+        $include = $this->getOption('include',[]);   
         $include = $include['js'] ?? null;
         if (empty($include) == true) {
             return;
         }
 
-        $include = (\is_array($include) == false) ? [$include] : $include;   
         // include component files
         foreach ($include as $item) {             
             $file = $this->resolveIncludeFile($item);
-            if ($file === null) continue;
-
+        
             $this->files['js'][] = $file;           
         }                 
     }
@@ -41,9 +39,9 @@ trait IncludeOption
      * Resolve include file
      *
      * @param string $includeFile  Component or Url     
-     * @return array|null
+     * @return array
      */
-    protected function resolveIncludeFile(string $includeFile): ?array
+    protected function resolveIncludeFile(string $includeFile): array
     {
         if (\filter_var($includeFile,FILTER_VALIDATE_URL) !== false) {             
             $tokens = \explode('|',$includeFile);
