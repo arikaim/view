@@ -23,7 +23,6 @@ use Arikaim\Core\View\Html\Component\Traits\UiLibrary;
 
 use Arikaim\Core\Interfaces\View\ComponentInterface;
 use Arikaim\Core\Interfaces\View\HtmlPageInterface;
-use Arikaim\Core\Interfaces\View\ViewInterface;
 
 /**
  * Html page
@@ -80,7 +79,7 @@ class Page extends BaseComponent implements HtmlPageInterface
     /**
      * View 
      *
-     * @var ViewInterface
+     * @var Arikaim\Core\Interfaces\View\ViewInterface
      */
     protected $view;
 
@@ -101,11 +100,11 @@ class Page extends BaseComponent implements HtmlPageInterface
     /**
      * Constructor
      * 
-     * @param ViewInterface $view
+     * @param Arikaim\Core\Interfaces\View\ViewInterface $view
      * @param string $defaultLanguage,
      * @param array $libraryOptions
      */
-    public function __construct(ViewInterface $view, string $defaultLanguage, array $libraryOptions = []) 
+    public function __construct(object $view, string $defaultLanguage, array $libraryOptions = []) 
     {  
         parent::__construct(
             '',
@@ -481,9 +480,14 @@ class Page extends BaseComponent implements HtmlPageInterface
             return $include;
         }
        
-        $json = \file_get_contents(Path::TEMPLATES_PATH . $this->templateName . DIRECTORY_SEPARATOR . 'arikaim-package.json');
-        $data = \json_decode($json,true);
-        $templateOptions = (\is_array($data) == true) ? $data : [];
+        try {
+            $json = \file_get_contents(Path::TEMPLATES_PATH . $this->templateName . DIRECTORY_SEPARATOR . 'arikaim-package.json');
+            $data = \json_decode($json,true);
+        } catch (\Exception $e) {
+            $data = null;
+        }
+     
+        $templateOptions = ($data != null) ? $data : [];
 
         $include = $templateOptions['include'] ?? [];
         $this->templateModules = $templateOptions['modules'] ?? [];

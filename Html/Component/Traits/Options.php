@@ -91,7 +91,7 @@ trait Options
     {       
         $this->files[$key]['file_name'] = $this->fullPath . $fileName;
     
-        return (\file_exists($this->files[$key]['file_name']) == true) ?
+        return (\is_file($this->files[$key]['file_name']) == true) ?
             \json_decode(\file_get_contents($this->files[$key]['file_name']),true) : [];                             
     }
 
@@ -207,7 +207,7 @@ trait Options
         $path = $path ?? $this->fullPath;
         $fileName = $path . $this->optionsFile;
 
-        if (\file_exists($fileName) == true) {
+        if (\is_file($fileName) == true) {
             $this->removeIncludeOptions = false;
             $this->setOptionsFileName($fileName);
             return;
@@ -221,7 +221,7 @@ trait Options
         // Check for parent component options file             
         $fileName = $this->getRootPath() . $this->optionsFile;
 
-        if (\file_exists($fileName) == true) {
+        if (\is_file($fileName) == true) {
             // disable includes from parent component     
             $this->removeIncludeOptions = true;
             $this->setOptionsFileName($fileName);

@@ -42,7 +42,7 @@ trait Data
     {
         $fileName = $this->fullPath . $this->name . '.php';
        
-        $this->dataFile = (\file_exists($fileName) == true) ? $fileName : null;       
+        $this->dataFile = (\is_file($fileName) == true) ? $fileName : null;       
     }
 
     /**
@@ -58,7 +58,7 @@ trait Data
 
         if (empty($this->dataFile) == false) {
             // include data file
-            $componentData = require ($this->dataFile);                       
+            $componentData = require_once($this->dataFile);                       
             if ($componentData instanceof ComponentDataInterface) {                   
                 $data = $componentData->getData($params,$container);              
                 $this->mergeContext($data); 

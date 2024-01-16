@@ -29,9 +29,7 @@ trait IncludeOption
 
         // include component files
         foreach ($include as $item) {             
-            $file = $this->resolveIncludeFile($item);
-        
-            $this->files['js'][] = $file;           
+            $this->files['js'][] = $this->resolveIncludeFile($item);
         }                 
     }
 

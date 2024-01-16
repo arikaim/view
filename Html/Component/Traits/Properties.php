@@ -30,7 +30,7 @@ trait Properties
     {
         $fileName = ($this->language != 'en') ? $this->name . '-' . $this->language . '.json' : $this->name . '.json';
                    
-        if (\file_exists($this->fullPath . $fileName) == true) {
+        if (\is_file($this->fullPath . $fileName) == true) {
             $this->setPropertiesFileName($this->fullPath . $fileName);   
         }      
     }

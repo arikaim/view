@@ -537,7 +537,7 @@ class BaseComponent implements ComponentInterface
      */
     protected function resolveHtmlContent(): void
     {   
-        $this->hasHtmlContent = (empty($this->htmlFileName) == false) ? \file_exists($this->fullPath . $this->htmlFileName) : false;
+        $this->hasHtmlContent = (empty($this->htmlFileName) == false) ? \is_file($this->fullPath . $this->htmlFileName) : false;
     }
 
     /**
@@ -706,7 +706,7 @@ class BaseComponent implements ComponentInterface
     public function addComponentFile(string $fileExt)
     {
         $fileName = $this->name . '.' . $fileExt; 
-        if (\file_exists($this->fullPath . $fileName) == false) {
+        if (\is_file($this->fullPath . $fileName) == false) {
             return false;
         }
         
@@ -854,7 +854,7 @@ class BaseComponent implements ComponentInterface
     {                 
         $fileName = $this->name . '.' . $fileExt;     
 
-        return \file_exists($this->fullPath . $fileName) ? $fileName : false;
+        return \is_file($this->fullPath . $fileName) ? $fileName : false;
     }
 
     /**

@@ -14,7 +14,6 @@ use Twig\Extension\ExtensionInterface;
 use Twig\Loader\FilesystemLoader;
 
 use Arikaim\Core\Interfaces\View\ViewInterface;
-use Arikaim\Core\Interfaces\CacheInterface;
 use Arikaim\Core\Interfaces\View\ComponentInterface;
 use Arikaim\Core\Interfaces\View\RequireAccessInterface;
 
@@ -132,7 +131,7 @@ class View implements ViewInterface
      * @param string|null $primaryTemplate
      */
     public function __construct(
-        CacheInterface $cache,           
+        object $cache,           
         string $viewPath,
         string $extensionsPath,
         string $templatesPath,

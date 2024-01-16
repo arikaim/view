@@ -110,7 +110,7 @@ trait ComponentEditor
     {           
         $fileName = ($path ?? $this->fullPath) . $this->editorOptionsFile;
 
-        if (\file_exists($fileName) == true) {
+        if (\is_file($fileName) == true) {
             $this->setEditorOptionsFileName($fileName);
             return;
         }              

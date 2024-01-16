@@ -40,11 +40,11 @@ trait ThemeGlobals
         
         if ($themeGlobals === false) {
             $fileName = $this->getTemplateThemeFile($themeName);
-            if (\file_exists($fileName) == false) {
+            if (\is_file($fileName) == false) {
                 return false;
             }          
             $themeGlobals = \json_decode(\file_get_contents($fileName),true);   
-            if (\is_array($themeGlobals) == false) {
+            if ($themeGlobals == null) {
                 return false;
             } 
             $this->cache->save('template.theme.' . $this->primaryTemplate . '.' . $themeName,$themeGlobals);
