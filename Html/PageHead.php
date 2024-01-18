@@ -25,19 +25,6 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
     const END_OF_LINE = "\n\t\t";
 
     /**
-     *  Skip meta tags names
-     */
-    const SKIP_META_TAGS_KEYS = [
-        'viewport',
-        'language',
-        'robots',
-        'googlebot',
-        'Cache-Control',
-        'favicon',
-        'code'
-    ];
-
-    /**
      * Property params
      *
      * @var array
@@ -405,12 +392,20 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      */
     public function addMetaTag(string $name, string $value): void
     {
-        if (\in_array($name,Self::SKIP_META_TAGS_KEYS) == true) {
-            return;
-        }
-
-        $this->set($name,$value);
         $this->htmlCode .= $this->getMetaCode($name,$value);
+    }
+
+    /**
+     * Add meta code fro items
+     *
+     * @param array $items
+     * @return void
+     */
+    public function addMetaTagCodeForItems(array $items): void
+    {
+        foreach ($items as $name) { 
+            $this->addMetaTag($name,$this->getString($name));
+        }
     }
 
     /**

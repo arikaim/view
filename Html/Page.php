@@ -277,14 +277,12 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         // page head     
         $this->head->mergeItems($this->properties['head'] ?? [],false);
-        if (($this->properties['head'] ?? null) !== null) {
-            foreach ($this->properties['head'] as $key => $value) {           
-                if (empty($this->head->get($key)) == true) {               
-                    $this->head->addMetaTag($key,$value);
-                }
-            }
-        }
-
+        $this->head->addMetaTagCodeForItems([
+            'title',
+            'description',
+            'keywords'
+        ]);
+      
         $params = \array_merge_recursive($params,$this->properties); 
 
         // add page head include html code
@@ -315,12 +313,7 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         foreach($includes['template_files']['js'] as $file) {  
             if (\is_array($file) == true) {
-                $attr = 'class="component-file" 
-                    component-type="'. $file['component_type'] . '"
-                    component-name="'. $file['component_name'] . '"
-                    component-id="'. $file['component_id'] . '"';
-
-                $this->head->addScriptCode($file['url'],'','',$attr);           
+                $this->head->addComponentFileCode($file);                
             } else {
                 $this->head->addScriptCode($file,'','');              
             }     
