@@ -20,11 +20,36 @@ use Arikaim\Core\Utils\Text;
 class PageHead extends Collection implements CollectionInterface, \Countable, \ArrayAccess, \IteratorAggregate
 {
     /**
+     *  Added to each html tag
+     */
+    const END_OF_LINE = "\n\t\t";
+
+    /**
+     *  Skip meta tags names
+     */
+    const SKIP_META_TAGS_KEYS = [
+        'viewport',
+        'language',
+        'robots',
+        'googlebot',
+        'Cache-Control',
+        'favicon',
+        'code'
+    ];
+
+    /**
      * Property params
      *
      * @var array
      */
     protected $params;
+
+    /**
+     * Page head html code
+     *
+     * @var string
+     */
+    protected $htmlCode;
 
     /**
      * Constructor
@@ -38,13 +63,14 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
         $this->data['og'] = [];
         $this->data['twitter'] = [];
         $this->params = [];
+        $this->htmlCode = '';
     }
 
     /**
      * Set property value param
      *
      * @param string $name
-     * @param string $value
+     * @param mixed $value
      * @return PageHead
      */
     public function param(string $name, $value)
@@ -96,9 +122,9 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      */
     public function setMetaTags(array $data): object
     {
-        $this->set('title',$data['title'] ?? '');
-        $this->set('description',$data['description'] ?? '');
-        $this->set('keywords',$data['keywords'] ?? '');
+        $this->set('title',$this->getString('title'));
+        $this->set('description',$this->getString('description'));
+        $this->set('keywords',$this->getString('keywords'));
         
         return $this;
     }
@@ -117,23 +143,6 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
         
         return $this;
     }
-
-    /**
-     * Set items value if not exist in collection
-     *
-     * @param array $items
-     * @return PageHead
-     */
-    public function applyDefaultItems(array $items): object
-    {
-        foreach ($items as $key => $value) {           
-            if (empty($this->get($key)) == true) {               
-                $this->set($key,$value);
-            }
-        }
-
-        return $this;
-    } 
 
     /**
      * Apply item value if is empty in collection
@@ -354,5 +363,176 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
         $this->data[$key] = $properties;
 
         return true;
+    }
+
+    /**
+     * Add comoponent instance code
+     *
+     * @param array $item
+     * @return void
+     */
+    public function addComponentInstanceCode(array $item): void 
+    {
+        $code = '<meta class="component-instance" component-name="' . $item['name'] . '" component-type="' . $item['type'] . '" component-id="' . $item['id'] . '" />\n\t"';
+        
+        $this->htmlCode .= $code;
+    }
+
+    /**
+     * Add component file code
+     *
+     * @param array $file
+     * @return void
+     */
+    public function addComponentFileCode(array $file): void
+    {
+        $crossorigin = (\in_array('crossorigin',$file['params'] ?? []) ==true )? ' crossorigin="anonymous"' : '';
+                    
+        $attr = 'async class="component-file" ' . $crossorigin . '
+            component-type="'. $file['component_type'] . '"
+            component-name="'. $file['component_name'] . '"
+            component-id="'. $file['component_id'] . '"';
+
+        $this->addScriptCode($file['url'],'','',$attr);         
+    }
+
+    /**
+     * Add metatag code
+     *
+     * @param string $name
+     * @param string $value
+     * @return void
+     */
+    public function addMetaTag(string $name, string $value): void
+    {
+        if (\in_array($name,Self::SKIP_META_TAGS_KEYS) == true) {
+            return;
+        }
+
+        $this->set($name,$value);
+        $this->htmlCode .= $this->getMetaCode($name,$value);
+    }
+
+    /**
+     * Add script code
+     *
+     * @param string $src
+     * @param string $type
+     * @param string $id
+     * @param string $attr
+     * @return void
+     */
+    public function addScriptCode(string $src, string $type = '', string $id = '', string $attr = '')
+    {
+        $this->htmlCode .= $this->getScriptCode($src,$type,$id,$attr);
+    }
+
+    /**
+     * Add inline script code
+     *
+     * @param string $content
+     * @param string $type
+     * @param string $attr
+     * @return void
+     */
+    public function addInlineScriptCode(string $content, string $type = 'text/javascript', string $attr = ''): void
+    {
+        $this->htmlCode .= $this->createInlineScriptCode($content,$type,$attr);
+    }
+
+    /**
+     * Add link code
+     *
+     * @param string $href
+     * @param string $type
+     * @param string $rel
+     * @param string $media
+     * @param string $onload
+     * @param string $attr
+     * @return void
+     */
+    public function addLinkCode(string $href, string $type, string $rel = '', string $media = 'all', string $onload = '', string $attr = ''): void
+    {
+        $this->htmlCode .= $this->getLinkCode($href,$type,$rel,$media,$onload,$attr);
+    }
+
+    /**
+     * Add ccomment code
+     *
+     * @param string $comment
+     * @return void
+     */
+    public function addCommentCode(string $comment)
+    {
+        $this->htmlCode .= '<!-- ' . $comment . " -->" . Self::END_OF_LINE;
+    }
+
+    /**
+     * Get html code
+     *
+     * @return string
+     */
+    public function getHtmlCode(): string
+    {
+        return $this->htmlCode;
+    }
+
+    /**
+     * Get metatag html code
+     *
+     * @param string $name
+     * @param string $value
+     * @param string $keyName
+     * @return string
+     */
+    public function getMetaCode(string $name, string $value, string $keyName = 'name'): string
+    {
+        return '<meta ' . $keyName . '="' . $name . '" content="' . $value . '"/>' . Self::END_OF_LINE;
+    }
+
+    /**
+     * Create script code
+     *
+     * @param string $src
+     * @param string $type
+     * @param string $id
+     * @param string $attr
+     * @return string
+     */
+    public function getScriptCode(string $src, string $type = '', string $id = '', string $attr = ''): string
+    {
+        return '<script src="' . $src . '" ' . $attr . (empty($id) ? '' : ' id="' . $id . '"') . ' type="' . (empty($type) ? 'text/javascript' : $type) . '"></script>' . Self::END_OF_LINE;       
+    }
+
+    /**
+     * Create inline script code
+     *
+     * @param string $content
+     * @param string $type
+     * @param string $attr
+     * @return string
+     */
+    public function createInlineScriptCode(string $content, string $type = 'text/javascript', string $attr = ''): string
+    {
+        return '<script type="' . $type . '" ' . $attr . ">\n" . $content ."\n</script>\n";
+    }
+
+    /**
+     * Create link code
+     *
+     * @param string $href
+     * @param string $type
+     * @param string $rel
+     * @param string $media
+     * @param string $onload
+     * @param string $attr
+     * @return string
+     */
+    public function getLinkCode(string $href, string $type, string $rel = '', string $media = 'all', string $onload = '', string $attr = ''): string 
+    {
+        return '<link media="' . $media . '" href="' . $href . '" '  . 
+            (empty($type) ? '' : ' type="' . $type . '"') . 
+            (empty($onload) ? '' : ' onload="' . $onload . '"') . 
+            (empty($rel) ? '' : ' rel="' . $rel . '" ') . $attr . ' />' . Self::END_OF_LINE;       
     }
 }

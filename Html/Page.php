@@ -11,7 +11,6 @@ namespace Arikaim\Core\View\Html;
 
 use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\View\Html\PageHead;
-use Arikaim\Core\Utils\Text;
 use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Http\Url;
 
@@ -127,7 +126,7 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         $this->libraryOptions = $libraryOptions;       
         $this->head = new PageHead();
-        Self::$defaultLanguage = $defaultLanguage; 
+        Self::$defaultLanguage = $defaultLanguage;        
     }
 
     /**
@@ -276,11 +275,75 @@ class Page extends BaseComponent implements HtmlPageInterface
         $this->view->addGlobal('page_component_name',$name);
         $this->view->addGlobal('template_modules',$this->templateModules);
 
-        // page head      
-        $this->resolvePageHead($this->properties['head'] ?? [],$this->templateUrl);
-      
+        // page head     
+        $this->head->mergeItems($this->properties['head'] ?? [],false);
+        if (($this->properties['head'] ?? null) !== null) {
+            foreach ($this->properties['head'] as $key => $value) {           
+                if (empty($this->head->get($key)) == true) {               
+                    $this->head->addMetaTag($key,$value);
+                }
+            }
+        }
+
         $params = \array_merge_recursive($params,$this->properties); 
+
+        // add page head include html code
+        $this->head->addCommentCode('library files');
+
+        foreach($includes['library_files'] as $file) {
+            if ($file['type'] == 'js') {                
+                $attr = ($file['params_text'] ?? '') . 
+                    (($file['async'] == true) ? ' async' : '') .
+                    (empty($file['crossorigin']) ? '' : ' crossorigin');
+
+                $this->head->addScriptCode($file['file'],'','library_' . $file['library'],$attr);
+            }
+            if ($file['type'] == 'css') { 
+                if (($file['async'] ?? false) == true) {
+                    $this->head->addLinkCode($file['file'],'','preload','all',"this.onload=null;this.rel='stylesheet'");
+                } else {
+                    $this->head->addLinkCode($file['file'],'text/css','stylesheet');
+                }               
+            }           
+        }
+
+        // template files
+        $this->head->addCommentCode('template files');        
+        foreach($includes['template_files']['css'] as $file) {           
+            $this->head->addLinkCode($file,'text/css','stylesheet');            
+        }
+
+        foreach($includes['template_files']['js'] as $file) {  
+            if (\is_array($file) == true) {
+                $attr = 'class="component-file" 
+                    component-type="'. $file['component_type'] . '"
+                    component-name="'. $file['component_name'] . '"
+                    component-id="'. $file['component_id'] . '"';
+
+                $this->head->addScriptCode($file['url'],'','',$attr);           
+            } else {
+                $this->head->addScriptCode($file,'','');              
+            }     
+        }
+
+        // render page body code
         $body = $this->view->fetch($this->getTemplateFile(),$params);  
+
+        // component files
+        $this->head->addCommentCode('component files'); 
+        foreach(($this->componentsFiles['js'] ?? []) as $file) {   
+            $this->head->addComponentFileCode($file);            
+        }
+        // page files
+        $this->head->addCommentCode('page files'); 
+        foreach(($includes['page_files']['js'] ?? []) as $file) { 
+            $this->head->addComponentFileCode($file);                       
+        }
+        // component instances
+        $this->head->addCommentCode('component instances'); 
+        foreach($this->componentInstances as $file) { 
+           $this->head->addComponentInstanceCode($file);        
+        }
 
         $merged = \array_merge($params,[              
             'body'                => $body,           
@@ -290,7 +353,8 @@ class Page extends BaseComponent implements HtmlPageInterface
             'component_files'     => $this->componentsFiles,
             'included_components' => $this->includedComponents,
             'component_instances' => $this->componentInstances,
-            'head'                => $this->head->toArray()
+            'head'                => $this->head->toArray(),
+            'head_code'           => $this->head->getHtmlCode()
         ]);   
 
         $htmlCode = $this->view->fetch($includes['index'],$merged);
@@ -340,35 +404,6 @@ class Page extends BaseComponent implements HtmlPageInterface
         $this->view->getCache()->save('html.page.includes.' . $name . '.' . $language,$includes);
 
         return $includes;      
-    }
-
-    /**
-     * Resolve page head
-     *
-     * @param array $head
-     * @param string $templateUrl
-     * @return void
-     */
-    protected function resolvePageHead(array $head, string $templateUrl): void
-    {
-        $this->head->param('template_url',$templateUrl); 
-        $head = Text::renderMultiple($head,$this->head->getParams());  
-        $this->head->applyDefaultMetaTags($head); 
-       
-        if (isset($head['og']) == true) {
-            if (empty($this->head->get('og')) == true) {
-                $this->head->set('og',$head['og']);
-                $this->head->resolveProperties('og');
-            }                
-        }
-        if (isset($head['twitter']) == true) {
-            if (empty($this->head->get('twitter')) == true) {
-                $this->head->set('twitter',$head['twitter']);
-                $this->head->resolveProperties('twitter');
-            }               
-        }
-
-        $this->head->applyDefaultItems($head);
     }
 
     /**
