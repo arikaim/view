@@ -345,9 +345,9 @@ class BaseComponent implements ComponentInterface
      */
     public function addIncludedComponent(string $name, string $type, ?string $id = null)
     {
-        if (\in_array($id,\array_column($this->includedComponents,'id')) == false) {
-            // incldue in page components
-            $this->includedComponents[] = [
+        if (isset($this->includedComponents[$name]) == false) {
+            // incldue component
+            $this->includedComponents[$name] = [
                 'name' => $name,
                 'type' => $type,
                 'id'   => $id
@@ -355,6 +355,11 @@ class BaseComponent implements ComponentInterface
         }
     }
 
+    public function isIncludedComponent() 
+    {
+
+    }
+    
     /**
      * Get included components
      *
@@ -710,7 +715,7 @@ class BaseComponent implements ComponentInterface
             return false;
         }
         
-        $this->files[$fileExt][] = [
+        $this->files[$fileExt][$this->fullName] = [
             'file_name'      => $fileName,
             'path'           => $this->filePath,
             'component_name' => $this->fullName,
@@ -729,7 +734,7 @@ class BaseComponent implements ComponentInterface
      */
     public function addFile(array $file, string $fileType): void
     {
-        $this->files[$fileType][] = $file;
+        $this->files[$fileType][$this->fullName] = $file;
     }
 
     /**

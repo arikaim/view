@@ -352,6 +352,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
         return true;
     }
 
+
     /**
      * Add comoponent instance code
      *
@@ -363,6 +364,30 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
         $code = '<meta class="component-instance" component-name="' . $item['name'] . '" component-type="' . $item['type'] . '" component-id="' . $item['id'] . '" />\n\t"';
         
         $this->htmlCode .= $code;
+    }
+
+    /**
+     * Add library include code
+     *
+     * @param array $file
+     * @return void
+     */
+    public function addLibraryIncludeCode(array $file): void
+    {
+        if ($file['type'] == 'js') {                
+            $attr = ($file['params_text'] ?? '') . 
+                (($file['async'] == true) ? ' async' : '') .
+                (empty($file['crossorigin']) ? '' : ' crossorigin');
+
+            $this->addScriptCode($file['file'],'','library_' . $file['library'],$attr);
+        }
+        if ($file['type'] == 'css') { 
+            if (($file['async'] ?? false) == true) {
+                $this->addLinkCode($file['file'],'','preload','all',"this.onload=null;this.rel='stylesheet'");
+            } else {
+                $this->addLinkCode($file['file'],'text/css','stylesheet');
+            }               
+        }      
     }
 
     /**

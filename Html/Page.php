@@ -90,6 +90,13 @@ class Page extends BaseComponent implements HtmlPageInterface
     protected $templateModules;
 
     /**
+     * Template url
+     *
+     * @var string
+     */
+    protected $templateUrl;
+
+    /**
      * Page head properties
      *
      * @var PageHead|null
@@ -155,6 +162,8 @@ class Page extends BaseComponent implements HtmlPageInterface
         $this->hasHtmlContent = true;
         // options
         $this->processIncludeOption();      
+
+        $this->templateUrl = Url::getTemplateUrl($this->getCurrentTemplate(),'/');
     }
 
     /**
@@ -179,26 +188,22 @@ class Page extends BaseComponent implements HtmlPageInterface
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $language = $language ?? $this->language;
         $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
-        $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/');
+        $params['template_url'] = $this->templateUrl;
     
         $component = $this->view->renderComponent($name,$language,$params,$type,$this->renderMode,$parent);
         $jsFiles = $component->getFiles('js');
 
         if (\count($jsFiles) > 0) {
             // include    
-            if (\in_array($name,\array_column($this->includedComponents,'name')) == false) {            
-                $this->componentsFiles['js'] = \array_merge($this->componentsFiles['js'],$jsFiles);              
+            if (isset($this->includedComponents[$name]) == false) {     
+                $this->addIncludedComponent($name,$type,$component->id);       
+                $this->componentsFiles['js'] = \array_merge($this->componentsFiles['js'],$jsFiles); 
+                $this->includedComponents = \array_merge($this->includedComponents,$component->getIncludedComponents());             
             } else {
                 $this->addComponentInstance($name,$type,$component->id);
             }
-
-            $this->addIncludedComponent($name,$type,$component->id);
-            $this->includedComponents = \array_merge($this->includedComponents,$component->getIncludedComponents());
         } 
              
-        // include css files
-        $this->componentsFiles['css'] = \array_merge($this->componentsFiles['css'],$component->getFiles('css'));      
-
         return $component;   
     }
 
@@ -212,13 +217,18 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     public function addComponentInstance(string $name, string $type, ?string $id = null)
     {
-        if (\in_array($id,\array_column($this->componentInstances,'id')) == false) {
-            // incldue in page components
-            $this->componentInstances[] = [
+        if (isset($this->componentInstances[$name]) == false) {      
+            // incldue in component instances
+            $item = [
                 'name' => $name,
                 'type' => $type,
                 'id'   => $id
             ];
+
+            $this->componentInstances[$name] = $item;
+            // push to head code
+            $this->head->addCommentCode('component instance'); 
+            $this->head->addComponentInstanceCode($item);      
         }
     }
 
@@ -287,22 +297,8 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         // add page head include html code
         $this->head->addCommentCode('library files');
-
         foreach($includes['library_files'] as $file) {
-            if ($file['type'] == 'js') {                
-                $attr = ($file['params_text'] ?? '') . 
-                    (($file['async'] == true) ? ' async' : '') .
-                    (empty($file['crossorigin']) ? '' : ' crossorigin');
-
-                $this->head->addScriptCode($file['file'],'','library_' . $file['library'],$attr);
-            }
-            if ($file['type'] == 'css') { 
-                if (($file['async'] ?? false) == true) {
-                    $this->head->addLinkCode($file['file'],'','preload','all',"this.onload=null;this.rel='stylesheet'");
-                } else {
-                    $this->head->addLinkCode($file['file'],'text/css','stylesheet');
-                }               
-            }           
+            $this->head->addLibraryIncludeCode($file);     
         }
 
         // template files
@@ -329,30 +325,18 @@ class Page extends BaseComponent implements HtmlPageInterface
         }
         // page files
         $this->head->addCommentCode('page files'); 
-        foreach(($includes['page_files']['js'] ?? []) as $file) { 
+        foreach(($includes['page_files']['js']) as $file) { 
             $this->head->addComponentFileCode($file);                       
         }
-        // component instances
-        $this->head->addCommentCode('component instances'); 
-        foreach($this->componentInstances as $file) { 
-           $this->head->addComponentInstanceCode($file);        
-        }
-
+       
         $merged = \array_merge($params,[              
-            'body'                => $body,           
-            'library_files'       => $includes['library_files'] ?? null,
-            'template_files'      => $includes['template_files'] ?? null,
-            'page_files'          => $includes['page_files'] ?? null, 
-            'component_files'     => $this->componentsFiles,
-            'included_components' => $this->includedComponents,
-            'component_instances' => $this->componentInstances,
+            'body'                => $body,                    
             'head'                => $this->head->toArray(),
             'head_code'           => $this->head->getHtmlCode()
         ]);   
 
-        $htmlCode = $this->view->fetch($includes['index'],$merged);
-        $this->setHtmlCode($htmlCode);
-     
+        $this->setHtmlCode($this->view->fetch($includes['index'],$merged));
+      
         return $this;
     }
 
@@ -377,7 +361,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $pageFiles = $this->getPageIncludeFiles();
         // set page component include files
         $includes['page_files'] = $this->getFiles();
-
+   
         $removeTemplateFiles = (bool)$this->getOption('remove-template-files',false);  
         if ($removeTemplateFiles == true) {
             $templatefiles = [];
@@ -510,12 +494,12 @@ class Page extends BaseComponent implements HtmlPageInterface
        
         try {
             $json = \file_get_contents(Path::TEMPLATES_PATH . $this->templateName . DIRECTORY_SEPARATOR . 'arikaim-package.json');
-            $data = \json_decode($json,true);
+            $templateOptions = \json_decode($json,true);
         } catch (\Exception $e) {
-            $data = null;
+            $templateOptions = null;
         }
      
-        $templateOptions = ($data != null) ? $data : [];
+        $templateOptions = $templateOptions ?? [];
 
         $include = $templateOptions['include'] ?? [];
         $this->templateModules = $templateOptions['modules'] ?? [];
@@ -543,7 +527,7 @@ class Page extends BaseComponent implements HtmlPageInterface
     {                    
         $include['library'] = $include['library'] ?? [];
         $include['js'] = \array_map(function($file) use($url) {
-            if (Url::isValid($file) == true) {
+            if (\filter_var($file,FILTER_VALIDATE_URL) !== false) {
                 return $file;
             }            
             $tokens = \explode(':',$file);           
@@ -558,7 +542,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         },$include['js'] ?? []);
       
         $include['css'] = \array_map(function($file) use($url) {
-            if (Url::isValid($file) == true) {
+            if (\filter_var($file,FILTER_VALIDATE_URL) !== false) {
                 return $file;
             }
             $tokens = \explode(':',$file);           
