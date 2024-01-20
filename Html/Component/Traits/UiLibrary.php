@@ -29,17 +29,15 @@ trait UiLibrary
     { 
         $fileName = Path::getLibraryPath($name) . 'arikaim-package.json';     
         $data = \json_decode(\file_get_contents($fileName),true);
-        $data = (\is_array($data) == false) ? [] : $data;
+        $data = ($data === null) ? [] : $data;
         if (empty($version) == true) {       
             return $data;
         }
-        $versions = $data['versions'] ?? [];
-       
-        $data['files'] = (isset($versions[$version]) == true) ? $versions[$version]['files'] : [];
-        if (isset($versions[$version]['async']) == true) {
-            $data['async'] = $versions[$version]['async'];
-        }
 
+        $versions = $data['versions'] ?? [];
+        $data['files'] = $versions[$version]['files'] ?? [];
+        $data['async'] = $versions[$version]['async'] ?? '';
+     
         return $data;
     }
 

@@ -294,47 +294,68 @@ class Page extends BaseComponent implements HtmlPageInterface
         ]);
       
         $params = \array_merge_recursive($params,$this->properties); 
-
-        // add page head include html code
-        $this->head->addCommentCode('library files');
-        foreach($includes['library_files'] as $file) {
-            $this->head->addLibraryIncludeCode($file);     
-        }
-
-        // template files
-        $this->head->addCommentCode('template files');        
-        foreach($includes['template_files']['css'] as $file) {           
-            $this->head->addLinkCode($file,'text/css','stylesheet');            
-        }
-
-        foreach($includes['template_files']['js'] as $file) {  
-            if (\is_array($file) == true) {
-                $this->head->addComponentFileCode($file);                
-            } else {
-                $this->head->addScriptCode($file,'','');              
-            }     
-        }
-
         // render page body code
-        $body = $this->view->fetch($this->getTemplateFile(),$params);  
+        $params['body'] = $this->view->fetch($this->getTemplateFile(),$params);  
 
-        // component files
-        $this->head->addCommentCode('component files'); 
-        foreach(($this->componentsFiles['js'] ?? []) as $file) {   
-            $this->head->addComponentFileCode($file);            
-        }
-        // page files
-        $this->head->addCommentCode('page files'); 
-        foreach(($includes['page_files']['js']) as $file) { 
-            $this->head->addComponentFileCode($file);                       
-        }
-       
-        $params['body'] = $body;
-        $params['head'] = $this->head->toArray();        
-                  
-        $this->setHtmlCode($this->view->fetch($includes['index'],$params));
+        // add page head code
+        $this->addPageHeadCode($includes,$name,$language);
+        
+        $params['head'] = $this->head->toArray();               
+        // fetch index file        
+        $this->setHtmlCode($this->view->fetch($this->getIndexFile($this->templateName),$params));
       
         return $this;
+    }
+
+    /**
+     * Push include code to page head
+     *
+     * @param array  $includes
+     * @param string $name
+     * @param string $language
+     * @return void
+     */
+    protected function addPageHeadCode(array $includes, string $name, string $language): void
+    {
+        $code = $this->view->getCache()->fetch('html.page.head.code' . $name . '.' . $language);
+        if ($code === false) {      
+            // add page head include html code
+            $this->head->addCommentCode('library files');
+            foreach($includes['library_files'] as $file) {
+                $this->head->addLibraryIncludeCode($file);     
+            }
+
+            // template files
+            $this->head->addCommentCode('template files');        
+            foreach($includes['css'] as $file) {           
+                $this->head->addLinkCode($file,'text/css','stylesheet');            
+            }
+
+            foreach($includes['js'] as $file) {  
+                if (\is_array($file) == true) {
+                    $this->head->addComponentFileCode($file);                
+                } else {
+                    $this->head->addScriptCode($file,'','');              
+                }     
+            }
+
+            // component files
+            $this->head->addCommentCode('component files'); 
+            foreach(($this->componentsFiles['js'] ?? []) as $file) {   
+                $this->head->addComponentFileCode($file);            
+            }
+            // page files
+            $this->head->addCommentCode('page files'); 
+            foreach($this->getFiles('js') as $file) { 
+                $this->head->addComponentFileCode($file);                       
+            }
+
+            // save to cache
+            $this->view->getCache()->save('html.page.head.code' . $name . '.' . $language,$this->head->getHtmlCode());
+            return;
+        }
+
+        $this->head->addHtmlCode($code);
     }
 
     /**
@@ -352,28 +373,25 @@ class Page extends BaseComponent implements HtmlPageInterface
         }
         $includes = [];
         
-        // template include files        
-        $templatefiles = $this->getTemplateIncludeFiles();     
         // page include files
-        $pageFiles = $this->getPageIncludeFiles();
-        // set page component include files
-        $includes['page_files'] = $this->getFiles();
-   
-        $removeTemplateFiles = (bool)$this->getOption('remove-template-files',false);  
-        if ($removeTemplateFiles == true) {
-            $templatefiles = [];
-            $includes['template_files'] = $pageFiles;
-            $includes['library_files'] = $pageFiles['library_files'] ?? [];
-        } else {
-            // merge template and page include files
-            $includes['template_files'] = \array_merge_recursive($templatefiles,$pageFiles);
-            // library files
-            $includes['library_files'] = \array_merge($includes['template_files']['library_files'] ?? [],$pageFiles['library_files'] ?? []); 
+        $pageIncludes = $this->getOption('include',[]);
+        $templateOptions = $this->readTemplatePackageFile();
+
+        if ((bool)$this->getOption('remove-template-files',false) == false) {
+            // merge template includes        
+            $pageIncludes = \array_merge_recursive($templateOptions['include'] ?? [],$pageIncludes);
         }
 
-        unset($includes['template_files']['library_files']);
-        // get index file
-        $includes['index'] = $this->getIndexFile($this->templateName);   
+        $pageIncludes = [
+            'library'    => \array_unique($pageIncludes['library'] ?? []),
+            'js'         => \array_unique($pageIncludes['js'] ?? []),
+            'css'        => \array_unique($pageIncludes['css'] ?? []),
+            'components' => \array_unique($pageIncludes['components'] ?? [])
+        ];
+      
+        // from page options
+        $includes = $this->resolveIncludeFiles($pageIncludes,$this->templateUrl);
+
         // save to cache
         $this->view->getCache()->save('html.page.includes.' . $name . '.' . $language,$includes);
 
@@ -449,68 +467,27 @@ class Page extends BaseComponent implements HtmlPageInterface
     }
 
     /**
-     * Get page include files
-     *  
-     * @return array
-    */
-    public function getPageIncludeFiles(): array
-    {
-        $include = $this->view->getCache()->fetch('page.include.files.' . $this->templateName . $this->id);
-        if ($include !== false) {        
-            return $include;
-        }
-        // from page options
-        $include = $this->getOption('include',null);     
-        if (empty($include) == true) {       
-            return [];
-        }
-
-        $include = $this->resolveIncludeFiles($include,$this->templateUrl);
-        if (\count($include['library']) > 0) {
-            // UI Libraries    
-            $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],$this->templateName . $this->id);                   
-        }
-
-        $this->view->getCache()->save('page.include.files.' . $this->templateName . $this->id,$include);   
-       
-        return $include;
-    }
-
-    /**
-     * Get template include files
-     *   
+     * Read template packaeg file
+     *
      * @return array
      */
-    protected function getTemplateIncludeFiles(): array
-    {               
-        $include = $this->view->getCache()->fetch('template.include.files.' . $this->templateName);
-        if ($include !== false) {    
-            $this->templateModules = $this->view->getCache()->fetch('template.include.modules.' . $this->templateName);      
-            return $include;
+    protected function readTemplatePackageFile(): array
+    {
+        $options = $this->view->getCache()->fetch('template.options.' . $this->templateName);
+        if ($options !== false) {             
+            return $options;
         }
        
         try {
             $json = \file_get_contents(Path::TEMPLATES_PATH . $this->templateName . DIRECTORY_SEPARATOR . 'arikaim-package.json');
-            $templateOptions = \json_decode($json,true);
+            $options = \json_decode($json,true);
         } catch (\Exception $e) {
-            $templateOptions = null;
+            return [];
         }
      
-        $templateOptions = $templateOptions ?? [];
+        $this->view->getCache()->save('template.options.' . $this->templateName,$options);
 
-        $include = $templateOptions['include'] ?? [];
-        $this->templateModules = $templateOptions['modules'] ?? [];
-
-        $include = $this->resolveIncludeFiles($include,$this->templateUrl);
-        if (\count($include['library']) > 0) {
-            // UI Libraries                    
-            $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],$this->templateName);  
-        }
-
-        $this->view->getCache()->save('template.include.files.' . $this->templateName,$include);
-        $this->view->getCache()->save('template.include.modules.' . $this->templateName,$this->templateModules);
-
-        return $include;
+        return $options;
     }
 
     /**
@@ -522,7 +499,10 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     protected function resolveIncludeFiles(array $include, string $url): array
     {                    
-        $include['library'] = $include['library'] ?? [];
+        // icnldue libraries
+        $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],$this->templateName . $this->id);
+
+        // include js files
         $include['js'] = \array_map(function($file) use($url) {
             if (\filter_var($file,FILTER_VALIDATE_URL) !== false) {
                 return $file;
@@ -537,7 +517,8 @@ class Page extends BaseComponent implements HtmlPageInterface
            
             return $url . '/js/' . $file; 
         },$include['js'] ?? []);
-      
+
+        // include css files
         $include['css'] = \array_map(function($file) use($url) {
             if (\filter_var($file,FILTER_VALIDATE_URL) !== false) {
                 return $file;
@@ -554,7 +535,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         },$include['css'] ?? []);
        
         // include components
-        foreach ($include['components'] ?? [] as $componentName) {               
+        foreach ($include['components'] as $componentName) {               
             $component = $this->view->createComponent($componentName,'en','empty');
             $include['js'][] = [
                 'url'            => $component->getIncludeFile('js'),

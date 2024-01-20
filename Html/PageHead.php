@@ -510,6 +510,17 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
     }
 
     /**
+     * Add head html code
+     *
+     * @param string $code
+     * @return void
+     */
+    public function addHtmlCode(string $code): void
+    {
+        $this->htmlCode .= $code;
+    }
+
+    /**
      * Get metatag html code
      *
      * @param string $name
