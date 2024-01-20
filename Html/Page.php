@@ -287,18 +287,13 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         // page head     
         $this->head->mergeItems($this->properties['head'] ?? [],false);
-        $this->head->addMetaTagCodeForItems([
-            'title',
-            'description',
-            'keywords'
-        ]);
-      
+       
         $params = \array_merge_recursive($params,$this->properties); 
         // render page body code
         $params['body'] = $this->view->fetch($this->getTemplateFile(),$params);  
 
         // add page head code
-        $this->addPageHeadCode($includes,$name,$language);
+        $this->addPageHeadCode($includes);
         
         $params['head'] = $this->head->toArray();               
         // fetch index file        
@@ -311,51 +306,46 @@ class Page extends BaseComponent implements HtmlPageInterface
      * Push include code to page head
      *
      * @param array  $includes
-     * @param string $name
-     * @param string $language
      * @return void
      */
-    protected function addPageHeadCode(array $includes, string $name, string $language): void
+    protected function addPageHeadCode(array $includes): void
     {
-        $code = $this->view->getCache()->fetch('html.page.head.code' . $name . '.' . $language);
-        if ($code === false) {      
-            // add page head include html code
-            $this->head->addCommentCode('library files');
-            foreach($includes['library_files'] as $file) {
-                $this->head->addLibraryIncludeCode($file);     
-            }
+        $this->head->addMetaTagCodeForItems([
+            'title',
+            'description',
+            'keywords'
+        ]);
 
-            // template files
-            $this->head->addCommentCode('template files');        
-            foreach($includes['css'] as $file) {           
-                $this->head->addLinkCode($file,'text/css','stylesheet');            
-            }
-
-            foreach($includes['js'] as $file) {  
-                if (\is_array($file) == true) {
-                    $this->head->addComponentFileCode($file);                
-                } else {
-                    $this->head->addScriptCode($file,'','');              
-                }     
-            }
-
-            // component files
-            $this->head->addCommentCode('component files'); 
-            foreach(($this->componentsFiles['js'] ?? []) as $file) {   
-                $this->head->addComponentFileCode($file);            
-            }
-            // page files
-            $this->head->addCommentCode('page files'); 
-            foreach($this->getFiles('js') as $file) { 
-                $this->head->addComponentFileCode($file);                       
-            }
-
-            // save to cache
-            $this->view->getCache()->save('html.page.head.code' . $name . '.' . $language,$this->head->getHtmlCode());
-            return;
+        // add page head include html code
+        $this->head->addCommentCode('library files');
+        foreach($includes['library_files'] as $file) {
+            $this->head->addLibraryIncludeCode($file);     
         }
 
-        $this->head->addHtmlCode($code);
+        // template files
+        $this->head->addCommentCode('template files');        
+        foreach($includes['css'] as $file) {           
+            $this->head->addLinkCode($file,'text/css','stylesheet');            
+        }
+
+        foreach($includes['js'] as $file) {  
+            if (\is_array($file) == true) {
+                $this->head->addComponentFileCode($file);                
+            } else {
+                $this->head->addScriptCode($file,'','');              
+            }     
+        }
+
+        // component files
+        $this->head->addCommentCode('component files'); 
+        foreach(($this->componentsFiles['js'] ?? []) as $file) {   
+            $this->head->addComponentFileCode($file);            
+        }
+        // page files
+        $this->head->addCommentCode('page files'); 
+        foreach($this->getFiles('js') as $file) { 
+            $this->head->addComponentFileCode($file);                       
+        }
     }
 
     /**
@@ -510,12 +500,12 @@ class Page extends BaseComponent implements HtmlPageInterface
             $tokens = \explode(':',$file);           
             if (isset($tokens[1]) == true) {
                 $file = $tokens[1];
-                $url = Url::getTemplateUrl($tokens[0]);
+                $url = Url::getTemplateUrl($tokens[0],'/');
             } else {
                 $file = $tokens[0];
             }
            
-            return $url . '/js/' . $file; 
+            return $url . 'js/' . $file; 
         },$include['js'] ?? []);
 
         // include css files
@@ -526,12 +516,12 @@ class Page extends BaseComponent implements HtmlPageInterface
             $tokens = \explode(':',$file);           
             if (isset($tokens[1]) == true) {
                 $file = $tokens[1];
-                $url = Url::getTemplateUrl($tokens[0]);
+                $url = Url::getTemplateUrl($tokens[0],'/');
             } else {
                 $file = $tokens[0];
             }
             
-            return $url . '/css/' . $file;         
+            return $url . 'css/' . $file;         
         },$include['css'] ?? []);
        
         // include components
