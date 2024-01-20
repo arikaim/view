@@ -54,6 +54,18 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
     }
 
     /**
+     * Return page head as array 
+     *
+     * @return array
+     */
+    public function toArray(): array
+    {
+        $this->data['html_code'] = $this->htmlCode;
+        
+        return parent::toArray();
+    }
+
+    /**
      * Set property value param
      *
      * @param string $name

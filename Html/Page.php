@@ -280,7 +280,7 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         // add global variables       
         $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
-        $this->view->addGlobal('template_url',$this->templateUrl . '/');
+        $this->view->addGlobal('template_url',$this->templateUrl);
         $this->view->addGlobal('current_language',$this->language);
         $this->view->addGlobal('page_component_name',$name);
         $this->view->addGlobal('template_modules',$this->templateModules);
@@ -329,13 +329,10 @@ class Page extends BaseComponent implements HtmlPageInterface
             $this->head->addComponentFileCode($file);                       
         }
        
-        $merged = \array_merge($params,[              
-            'body'                => $body,                    
-            'head'                => $this->head->toArray(),
-            'head_code'           => $this->head->getHtmlCode()
-        ]);   
-
-        $this->setHtmlCode($this->view->fetch($includes['index'],$merged));
+        $params['body'] = $body;
+        $params['head'] = $this->head->toArray();        
+                  
+        $this->setHtmlCode($this->view->fetch($includes['index'],$params));
       
         return $this;
     }
