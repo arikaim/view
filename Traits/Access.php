@@ -68,7 +68,7 @@ trait Access
         if ((\strtolower($permission) == 'none') || (empty($permission) == true)) {
             return true;
         }
-        
-        return $this->getService('access')->hasAccess($permission);      
+         
+        return $this->getService('access')->hasAccessOneFrom(\explode('|',$permission));
     }
 }
