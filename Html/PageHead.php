@@ -373,7 +373,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      */
     public function addComponentInstanceCode(array $item): void 
     {
-        $code = '<meta class="component-instance" component-name="' . $item['name'] . '" component-type="' . $item['type'] . '" component-id="' . $item['id'] . '" />\n\t"';
+        $code = '<meta class="component-instance" component-name="' . $item['name'] . '" component-type="' . $item['type'] . '" component-id="' . $item['id'] . '" />' . Self::END_OF_LINE;
         
         $this->htmlCode .= $code;
     }
