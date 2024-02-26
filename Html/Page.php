@@ -212,12 +212,12 @@ class Page extends BaseComponent implements HtmlPageInterface
      *
      * @param string $name
      * @param string $type
-     * @param string|null $id
+     * @param string $id
      * @return void
      */
-    public function addComponentInstance(string $name, string $type, ?string $id = null)
+    public function addComponentInstance(string $name, string $type, string $id)
     {
-        if (isset($this->componentInstances[$name]) == false) {      
+        if (isset($this->componentInstances[$id]) == false) {      
             // incldue in component instances
             $item = [
                 'name' => $name,
@@ -225,7 +225,7 @@ class Page extends BaseComponent implements HtmlPageInterface
                 'id'   => $id
             ];
 
-            $this->componentInstances[$name] = $item;
+            $this->componentInstances[$id] = $item;
             // push to head code
             $this->head->addCommentCode('component instance'); 
             $this->head->addComponentInstanceCode($item);      
