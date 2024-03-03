@@ -56,7 +56,7 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
      * @param ViewInterface $view
      * @param string $defaultLanguage    
      */
-    public function __construct(ViewInterface $view, string $defaultLanguage, ?string $emailComplierClass = null) 
+    public function __construct(ViewInterface $view, string $defaultLanguage) 
     {
         parent::__construct(
             '',
@@ -178,9 +178,11 @@ class EmailView extends BaseComponent implements HtmlComponentInterface, EmailVi
                 $params['component_css'][] = $componentCss;                           
             }  
           
-            $params['body'] = $code;
-            $indexFile = $this->getIndexFile($this->primaryTemplate);
-            $code = $this->view->fetch($indexFile,$params);                  
+            if ($this->getOption('include-index',true) == true) {              
+                $params['body'] = $code;
+                $indexFile = $this->getIndexFile($this->primaryTemplate);
+                $code = $this->view->fetch($indexFile,$params);                   
+            } 
         }
 
         $this->setHtmlCode($code);   
