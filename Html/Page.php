@@ -104,6 +104,13 @@ class Page extends BaseComponent implements HtmlPageInterface
     private $head;
     
     /**
+     * Page languages
+     *
+     * @var array
+     */
+    protected $languages;
+
+    /**
      * Constructor
      * 
      * @param Arikaim\Core\Interfaces\View\ViewInterface $view
@@ -133,9 +140,21 @@ class Page extends BaseComponent implements HtmlPageInterface
 
         $this->libraryOptions = $libraryOptions;       
         $this->head = new PageHead();
-        Self::$defaultLanguage = $defaultLanguage;        
+        Self::$defaultLanguage = $defaultLanguage; 
+        
+        $this->languages = ['en'];
     }
 
+    /**
+     * Get languages
+     *
+     * @return array
+     */
+    public function getLanguages():array
+    {
+        return $this->languages;
+    }
+    
     /**
      * Return true if component is valid
      *
@@ -277,6 +296,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $this->resolve($params);  
 
         $includes = $this->getPageIncludes($name,$this->language);   
+        $this->languages = $includes['languages'];
 
         // add global variables       
         $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
@@ -366,6 +386,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         // page include files
         $pageIncludes = $this->getOption('include',[]);
         $templateOptions = $this->readTemplatePackageFile();
+        $languages = $templateOptions['languages'] ?? ['en'];
 
         if ((bool)$this->getOption('remove-template-files',false) == false) {
             // merge template includes        
@@ -376,7 +397,8 @@ class Page extends BaseComponent implements HtmlPageInterface
             'library'    => \array_unique($pageIncludes['library'] ?? []),
             'js'         => \array_unique($pageIncludes['js'] ?? []),
             'css'        => \array_unique($pageIncludes['css'] ?? []),
-            'components' => \array_unique($pageIncludes['components'] ?? [])
+            'components' => \array_unique($pageIncludes['components'] ?? []),
+            'languages'  => $languages
         ];
       
         // from page options
