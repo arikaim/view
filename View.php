@@ -336,6 +336,17 @@ class View implements ViewInterface
     }
 
     /**
+     * Return true if global vari exist
+     *
+     * @param string $name
+     * @return boolean
+     */
+    public function hasGlobal(string $name): bool
+    {
+        return \array_key_exists($name, $this->getEnvironment()->getGlobals());
+    }  
+
+    /**
      * Get global variable
      *
      * @param string $name
