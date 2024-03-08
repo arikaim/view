@@ -83,13 +83,6 @@ class Page extends BaseComponent implements HtmlPageInterface
     protected $view;
 
     /**
-     * Template modules 
-     *
-     * @var array|null
-     */
-    protected $templateModules;
-
-    /**
      * Template url
      *
      * @var string
@@ -129,7 +122,6 @@ class Page extends BaseComponent implements HtmlPageInterface
             ComponentInterface::PAGE_COMPONENT_TYPE
         );
 
-        $this->templateModules = [];
         $this->view = $view; 
         $this->setOptionFile('page.json');
 
@@ -208,7 +200,9 @@ class Page extends BaseComponent implements HtmlPageInterface
         $language = $language ?? $this->language;
         $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
         $params['template_url'] = $this->templateUrl;
-    
+        $params['current_language'] = $language;
+        $params['page_component_name'] = $this->fullName;
+
         $component = $this->view->renderComponent($name,$language,$params,$type,$this->renderMode,$parent);
         $jsFiles = $component->getFiles('js');
 
@@ -298,13 +292,11 @@ class Page extends BaseComponent implements HtmlPageInterface
         $includes = $this->getPageIncludes($name,$this->language);   
         $this->languages = $includes['languages'];
 
-        // add global variables       
-        $this->view->addGlobal('current_url_path',$params['current_path'] ?? '');
-        $this->view->addGlobal('template_url',$this->templateUrl);
-        $this->view->addGlobal('current_language',$this->language);
-        $this->view->addGlobal('page_component_name',$name);
-        $this->view->addGlobal('template_modules',$this->templateModules);
-
+        $params['current_language'] = $this->language;
+        $params['template_url'] = $this->templateUrl;
+        $params['current_url_path'] = $params['current_path'] ?? '';
+        $params['page_component_name'] = $name;
+  
         // page head     
         $this->head->mergeItems($this->properties['head'] ?? [],false);
        

@@ -490,13 +490,23 @@ class View implements ViewInterface
     }
 
     /**
+     * Clear current env
+     *
+     * @return void
+     */
+    public function destroyEnvironment():void 
+    {
+        $this->environment = null;
+    }
+
+    /**
      * Get Twig environment
      *
      * @return \Twig\Environment
      */
     public function getEnvironment()
     {
-        if (empty($this->environment) == true) {
+        if ($this->environment == null) {
             $this->resolveEnvironment();
         }
 
