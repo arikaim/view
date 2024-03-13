@@ -174,7 +174,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         // options
         $this->processIncludeOption();      
 
-        $this->templateUrl = Url::getTemplateUrl($this->getCurrentTemplate(),'/');
+        $this->templateUrl = Url::getTemplateUrl($this->getCurrentTemplate(),'/',false);
     }
 
     /**
