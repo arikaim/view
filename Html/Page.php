@@ -5,7 +5,7 @@
  * @link        http://www.arikaim.com
  * @copyright   Copyright (c)  Konstantin Atanasov <info@arikaim.com>
  * @license     http://www.arikaim.com/license
- * 
+ * @package     View
 */
 namespace Arikaim\Core\View\Html;
 
@@ -290,6 +290,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $this->resolve($params);  
 
         $includes = $this->getPageIncludes($name,$this->language);   
+      
         $this->languages = $includes['languages'];
 
         $params['current_language'] = $this->language;
@@ -370,7 +371,7 @@ class Page extends BaseComponent implements HtmlPageInterface
     protected function getPageIncludes(string $name, string $language): array
     {
         $includes = $this->view->getCache()->fetch('html.page.includes.' . $name . '.' . $language);
-        if ($includes !== false) {      
+        if ($includes !== false) {             
             return $includes;
         }
         $includes = [];
@@ -378,6 +379,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         // page include files
         $pageIncludes = $this->getOption('include',[]);
         $templateOptions = $this->readTemplatePackageFile();
+      
         $languages = $templateOptions['languages'] ?? ['en'];
 
         if ((bool)$this->getOption('remove-template-files',false) == false) {

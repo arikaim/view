@@ -5,7 +5,7 @@
  * @link        http://www.arikaim.com
  * @copyright   Copyright (c)  Konstantin Atanasov <info@arikaim.com>
  * @license     http://www.arikaim.com/license
- * 
+ * @package     View
 */
 namespace Arikaim\Core\View;
 
@@ -235,7 +235,6 @@ class View implements ViewInterface
             $component->setHtmlCode($html);  
         }
 
-        
         // check for edit mode
         if ($mode == ComponentInterface::RENDER_MODE_EDIT) {
             $editorComponent = $component->getContext()['_editor']['component'] ?? null;
