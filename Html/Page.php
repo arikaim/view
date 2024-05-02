@@ -174,7 +174,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         // options
         $this->processIncludeOption();      
 
-        $this->templateUrl = Url::getTemplateUrl($this->getCurrentTemplate(),'/',false);
+        $this->templateUrl = Url::getTemplateUrl($this->getCurrentTemplate(),'/',true);
     }
 
     /**
@@ -199,7 +199,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $language = $language ?? $this->language;
         $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
-        $params['template_url'] = $this->templateUrl;
+        $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/',true);
         $params['current_language'] = $language;
         $params['page_component_name'] = $this->fullName;
 
@@ -294,7 +294,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $this->languages = $includes['languages'];
 
         $params['current_language'] = $this->language;
-        $params['template_url'] = $this->templateUrl;
+        $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/',true);
         $params['current_url_path'] = $params['current_path'] ?? '';
         $params['page_component_name'] = $name;
   
