@@ -46,13 +46,15 @@ trait Access
      */
     public function checkAuthOption(array $accessOptions): bool
     {
+        global $arikaim;
+
         $auth = $accessOptions['auth'] ?? '';
         if ((\strtolower($auth) == 'none') || (empty($auth) == true)) {
             return true;
         }
 
         // switch auth provider
-        return $this->getService('access')->withProvider($auth)->isLogged();
+        return $arikaim->get('access')->withProvider($auth)->isLogged();
     }
 
     /**
@@ -63,12 +65,13 @@ trait Access
      */
     public function checkPermissionOption(array $accessOptions): bool
     {
-        $permission = $accessOptions['permission'] ?? '';
+        global $arikaim;
 
+        $permission = $accessOptions['permission'] ?? '';
         if ((\strtolower($permission) == 'none') || (empty($permission) == true)) {
             return true;
         }
          
-        return $this->getService('access')->hasAccessOneFrom(\explode('|',$permission));
+        return $arikaim->get('access')->hasAccessOneFrom(\explode('|',$permission));
     }
 }

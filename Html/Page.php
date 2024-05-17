@@ -370,7 +370,9 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     protected function getPageIncludes(string $name, string $language): array
     {
-        $includes = $this->view->getCache()->fetch('html.page.includes.' . $name . '.' . $language);
+        global $arikaim;
+
+        $includes = $arikaim->get('cache')->fetch('html.page.includes.' . $name . '.' . $language);
         if ($includes !== false) {             
             return $includes;
         }
@@ -399,7 +401,7 @@ class Page extends BaseComponent implements HtmlPageInterface
         $includes = $this->resolveIncludeFiles($pageIncludes,$this->templateUrl);
 
         // save to cache
-        $this->view->getCache()->save('html.page.includes.' . $name . '.' . $language,$includes);
+        $arikaim->get('cache')->save('html.page.includes.' . $name . '.' . $language,$includes);
 
         return $includes;      
     }
@@ -479,7 +481,9 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     protected function readTemplatePackageFile(): array
     {
-        $options = $this->view->getCache()->fetch('template.options.' . $this->templateName);
+        global $arikaim;
+
+        $options = $arikaim->get('cache')->fetch('template.options.' . $this->templateName);
         if ($options !== false) {             
             return $options;
         }
@@ -491,7 +495,7 @@ class Page extends BaseComponent implements HtmlPageInterface
             return [];
         }
      
-        $this->view->getCache()->save('template.options.' . $this->templateName,$options);
+        $arikaim->get('cache')->save('template.options.' . $this->templateName,$options);
 
         return $options;
     }
@@ -562,8 +566,10 @@ class Page extends BaseComponent implements HtmlPageInterface
      * @return array
      */
     public function getLibraryIncludeFiles(array $libraryList, string $cacheKey): array
-    {                
-        $files = $this->view->getCache()->fetch('template.library.files.' . $cacheKey);        
+    {           
+        global $arikaim;
+
+        $files = $arikaim->get('cache')->fetch('template.library.files.' . $cacheKey);        
         if ($files !== false) {            
             return $files;
         }
@@ -576,17 +582,17 @@ class Page extends BaseComponent implements HtmlPageInterface
                 continue;
             }
             
-            $libraryFiles = $this->view->getCache()->fetch('library.files.' . $library . $libraryVersion ?? '');    
+            $libraryFiles = $arikaim->get('cache')->fetch('library.files.' . $library . $libraryVersion ?? '');    
             if ($libraryFiles === false) {
                 $libraryFiles = $this->getLibraryFiles($libraryName,$libraryVersion,$libraryOption);
-                $this->view->getCache()->save('library.files.' . $library . $libraryVersion ?? '',$libraryFiles);  
+                $arikaim->get('cache')->save('library.files.' . $library . $libraryVersion ?? '',$libraryFiles);  
             } 
         
             $files = \array_merge($files,$libraryFiles);       
         }
  
         // Save to cache
-        $this->view->getCache()->save('template.library.files.' . $cacheKey,$files); 
+        $arikaim->get('cache')->save('template.library.files.' . $cacheKey,$files); 
                                
         return $files;
     }

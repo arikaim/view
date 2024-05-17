@@ -49,13 +49,6 @@ class View implements ViewInterface
     private $environment = null;
 
     /**
-     * Cache
-     *
-     * @var CacheInterface
-     */
-    private $cache;
-
-    /**
      * Vie wpath
      *
      * @var string
@@ -112,17 +105,8 @@ class View implements ViewInterface
     protected $templateTheme;
 
     /**
-     * Services
-     *
-     * @var array
-     */
-    protected $services = [];
-
-    /**
      * Constructor
      *
-     * @param CacheInterface $cache
-     * @param array $services
      * @param string $viewPath
      * @param string $extensionsPath
      * @param string $templatesPath
@@ -131,12 +115,10 @@ class View implements ViewInterface
      * @param string|null $primaryTemplate
      */
     public function __construct(
-        object $cache,           
         string $viewPath,
         string $extensionsPath,
         string $templatesPath,
         string $componentsPath,
-        array $services = [],   
         array $settings = [],
         ?string $primaryTemplate = null,
         ?string $templateTheme = null)
@@ -146,21 +128,8 @@ class View implements ViewInterface
         $this->templatesPath = $templatesPath;
         $this->componentsPath = $componentsPath;       
         $this->settings = $settings;      
-        $this->cache = $cache;      
-        $this->services  = $services;
         $this->primaryTemplate = $primaryTemplate ?? 'system';       
         $this->templateTheme = $templateTheme;
-    }
-
-    /**
-     * Get service
-     *
-     * @param string $name
-     * @return mixed|null
-     */
-    public function getService(string $name)
-    {
-        return $this->services[$name] ?? null;
     }
 
     /**
@@ -214,9 +183,11 @@ class View implements ViewInterface
         array $parent = []
     )
     {
+        global $arikaim;
+
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $cacheItemName = 'html.component.' . $name . '.' . $language;        
-        $cached = $this->cache->fetch($cacheItemName);
+        $cached = $arikaim->get('cache')->fetch($cacheItemName);
 
         $component = ($cached === false) ? $this->createComponent($name,$language,$type,$mode,$parent) : $cached;
 
@@ -253,7 +224,7 @@ class View implements ViewInterface
         ) 
         {
             // save cache
-            $this->cache->save($cacheItemName,$component);
+            $arikaim->get('cache')->save($cacheItemName,$component);
         }
             
         return $component;
@@ -397,16 +368,6 @@ class View implements ViewInterface
     public function getViewPath(): string
     {
         return $this->viewPath;
-    }
-
-    /**
-     * Get cache
-     *
-     * @return CacheInterface
-     */
-    public function getCache()
-    {
-        return $this->cache;
     }
 
     /**

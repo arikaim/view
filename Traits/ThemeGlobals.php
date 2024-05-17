@@ -33,10 +33,12 @@ trait ThemeGlobals
      */
     protected function includeThemeGlobals(?string $themeName = null): bool
     { 
+        global $arikaim;
+
         if (empty($themeName) == true) {
             return false;
         }
-        $themeGlobals = $this->cache->fetch('template.theme.' . $this->primaryTemplate . '.' . $themeName);
+        $themeGlobals = $arikaim->get('cache')->fetch('template.theme.' . $this->primaryTemplate . '.' . $themeName);
         
         if ($themeGlobals === false) {
             $fileName = $this->getTemplateThemeFile($themeName);
@@ -47,7 +49,7 @@ trait ThemeGlobals
             if ($themeGlobals == null) {
                 return false;
             } 
-            $this->cache->save('template.theme.' . $this->primaryTemplate . '.' . $themeName,$themeGlobals);
+            $arikaim->get('cache')->save('template.theme.' . $this->primaryTemplate . '.' . $themeName,$themeGlobals);
         }
        
         $this->addGlobal('theme',$themeGlobals);
