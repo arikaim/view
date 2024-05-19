@@ -504,44 +504,38 @@ class Page extends BaseComponent implements HtmlPageInterface
      * Resolve include files
      *
      * @param array $include
-     * @param string $url
+     * @param string $templateUrl
      * @return array
      */
-    protected function resolveIncludeFiles(array $include, string $url): array
+    protected function resolveIncludeFiles(array $include, string $templateUrl): array
     {                    
         // icnldue libraries
         $include['library_files'] = $this->getLibraryIncludeFiles($include['library'],$this->templateName . $this->id);
-
+       
         // include js files
-        $include['js'] = \array_map(function($file) use($url) {
+        $include['js'] = \array_map(function($file) use($templateUrl) {
             if (\filter_var($file,FILTER_VALIDATE_URL) !== false) {
                 return $file;
             }            
             $tokens = \explode(':',$file);           
             if (isset($tokens[1]) == true) {
-                $file = $tokens[1];
-                $url = Url::getTemplateUrl($tokens[0],'/');
-            } else {
-                $file = $tokens[0];
-            }
-           
-            return $url . 'js/' . $file; 
+                return Url::getTemplateUrl($tokens[0],'/') . 'js/' . $tokens[1];
+            } 
+
+            return $templateUrl . 'js/' .  $tokens[0]; 
         },$include['js'] ?? []);
 
         // include css files
-        $include['css'] = \array_map(function($file) use($url) {
+        $include['css'] = \array_map(function($file) use($templateUrl) {
             if (\filter_var($file,FILTER_VALIDATE_URL) !== false) {
                 return $file;
             }
             $tokens = \explode(':',$file);           
             if (isset($tokens[1]) == true) {
-                $file = $tokens[1];
-                $url = Url::getTemplateUrl($tokens[0],'/');
-            } else {
-                $file = $tokens[0];
-            }
-            
-            return $url . 'css/' . $file;         
+                return Url::getTemplateUrl($tokens[0],'/') . 'css/' . $tokens[1];
+            } 
+
+            return $templateUrl . 'css/' .  $tokens[0];    
         },$include['css'] ?? []);
        
         // include components
