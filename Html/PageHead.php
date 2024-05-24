@@ -412,6 +412,11 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
     {
         $crossorigin = (\in_array('crossorigin',$file['params'] ?? []) ==true )? ' crossorigin="anonymous"' : '';
                     
+        if ($file['component_type'] == 'url') {
+            $this->addScriptCode($file['url'],'text/javascript');
+            return;
+        }
+        
         $attr = 'async class="component-file" ' . $crossorigin . '
             component-type="'. $file['component_type'] . '"
             component-name="'. $file['component_name'] . '"

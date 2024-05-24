@@ -43,12 +43,12 @@ trait IncludeOption
     {
         if (\filter_var($includeFile,FILTER_VALIDATE_URL) !== false) {             
             $tokens = \explode('|',$includeFile);
-            $tokens[0] = 'external';
-        
+            
             return [
                 'url'              => $tokens[0],
                 'params'           => (isset($tokens[1]) == true) ? $tokens : [],
-                'source_component' => 'url'
+                'source_component' => 'external',
+                'component_type'   => 'url'
             ];
         } 
         
