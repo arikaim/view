@@ -121,9 +121,9 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      */
     public function setMetaTags(array $data): object
     {
-        $this->set('title',$this->getString('title'));
-        $this->set('description',$this->getString('description'));
-        $this->set('keywords',$this->getString('keywords'));
+        $this->set('title',$data['title'] ?? '');
+        $this->set('description',$data['description'] ?? '');
+        $this->set('keywords',$data['keywords'] ?? '');
         
         return $this;
     }
