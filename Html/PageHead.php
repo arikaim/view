@@ -248,6 +248,8 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      */
     public function og(string $name, $value, array $options = []): object
     {      
+        $this->addMetaTag('og:' . $name,$value);
+
         return $this->addProperty('og',$name,$value,$options);
     }
 
@@ -283,6 +285,8 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      */
     public function twitter(string $name, $value, array $options = []): object
     {
+        $this->addMetaTag('twitter:' . $name,$value);
+        
         return $this->addProperty('twitter',$name,$value,$options);      
     }
 
