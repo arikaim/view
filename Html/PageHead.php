@@ -393,6 +393,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
         if ($file['type'] == 'js') {                
             $attr = ($file['params_text'] ?? '') . 
                 (($file['async'] == true) ? ' async' : '') .
+                (($file['defer'] == true) ? ' defer' : '') .
                 (empty($file['crossorigin']) ? '' : ' crossorigin');
 
             $this->addScriptCode($file['file'],'','library_' . $file['library'],$attr);

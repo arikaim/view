@@ -53,10 +53,15 @@ trait UiLibrary
         $version = $tokens[1] ?? null;
         $option = $tokens[2] ?? null;
 
+        if ($version == 'async' || $version == 'defer') {
+            $option = $version;
+            $version = null;
+        }
+       
         return [
             $tokens[0] ?? $libraryName,
-            ($version == 'async') ? null : $version,
-            (empty($option) == true && $version == 'async') ? 'async' : $option 
+            $version,
+            $option
         ];
     }
 
@@ -126,6 +131,7 @@ trait UiLibrary
                 'params_text' => $paramsText,
                 'library'     => $libraryName,
                 'async'       => $properties['async'] ?? ($option == 'async'),
+                'defer'       => $properties['defer'] ?? ($option == 'defer'),
                 'crossorigin' => $properties['crossorigin'] ?? null
             ];                      
         }   
