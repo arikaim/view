@@ -204,6 +204,10 @@ class Page extends BaseComponent implements HtmlPageInterface
         $params['page_component_name'] = $this->fullName;
 
         $component = $this->view->renderComponent($name,$language,$params,$type,$this->renderMode,$parent);
+        if ($component->hasError() == true) {
+            $this->setError($component->getError());
+        }
+        
         $jsFiles = $component->getFiles('js');
 
         if (\count($jsFiles) > 0) {
