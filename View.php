@@ -238,7 +238,7 @@ class View implements ViewInterface
      * @param array $options
      * @return Arikaim\Core\Interfaces\View\ComponentInterface
     */
-    protected function renderComponentError(string $name, string $language, string $errorCode, array $options = [])
+    public function renderComponentError(string $name, string $language, string $errorCode, array $options = [])
     {
         $component = $this->renderComponent(Self::COMPONENT_ERROR_NAME,$language,[
             'message' => 'Error in html component <b>' . $name . '</b>' . $errorCode
