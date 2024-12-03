@@ -60,8 +60,7 @@ class ComponentTagParser extends AbstractTokenParser
                 'name' => $componentName,
                 'type' => $type
             ],
-            $token->getLine(),
-            $this->getTag()           
+            $token->getLine()    
         );
     }
 

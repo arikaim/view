@@ -16,6 +16,7 @@ use Twig\Node\NodeOutputInterface;
 /**
  * Component tag node
  */
+#[\Twig\Attribute\YieldReady]
 class ComponentNode extends Node implements NodeOutputInterface
 {
     /**
@@ -31,14 +32,13 @@ class ComponentNode extends Node implements NodeOutputInterface
      * @param Node $body
      * @param array $params
      * @param integer $line
-     * @param string $tag
      * @param string $twigExtensionClass
      */
-    public function __construct(Node $body, string $twigExtensionClass, $params = [], $line = 0, $tag = 'component')
+    public function __construct(Node $body, string $twigExtensionClass, $params = [], $line = 0)
     {
         $this->twigExtensionClass = $twigExtensionClass;
 
-        parent::__construct(['body' => $body],$params,$line,$tag);
+        parent::__construct(['body' => $body],$params,$line);
     }
 
     /**
@@ -60,6 +60,6 @@ class ComponentNode extends Node implements NodeOutputInterface
             ->write("\$context['content'] = trim(ob_get_clean());")    
             ->write("unset(\$context['component_id']);") 
             ->write("unset(\$context['styles']);")                  
-            ->write('echo $this->env->getExtension("' . $this->twigExtensionClass . '")->loadComponent($context,"' . $componentName . '",$context,"' . $type .'");');    
+            ->write('yield $this->env->getExtension("' . $this->twigExtensionClass . '")->loadComponent($context,"' . $componentName . '",$context,"' . $type .'");');    
     }
 }

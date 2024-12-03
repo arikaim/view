@@ -16,6 +16,7 @@ use Twig\Node\NodeOutputInterface;
 /**
  * Error node
  */
+#[\Twig\Attribute\YieldReady]
 class ErrorNode extends Node implements NodeOutputInterface
 {
     /**
@@ -29,7 +30,7 @@ class ErrorNode extends Node implements NodeOutputInterface
         $compiler->addDebugInfo($this);
         $message = \trim($this->getNode('message')->getAttribute('value'),'\'"');
         $compiler          
-            ->write("echo '" . $message . "';\n")
+            ->write("yield '" . $message . "';\n")
             ->write('return false;' . PHP_EOL);
             
     }

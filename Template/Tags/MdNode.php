@@ -16,6 +16,7 @@ use Twig\Node\NodeOutputInterface;
 /**
  * Markdown node
  */
+#[\Twig\Attribute\YieldReady]
 class MdNode extends Node implements NodeOutputInterface
 {
     /**
@@ -57,6 +58,6 @@ class MdNode extends Node implements NodeOutputInterface
             ->write('$lines = explode("\n", $content);' . PHP_EOL)
             ->write('$content = preg_replace(\'/^\' . $matches[0]. \'/\', "", $lines);' . PHP_EOL)
             ->write('$content = join("\n", $content);' . PHP_EOL)
-            ->write('echo $this->env->getExtension("' . $this->twigExtensionClass . '")->parseMarkdown($content,$context);' . PHP_EOL);
+            ->write('yield $this->env->getExtension("' . $this->twigExtensionClass . '")->parseMarkdown($content,$context);' . PHP_EOL);
     }
 }

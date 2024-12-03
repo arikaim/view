@@ -15,6 +15,7 @@ use Twig\Node\Node;
 /**
  * Cache tag node class
  */
+#[\Twig\Attribute\YieldReady]
 class CacheNode extends Node
 {
     /**
@@ -47,11 +48,13 @@ class CacheNode extends Node
     {             
         $this->twigExtensionClass = $twigExtensionClass;
 
-        parent::__construct(['body' => $body],[
+        parent::__construct([
+            'body' => $body
+        ],[
             'key'      => $key,
             'keyName'  => $keyName,
             'saveTime' => $saveTime
-        ],$line,$tag);
+        ],$line);
     }
 
     /**
@@ -78,6 +81,6 @@ class CacheNode extends Node
                 ->write('$cached = ob_get_clean();')             
                 ->write('$cache->save("$key",$cached);')
             ->write("}\n")                 
-            ->write('echo $cached;');
+            ->write('yield $cached;');
     }
 }
