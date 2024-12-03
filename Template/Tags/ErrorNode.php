@@ -32,6 +32,5 @@ class ErrorNode extends Node implements NodeOutputInterface
         $compiler          
             ->write("yield '" . $message . "';\n")
             ->write('return false;' . PHP_EOL);
-            
     }
 }

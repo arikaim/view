@@ -55,8 +55,7 @@ class MdTagParser extends AbstractTokenParser
             $body,
             $this->twigExtensionClass,
             [],
-            $line,
-            $this->getTag()          
+            $line         
         );
     }
 

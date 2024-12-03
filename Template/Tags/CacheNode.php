@@ -33,7 +33,6 @@ class CacheNode extends Node
      * @param mixed $saveTime
      * @param Node $body
      * @param integer $line
-     * @param string $tag
      * @param string $twigExtensionClass
      */
     public function __construct(
@@ -42,7 +41,6 @@ class CacheNode extends Node
         ?string $saveTime, 
         Node $body, 
         int $line, 
-        string $tag,
         string $twigExtensionClass
     )
     {             

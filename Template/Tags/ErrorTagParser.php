@@ -37,7 +37,7 @@ class ErrorTagParser extends AbstractTokenParser
         }
         $stream->expect(Token::BLOCK_END_TYPE);
        
-        return new ErrorNode($nodes,[],$line,$this->getTag());
+        return new ErrorNode($nodes,[],$line);
     }
 
     /**

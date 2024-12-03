@@ -59,7 +59,6 @@ class CacheTagParser extends AbstractTokenParser
             null,
             $body,
             $token->getLine(),
-            $this->getTag(),
             $this->twigExtensionClass
         );
     }
