@@ -22,6 +22,7 @@ use Arikaim\Core\View\Html\Component\Traits\UiLibrary;
 
 use Arikaim\Core\Interfaces\View\ComponentInterface;
 use Arikaim\Core\Interfaces\View\HtmlPageInterface;
+use PhpUnitsOfMeasure\PhysicalQuantity\Length;
 
 /**
  * Html page
@@ -287,6 +288,11 @@ class Page extends BaseComponent implements HtmlPageInterface
     */
     public function render(string $name, array $params = [], ?string $language = null)
     {  
+        if (count(\explode(':',$name)) == 1 &&
+            count(\explode('>',$name)) == 1) {
+            $name = 'current>' . $name;
+        }
+        
         $this->fullName = $name;       
         $this->language = $language ?? $this->language;
 

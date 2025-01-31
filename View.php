@@ -20,6 +20,7 @@ use Arikaim\Core\Interfaces\View\RequireAccessInterface;
 use Arikaim\Core\View\Traits\Access;
 use Arikaim\Core\View\Traits\ThemeGlobals;
 use Arikaim\Core\View\ComponentFactory;
+use Arikaim\Core\Http\Session;
 
 /**
  * View class
@@ -127,9 +128,14 @@ class View implements ViewInterface
         $this->extensionsPath = $extensionsPath;
         $this->templatesPath = $templatesPath;
         $this->componentsPath = $componentsPath;       
-        $this->settings = $settings;      
+        $this->settings = $settings;    
+        $this->templateTheme = $templateTheme;  
+         
+        // resolve primary template
         $this->primaryTemplate = $primaryTemplate ?? 'system';       
-        $this->templateTheme = $templateTheme;
+        if ($this->primaryTemplate != 'system' && empty(Session::get('template')) == false) {
+            $this->primaryTemplate = Session::get('template');
+        }  
     }
 
     /**
@@ -276,11 +282,16 @@ class View implements ViewInterface
      * Set primary template
      *
      * @param string $templateName
+     * @param bool $session
      * @return void
      */
-    public function setPrimaryTemplate(string $templateName): void
+    public function setPrimaryTemplate(string $templateName, bool $session = false): void
     {       
         $this->primaryTemplate = $templateName;
+
+        if ($session == true) {
+            Session::set('template',$templateName);   
+        }
     }
 
     /**
