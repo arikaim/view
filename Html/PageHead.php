@@ -386,9 +386,10 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * Add library include code
      *
      * @param array $file
+     * @param string $fileParams
      * @return void
      */
-    public function addLibraryIncludeCode(array $file): void
+    public function addLibraryIncludeCode(array $file, string $fileParams = ''): void
     {
         if ($file['type'] == 'js') {                
             $attr = ($file['params_text'] ?? '') . 
@@ -400,9 +401,9 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
         }
         if ($file['type'] == 'css') { 
             if (($file['async'] ?? false) == true) {
-                $this->addLinkCode($file['file'],'','preload','all',"this.onload=null;this.rel='stylesheet'");
+                $this->addLinkCode($file['file'] . $fileParams,'','preload','all',"this.onload=null;this.rel='stylesheet'");
             } else {
-                $this->addLinkCode($file['file'],'text/css','stylesheet');
+                $this->addLinkCode($file['file'] . $fileParams,'text/css','stylesheet');
             }               
         }      
     }
@@ -411,9 +412,10 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
      * Add component file code
      *
      * @param array $file
+     * @param string $fileParams
      * @return void
      */
-    public function addComponentFileCode(array $file): void
+    public function addComponentFileCode(array $file, string $fileParams = ''): void
     {
         $crossorigin = (\in_array('crossorigin',$file['params'] ?? []) ==true )? ' crossorigin="anonymous"' : '';
                     
@@ -427,7 +429,7 @@ class PageHead extends Collection implements CollectionInterface, \Countable, \A
             component-name="'. $file['component_name'] . '"
             component-id="'. $file['component_id'] . '"';
 
-        $this->addScriptCode($file['url'],'','',$attr);         
+        $this->addScriptCode($file['url'] . $fileParams,'','',$attr);         
     }
 
     /**

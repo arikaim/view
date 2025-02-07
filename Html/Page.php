@@ -22,7 +22,6 @@ use Arikaim\Core\View\Html\Component\Traits\UiLibrary;
 
 use Arikaim\Core\Interfaces\View\ComponentInterface;
 use Arikaim\Core\Interfaces\View\HtmlPageInterface;
-use PhpUnitsOfMeasure\PhysicalQuantity\Length;
 
 /**
  * Html page
@@ -333,7 +332,11 @@ class Page extends BaseComponent implements HtmlPageInterface
      */
     protected function addPageHeadCode(array $includes): void
     {
-        $this->head->addMetaTagCodeForItems([
+        $fileParams = (($this->libraryOptions['includeFileKey'] ?? false) == true) ? 
+            '?v=' . \md5($this->primaryTemplate) : 
+            '';
+
+       $this->head->addMetaTagCodeForItems([
             'title',
             'description',
             'keywords'
@@ -342,32 +345,32 @@ class Page extends BaseComponent implements HtmlPageInterface
         // add page head include html code
         $this->head->addCommentCode('library files');
         foreach($includes['library_files'] as $file) {
-            $this->head->addLibraryIncludeCode($file);     
+            $this->head->addLibraryIncludeCode($file,$fileParams);     
         }
 
         // template files
         $this->head->addCommentCode('template files');        
         foreach($includes['css'] as $file) {           
-            $this->head->addLinkCode($file,'text/css','stylesheet');            
+            $this->head->addLinkCode($file . $fileParams,'text/css','stylesheet');            
         }
 
         foreach($includes['js'] as $file) {  
             if (\is_array($file) == true) {
-                $this->head->addComponentFileCode($file);                
+                $this->head->addComponentFileCode($file,$fileParams);                
             } else {
-                $this->head->addScriptCode($file,'','');              
+                $this->head->addScriptCode($file . $fileParams,'','');              
             }     
         }
 
         // component files
         $this->head->addCommentCode('component files'); 
         foreach(($this->componentsFiles['js'] ?? []) as $file) {   
-            $this->head->addComponentFileCode($file);            
+            $this->head->addComponentFileCode($file,$fileParams);            
         }
         // page files
         $this->head->addCommentCode('page files'); 
         foreach($this->getFiles('js') as $file) { 
-            $this->head->addComponentFileCode($file);                       
+            $this->head->addComponentFileCode($file,$fileParams);                       
         }
     }
 
