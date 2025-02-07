@@ -292,6 +292,9 @@ class View implements ViewInterface
         if ($session == true) {
             Session::set('template',$templateName);   
         }
+
+        // add theme globals
+        $this->includeThemeGlobals($this->templateTheme);
     }
 
     /**
