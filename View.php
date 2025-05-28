@@ -139,6 +139,15 @@ class View implements ViewInterface
     }
 
     /**
+     * Get primary template path
+     * @return string
+     */
+    public function getPrimaryTemplatePath(): string
+    {
+        return $this->templatesPath . $this->primaryTemplate . DIRECTORY_SEPARATOR;
+    }
+
+    /**
      * Create component
      *
      * @param string $name
