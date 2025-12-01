@@ -198,6 +198,16 @@ class Page extends BaseComponent implements HtmlPageInterface
     {
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
         $language = $language ?? $this->language;
+       
+        // check for control panel template
+        if (empty($this->fullName) == true) {        
+            $componentTemplateName = \explode(':',$name)[0] ?? null;           
+            if ($componentTemplateName == 'system') {
+                $this->templateName = 'system';    
+                $this->view->setPrimaryTemplate('system',false);          
+            }
+        }
+        
         $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
         $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/',true);
         $params['current_language'] = $language;
