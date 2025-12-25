@@ -217,6 +217,11 @@ class View implements ViewInterface
         }
 
         if ($component->hasContent() == true) {
+            // set system template for components in extensions
+            if ($component->getLocation() == ComponentInterface::EXTENSION_COMPONENT) {              
+                $this->setPrimaryTemplate('system',false);  
+            }
+
             $html = $this->fetch($component->getTemplateFile(),$component->getContext());
             $component->setHtmlCode($html);  
         }
