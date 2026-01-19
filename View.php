@@ -532,6 +532,12 @@ class View implements ViewInterface
         $this->environment->addGlobal('current_language',null);      
         $this->environment->addGlobal('current_url_path',null);      
 
+        // global constants
+        $this->environment->addGlobal('DOMAIN',DOMAIN);      
+        $this->environment->addGlobal('HOST',HOST);      
+        $this->environment->addGlobal('SUB_DOMAIN',SUB_DOMAIN);     
+        $this->environment->addGlobal('BASE_PATH',BASE_PATH); 
+
         // add theme globals
         $this->includeThemeGlobals($this->templateTheme);
     }
