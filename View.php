@@ -139,6 +139,16 @@ class View implements ViewInterface
     }
 
     /**
+     * Set template theme name
+     * @param string $name
+     * @return void
+     */
+    public function setTemplateTheme(string $name): void
+    {
+        $this->templateTheme = $name;
+    }
+
+    /**
      * Get primary template path
      * @return string
      */
