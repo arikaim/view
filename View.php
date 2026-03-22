@@ -142,9 +142,10 @@ class View implements ViewInterface
      * Get template language
      * @param string $templateName
      */
-    public function getTemplateLanguage(string $templateName): ?string
+    public function getTemplateLanguage(string $templateName): string
     {
-        return $this->settings['language'][$templateName] ?? null;
+        return $this->settings['language'][$templateName] ?? 
+            $this->settings['language']['defaultLanguage'];
     }
 
     /**

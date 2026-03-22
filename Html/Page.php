@@ -321,7 +321,7 @@ class Page extends BaseComponent implements HtmlPageInterface
     */
     public function getCurrentLanguage($data = [], bool $skipSession = false): string
     {     
-        $language = $data['language'] ?? '';
+        $language = $data['language'] ?? null;
         if (empty($language) == false) {
             return $language;
         }
