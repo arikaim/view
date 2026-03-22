@@ -139,6 +139,15 @@ class View implements ViewInterface
     }
 
     /**
+     * Get template language
+     * @param string $templateName
+     */
+    public function getTemplateLanguage(string $templateName): ?string
+    {
+        return $this->settings['language'][$templateName] ?? null;
+    }
+
+    /**
      * Set template theme name
      * @param string $name
      * @return void
@@ -166,7 +175,7 @@ class View implements ViewInterface
      * @param int|null $renderMode
      * @param array $parent 
      * 
-     * @return Arikaim\Core\Interfaces\View\ComponentInterface
+     * @return \Arikaim\Core\Interfaces\View\ComponentInterface
      */
     public function createComponent(
         string $name, 
@@ -197,7 +206,7 @@ class View implements ViewInterface
      * @param int|null $mode
      * @param array $parent
      * 
-     * @return Arikaim\Core\Interfaces\View\ComponentInterface
+     * @return \Arikaim\Core\Interfaces\View\ComponentInterface
     */
     public function renderComponent(
         string $name, 
@@ -266,7 +275,7 @@ class View implements ViewInterface
      * @param string $name
      * @param string $language
      * @param array $options
-     * @return Arikaim\Core\Interfaces\View\ComponentInterface
+     * @return \Arikaim\Core\Interfaces\View\ComponentInterface
     */
     public function renderComponentError(string $name, string $language, string $errorCode, array $options = [])
     {
@@ -480,7 +489,7 @@ class View implements ViewInterface
     /**
      * Get Twig loader
      *
-     * @return Twig\Loader\FilesystemLoader
+     * @return \Twig\Loader\FilesystemLoader
      */
     public function getLoader()
     {

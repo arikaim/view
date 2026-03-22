@@ -13,6 +13,8 @@ use Arikaim\Core\View\Html\Component\BaseComponent;
 use Arikaim\Core\View\Html\PageHead;
 use Arikaim\Core\Utils\Path;
 use Arikaim\Core\Http\Url;
+use Arikaim\Core\Http\Cookie;
+use Arikaim\Core\Http\Session;
 
 use Arikaim\Core\View\Html\Component\Traits\IncludeOption;
 use Arikaim\Core\View\Html\Component\Traits\Options;
@@ -165,8 +167,7 @@ class Page extends BaseComponent implements HtmlPageInterface
     public function init(): void 
     {
         parent::init();
-        
-        $this->loadProperties();
+         
         $this->loadOptions(false); 
         $this->addComponentFile('js');    
         $this->addComponentFile('css');           
@@ -177,6 +178,22 @@ class Page extends BaseComponent implements HtmlPageInterface
         $this->templateUrl = Url::getTemplateUrl($this->getCurrentTemplate(),'/',true);
     }
 
+    /**
+     * Retrun true if html component exist
+     * @param string $name
+     * @return bool
+     */
+    public function hasComponent(string $name): bool
+    {
+        $language = $language ?? $this->language;
+        $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
+        
+        $component = $this->view->createComponent($name,$language,$type,$this->renderMode,[]);        
+        $component->resolveHtmlContent();
+
+        return ($component->isValid() == true);
+    }
+    
     /**
      * Render html component
      *
@@ -208,11 +225,19 @@ class Page extends BaseComponent implements HtmlPageInterface
             }
         }
         
+        // check for extension component
+        if (isset(\explode('::',$name)[1]) == true) {
+            $this->templateName = 'system';    
+            $this->view->setPrimaryTemplate('system',false);         
+        }
+
+        $language = $language ?? $this->getCurrentLanguage($params);
+
         $params['template_path'] = Path::TEMPLATES_PATH . $this->getCurrentTemplate() . DIRECTORY_SEPARATOR;
         $params['template_url'] = Url::getTemplateUrl($this->getCurrentTemplate(),'/',true);
         $params['current_language'] = $language;
         $params['page_component_name'] = $this->fullName;
-
+     
         $component = $this->view->renderComponent($name,$language,$params,$type,$this->renderMode,$parent);
         if ($component->hasError() == true) {
             $this->setError($component->getError());
@@ -288,6 +313,32 @@ class Page extends BaseComponent implements HtmlPageInterface
     }
 
     /**
+     * Get current page language
+     *
+     * @param array $data
+     * @param bool $skipSession
+     * @return string
+    */
+    public function getCurrentLanguage($data = [], bool $skipSession = false): string
+    {     
+        $language = $data['language'] ?? '';
+        if (empty($language) == false) {
+            return $language;
+        }
+        
+        $language = Cookie::get('language',null);      
+        if (empty($language) == false) {
+            return $language;
+        } 
+       
+        if ($skipSession == false) {
+            $language = Session::get('language',null);
+        }
+       
+        return (empty($language) == true) ? $this->view->getTemplateLanguage($this->getCurrentTemplate()) : $language;           
+    }
+
+    /**
      * Render page
      *
      * @param string $name
@@ -301,11 +352,14 @@ class Page extends BaseComponent implements HtmlPageInterface
             count(\explode('>',$name)) == 1) {
             $name = 'current>' . $name;
         }
-        
-        $this->fullName = $name;       
-        $this->language = $language ?? $this->language;
 
+        $this->fullName = $name;       
         $this->init();
+
+        $this->language = $language ?? $this->getCurrentLanguage($params);
+
+        // load properties after set language
+        $this->loadProperties();
         $this->resolve($params);  
 
         $includes = $this->getPageIncludes($name,$this->language);   
