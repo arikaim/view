@@ -273,12 +273,14 @@ class View implements ViewInterface
      * Render compoent error
      *
      * @param string $name
-     * @param string $language
+     * @param string|null $language
      * @param array $options
      * @return \Arikaim\Core\Interfaces\View\ComponentInterface
     */
-    public function renderComponentError(string $name, string $language, string $errorCode, array $options = [])
+    public function renderComponentError(string $name, ?string $language, string $errorCode, array $options = [])
     {
+        $language = $language ?? $this->settings['defaultLanguage'] ?? 'en';
+
         $component = $this->renderComponent(Self::COMPONENT_ERROR_NAME,$language,[
             'message' => 'Error in html component <b>' . $name . '</b>' . $errorCode
         ],'static');
