@@ -214,8 +214,7 @@ class Page extends BaseComponent implements HtmlPageInterface
     )
     {
         $type = $type ?? ComponentInterface::ARIKAIM_COMPONENT_TYPE;
-        $language = $language ?? $this->language;
-       
+    
         // check for control panel template
         if (empty($this->fullName) == true) {        
             $componentTemplateName = \explode(':',$name)[0] ?? null;           
